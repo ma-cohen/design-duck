@@ -7,12 +7,6 @@
  * Requirements are user-value focused only — no technical/derived requirements.
  */
 
-export const PRIORITIES = ["high", "medium", "low"] as const;
-export type Priority = (typeof PRIORITIES)[number];
-
-export const STATUSES = ["draft", "review", "approved"] as const;
-export type Status = (typeof STATUSES)[number];
-
 /** Vision, mission, and core problem statement (vision.yaml). */
 export interface Vision {
   vision: string;
@@ -25,8 +19,6 @@ export interface Requirement {
   id: string;
   description: string;
   userValue: string;
-  priority: Priority;
-  status: Status;
 }
 
 /** A project's requirements file with vision alignment. */
@@ -42,20 +34,6 @@ export type ValidationResult =
 function nonEmptyString(value: unknown, field: string): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return `${field} must be a non-empty string`;
-  }
-  return null;
-}
-
-function oneOf<T extends string>(
-  value: unknown,
-  field: string,
-  allowed: readonly T[],
-): string | null {
-  if (typeof value !== "string") {
-    return `${field} must be a string`;
-  }
-  if (!allowed.includes(value as T)) {
-    return `${field} must be one of: ${allowed.join(", ")}`;
   }
   return null;
 }
@@ -101,10 +79,6 @@ export function validateRequirement(
   if (descErr) errors.push(descErr);
   const uvErr = nonEmptyString(o.userValue, "userValue");
   if (uvErr) errors.push(uvErr);
-  const priErr = oneOf(o.priority, "priority", PRIORITIES);
-  if (priErr) errors.push(priErr);
-  const statusErr = oneOf(o.status, "status", STATUSES);
-  if (statusErr) errors.push(statusErr);
 
   if (errors.length > 0) {
     return { valid: false, errors };

@@ -108,14 +108,10 @@ requirements:
   - id: req-001
     description: Users need to quickly find products by searching with partial names
     userValue: Reduces time to find desired product from minutes to seconds
-    priority: high
-    status: draft
 
   - id: req-002
     description: Users can save items to a wishlist for later purchase
     userValue: Increases conversion by letting users return to considered items
-    priority: medium
-    status: draft
 ```
 
 ### Requirement Fields
@@ -125,8 +121,6 @@ requirements:
 | `id` | Yes | Unique identifier (e.g. `req-001`) |
 | `description` | Yes | What the user needs |
 | `userValue` | Yes | Why this matters to the user |
-| `priority` | Yes | `high`, `medium`, or `low` |
-| `status` | Yes | `draft`, `review`, or `approved` |
 
 ## Domain Structure
 

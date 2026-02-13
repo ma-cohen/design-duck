@@ -5,15 +5,9 @@ requirements:
   - id: req-001
     description: Users can search products by name
     userValue: Quickly find desired products
-    priority: high
-    status: draft
   - id: req-002
     description: Users can save items to a wishlist
     userValue: Return to considered items later
-    priority: medium
-    status: draft
   - id: req-003
     description: Users can track order delivery status
     userValue: Know when their package will arrive
-    priority: high
-    status: review

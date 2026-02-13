@@ -55,8 +55,6 @@ requirements:
   - id: req-001
     description: Users can search products by name
     userValue: Quickly find desired products
-    priority: high       # high | medium | low
-    status: draft        # draft | review | approved
 ```
 
 ### 5. Validate
@@ -128,8 +126,6 @@ requirements/
 | `id` | Yes | Unique identifier (e.g. `req-001`) |
 | `description` | Yes | What the user needs |
 | `userValue` | Yes | Why this matters to the user |
-| `priority` | Yes | `high`, `medium`, or `low` |
-| `status` | Yes | `draft`, `review`, or `approved` |
 
 ## Development
 

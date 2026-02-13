@@ -12,15 +12,11 @@ const REQUIREMENTS: Requirement[] = [
     id: "req-001",
     description: "Users need to search products",
     userValue: "Reduces time to find products",
-    priority: "high",
-    status: "draft",
   },
   {
     id: "req-002",
     description: "Users can save wishlists",
     userValue: "Return to considered items",
-    priority: "medium",
-    status: "review",
   },
 ];
 
@@ -29,8 +25,6 @@ const REQUIREMENTS: Requirement[] = [
 // ---------------------------------------------------------------------------
 
 describe("RequirementList", () => {
-  // --- Loading state ---
-
   test("renders loading state", () => {
     const html = renderToString(
       <RequirementList requirements={[]} loading={true} error={null} />,
@@ -45,8 +39,6 @@ describe("RequirementList", () => {
     );
     expect(html).not.toContain("requirement-card-req-001");
   });
-
-  // --- Error state ---
 
   test("renders error state", () => {
     const html = renderToString(
@@ -68,18 +60,13 @@ describe("RequirementList", () => {
     expect(html).not.toContain("requirement-card-req-001");
   });
 
-  // --- Empty state ---
-
   test("renders empty state when no requirements", () => {
     const html = renderToString(
       <RequirementList requirements={[]} loading={false} error={null} />,
     );
     expect(html).toContain("requirements-empty");
     expect(html).toContain("No requirements found");
-    expect(html).toContain("requirements.yaml");
   });
-
-  // --- Normal rendering ---
 
   test("renders list container with data-testid", () => {
     const html = renderToString(
@@ -102,22 +89,6 @@ describe("RequirementList", () => {
     );
     expect(html).toContain("Users need to search products");
     expect(html).toContain("Users can save wishlists");
-  });
-
-  test("renders priority badges for each card", () => {
-    const html = renderToString(
-      <RequirementList requirements={REQUIREMENTS} loading={false} error={null} />,
-    );
-    expect(html).toContain("priority-badge-req-001");
-    expect(html).toContain("priority-badge-req-002");
-  });
-
-  test("renders status badges for each card", () => {
-    const html = renderToString(
-      <RequirementList requirements={REQUIREMENTS} loading={false} error={null} />,
-    );
-    expect(html).toContain("status-badge-req-001");
-    expect(html).toContain("status-badge-req-002");
   });
 
   test("renders single requirement", () => {

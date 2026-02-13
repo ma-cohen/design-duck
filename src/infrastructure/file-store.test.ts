@@ -113,8 +113,6 @@ requirements:
   - id: req-001
     description: Users need to search products
     userValue: Reduces time to find products
-    priority: high
-    status: draft
 `;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
 
@@ -125,8 +123,6 @@ requirements:
     expect(result.requirements[0].id).toBe("req-001");
     expect(result.requirements[0].description).toBe("Users need to search products");
     expect(result.requirements[0].userValue).toBe("Reduces time to find products");
-    expect(result.requirements[0].priority).toBe("high");
-    expect(result.requirements[0].status).toBe("draft");
   });
 
   test("parses valid requirements.yaml with multiple requirements", () => {
@@ -135,13 +131,9 @@ requirements:
   - id: req-001
     description: Search products
     userValue: Faster search
-    priority: high
-    status: draft
   - id: req-002
     description: Save wishlist
     userValue: Return to items
-    priority: medium
-    status: review
 `;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
 
@@ -150,7 +142,6 @@ requirements:
     expect(result.requirements).toHaveLength(2);
     expect(result.requirements[0].id).toBe("req-001");
     expect(result.requirements[1].id).toBe("req-002");
-    expect(result.requirements[1].status).toBe("review");
   });
 
   test("parses empty requirements array", () => {
@@ -196,27 +187,11 @@ requirements: []`;
     expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/must have a 'requirements' array/);
   });
 
-  test("throws error when requirement has invalid priority", () => {
-    const yaml = `visionAlignment: "align"
-requirements:
-  - id: req-001
-    description: x
-    userValue: y
-    priority: critical
-    status: draft
-`;
-    writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-    expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/requirement at index 0/);
-    expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/priority/);
-  });
-
   test("throws error when requirement has missing userValue", () => {
     const yaml = `visionAlignment: "align"
 requirements:
   - id: req-001
     description: x
-    priority: high
-    status: draft
 `;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
     expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/requirement at index 0/);
@@ -229,13 +204,9 @@ requirements:
   - id: req-001
     description: x
     userValue: y
-    priority: high
-    status: draft
-  - id: req-002
+  - id: ""
     description: x
     userValue: y
-    priority: invalid
-    status: draft
 `;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
     expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/requirement at index 1/);
@@ -246,48 +217,12 @@ requirements:
     expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/must contain a YAML object/);
   });
 
-  test("accepts all valid priority values", () => {
-    for (const priority of ["high", "medium", "low"] as const) {
-      const yaml = `visionAlignment: "align"
-requirements:
-  - id: req-001
-    description: x
-    userValue: y
-    priority: ${priority}
-    status: draft
-`;
-      writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-      const result = readProjectRequirements(testDir, "my-project");
-      expect(result.requirements).toHaveLength(1);
-      expect(result.requirements[0].priority).toBe(priority);
-    }
-  });
-
-  test("accepts all valid status values", () => {
-    for (const status of ["draft", "review", "approved"] as const) {
-      const yaml = `visionAlignment: "align"
-requirements:
-  - id: req-001
-    description: x
-    userValue: y
-    priority: high
-    status: ${status}
-`;
-      writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-      const result = readProjectRequirements(testDir, "my-project");
-      expect(result.requirements).toHaveLength(1);
-      expect(result.requirements[0].status).toBe(status);
-    }
-  });
-
   test("accepts requirement with extra fields (ignores them)", () => {
     const yaml = `visionAlignment: "align"
 requirements:
   - id: req-001
     description: x
     userValue: y
-    priority: high
-    status: draft
     extraField: should be ignored
 `;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");

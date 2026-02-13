@@ -68,8 +68,6 @@ describe("validateRequirement", () => {
       id: "req-001",
       description: "Users need to search by partial names",
       userValue: "Reduces time to find products",
-      priority: "high",
-      status: "draft",
     };
     expect(validateRequirement(r)).toEqual({ valid: true });
   });
@@ -96,33 +94,21 @@ describe("validateRequirement", () => {
     });
   });
 
-  test("rejects invalid priority", () => {
-    const r = {
-      id: "req-001",
-      description: "x",
-      userValue: "y",
-      priority: "critical",
-      status: "draft",
-    };
+  test("rejects missing description", () => {
+    const r = { id: "req-001", userValue: "y" };
     const out = validateRequirement(r);
     expect(out.valid).toBe(false);
     expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("priority")]),
+      expect.arrayContaining([expect.stringContaining("description")]),
     );
   });
 
-  test("rejects invalid status", () => {
-    const r = {
-      id: "req-001",
-      description: "x",
-      userValue: "y",
-      priority: "high",
-      status: "done",
-    };
+  test("rejects missing userValue", () => {
+    const r = { id: "req-001", description: "x" };
     const out = validateRequirement(r);
     expect(out.valid).toBe(false);
     expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("status")]),
+      expect.arrayContaining([expect.stringContaining("userValue")]),
     );
   });
 });
@@ -150,8 +136,6 @@ describe("assertRequirement", () => {
       id: "req-001",
       description: "x",
       userValue: "y",
-      priority: "high",
-      status: "draft",
     };
     expect(() => assertRequirement(r)).not.toThrow();
   });
