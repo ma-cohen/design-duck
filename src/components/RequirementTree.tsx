@@ -1,11 +1,15 @@
 /**
  * Renders the full requirements view: vision header + per-project sections.
- * This is the main orchestrating component for the requirements UI.
+ * Supports two modes:
+ *   - Home view (no project selected): vision header + grid of project cards
+ *   - Detail view (project selected): full project section with requirements & design
  */
 
 import type { Vision, ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
+import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
 import { ProjectSection } from "./ProjectSection";
+import { ProjectCard } from "./ProjectCard";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
@@ -13,6 +17,8 @@ export interface RequirementTreeProps {
   designs?: Record<string, ProjectDesign>;
   loading: boolean;
   error: string | null;
+  selectedProject: string | null;
+  onSelectProject: (name: string | null) => void;
 }
 
 export function RequirementTree({
@@ -21,12 +27,20 @@ export function RequirementTree({
   designs = {},
   loading,
   error,
+  selectedProject,
+  onSelectProject,
 }: RequirementTreeProps) {
+  const deleteProject = useRequirementsStore((s) => s.deleteProject);
   const projectNames = Object.keys(projects).sort();
 
   console.debug(
-    `[design-duck:ui] Rendering RequirementTree: ${projectNames.length} project(s)`,
+    `[design-duck:ui] Rendering RequirementTree: ${projectNames.length} project(s), selected=${selectedProject}`,
   );
+
+  const handleDeleteProject = async (name: string) => {
+    await deleteProject(name);
+    onSelectProject(null);
+  };
 
   if (loading) {
     return (
@@ -64,6 +78,21 @@ export function RequirementTree({
     );
   }
 
+  // ---------- Detail view: single project ----------
+  if (selectedProject && projects[selectedProject]) {
+    return (
+      <div data-testid="project-detail-view">
+        <ProjectSection
+          projectName={selectedProject}
+          project={projects[selectedProject]}
+          design={designs[selectedProject] ?? null}
+          onDeleteProject={handleDeleteProject}
+        />
+      </div>
+    );
+  }
+
+  // ---------- Home view: vision + project card grid ----------
   return (
     <div data-testid="requirement-tree">
       <VisionHeader vision={vision} />
@@ -78,13 +107,17 @@ export function RequirementTree({
           </p>
         </div>
       ) : (
-        <div className="grid gap-6" data-testid="projects-grid">
+        <div
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          data-testid="projects-grid"
+        >
           {projectNames.map((name) => (
-            <ProjectSection
+            <ProjectCard
               key={name}
               projectName={name}
               project={projects[name]}
               design={designs[name] ?? null}
+              onClick={() => onSelectProject(name)}
             />
           ))}
         </div>

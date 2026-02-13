@@ -48,10 +48,12 @@ const PROJECTS: Record<string, ProjectRequirements> = {
 // Tests
 // ---------------------------------------------------------------------------
 
+const noop = () => {};
+
 describe("RequirementTree", () => {
   test("renders loading state", () => {
     const html = renderToString(
-      <RequirementTree vision={null} projects={{}} loading={true} error={null} />,
+      <RequirementTree vision={null} projects={{}} loading={true} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("tree-loading");
     expect(html).toContain("Loading requirements");
@@ -59,14 +61,14 @@ describe("RequirementTree", () => {
 
   test("does not render tree when loading", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={PROJECTS} loading={true} error={null} />,
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={true} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).not.toContain("requirement-tree");
   });
 
   test("renders error state", () => {
     const html = renderToString(
-      <RequirementTree vision={null} projects={{}} loading={false} error="Network error" />,
+      <RequirementTree vision={null} projects={{}} loading={false} error="Network error" selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("tree-error");
     expect(html).toContain("Failed to load requirements");
@@ -75,7 +77,7 @@ describe("RequirementTree", () => {
 
   test("renders empty state when no vision and no projects", () => {
     const html = renderToString(
-      <RequirementTree vision={null} projects={{}} loading={false} error={null} />,
+      <RequirementTree vision={null} projects={{}} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("tree-empty");
     expect(html).toContain("No requirements found");
@@ -83,7 +85,7 @@ describe("RequirementTree", () => {
 
   test("renders vision header", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("vision-header");
     expect(html).toContain("A world where teams manage requirements efficiently");
@@ -91,40 +93,47 @@ describe("RequirementTree", () => {
     expect(html).toContain("Teams struggle with requirements management");
   });
 
-  test("renders project sections for each project", () => {
+  test("renders project cards on home view", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
-    expect(html).toContain("project-section-checkout-flow");
-    expect(html).toContain("project-section-search-service");
+    expect(html).toContain("project-card-checkout-flow");
+    expect(html).toContain("project-card-search-service");
   });
 
-  test("renders vision alignment for each project", () => {
+  test("renders project detail when selected", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject="search-service" onSelectProject={noop} />,
+    );
+    expect(html).toContain("project-section-search-service");
+    expect(html).toContain("requirement-card-req-001");
+    expect(html).toContain("requirement-card-req-002");
+  });
+
+  test("renders vision alignment for each project card", () => {
+    const html = renderToString(
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("Enables efficient product discovery");
     expect(html).toContain("Streamlines purchasing process");
   });
 
-  test("renders requirement cards inside project sections", () => {
+  test("renders requirement cards in detail view", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject="checkout-flow" onSelectProject={noop} />,
     );
-    expect(html).toContain("requirement-card-req-001");
-    expect(html).toContain("requirement-card-req-002");
     expect(html).toContain("requirement-card-req-003");
   });
 
   test("renders no-projects message when vision exists but no projects", () => {
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={{}} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={{}} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("no-projects");
     expect(html).toContain("No projects found");
   });
 
-  test("renders empty project correctly", () => {
+  test("renders empty project correctly in detail view", () => {
     const emptyProjects: Record<string, ProjectRequirements> = {
       "empty-project": {
         visionAlignment: "Will help later",
@@ -132,7 +141,7 @@ describe("RequirementTree", () => {
       },
     };
     const html = renderToString(
-      <RequirementTree vision={VISION} projects={emptyProjects} loading={false} error={null} />,
+      <RequirementTree vision={VISION} projects={emptyProjects} loading={false} error={null} selectedProject="empty-project" onSelectProject={noop} />,
     );
     expect(html).toContain("project-section-empty-project");
     expect(html).toContain("No requirements yet");

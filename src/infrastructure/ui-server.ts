@@ -15,11 +15,17 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { join, extname } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
+import { join, extname, dirname } from "node:path";
 import { execSync } from "node:child_process";
+import { dump as yamlDump } from "js-yaml";
 import { watchRequirementsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
+import {
+  validateVision,
+  validateRequirement,
+  validateDecision,
+} from "../domain/requirements/requirement";
 
 /** Options for starting the UI server. */
 export interface UiServerOptions {
@@ -125,6 +131,17 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       console.error(`[design-duck:server] ${req.method} ${pathname}`);
     }
 
+    // Handle CORS preflight for write APIs
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      });
+      res.end();
+      return;
+    }
+
     // SSE endpoint for file change notifications
     if (pathname === "/events") {
       handleSSE(res, sseClients);
@@ -132,8 +149,35 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     }
 
     // API: list project directories
-    if (pathname === "/api/projects") {
+    if (pathname === "/api/projects" && req.method === "GET") {
       handleProjectsList(requirementsDir, res);
+      return;
+    }
+
+    // Write API: PUT /api/vision
+    if (pathname === "/api/vision" && req.method === "PUT") {
+      handlePutVision(req, res, requirementsDir);
+      return;
+    }
+
+    // Write API: PUT /api/projects/:name/requirements
+    const reqMatch = pathname.match(/^\/api\/projects\/([^/]+)\/requirements$/);
+    if (reqMatch && req.method === "PUT") {
+      handlePutRequirements(req, res, requirementsDir, decodeURIComponent(reqMatch[1]));
+      return;
+    }
+
+    // Write API: PUT /api/projects/:name/design
+    const designMatch = pathname.match(/^\/api\/projects\/([^/]+)\/design$/);
+    if (designMatch && req.method === "PUT") {
+      handlePutDesign(req, res, requirementsDir, decodeURIComponent(designMatch[1]));
+      return;
+    }
+
+    // Delete API: DELETE /api/projects/:name
+    const deleteMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
+    if (deleteMatch && req.method === "DELETE") {
+      handleDeleteProject(res, requirementsDir, decodeURIComponent(deleteMatch[1]));
       return;
     }
 
@@ -266,6 +310,156 @@ function serveFile(filePath: string, res: ServerResponse): void {
   } catch {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Request body helper
+// ---------------------------------------------------------------------------
+
+function readBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+    req.on("error", reject);
+  });
+}
+
+function jsonResponse(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+): void {
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+  });
+  res.end(JSON.stringify(body));
+}
+
+// ---------------------------------------------------------------------------
+// Write API handlers
+// ---------------------------------------------------------------------------
+
+async function handlePutVision(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+    const result = validateVision(raw);
+    if (!result.valid) {
+      jsonResponse(res, 400, { error: "Validation failed", details: result.errors });
+      return;
+    }
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const filePath = join(requirementsDir, "vision.yaml");
+    writeFileSync(filePath, yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutRequirements(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  projectName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    // Validate structure
+    if (typeof raw.visionAlignment !== "string" || raw.visionAlignment.trim() === "") {
+      jsonResponse(res, 400, { error: "visionAlignment must be a non-empty string" });
+      return;
+    }
+    if (!Array.isArray(raw.requirements)) {
+      jsonResponse(res, 400, { error: "requirements must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.requirements.length; i++) {
+      const result = validateRequirement(raw.requirements[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Requirement at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "projects", projectName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "requirements.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutDesign(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  projectName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (!Array.isArray(raw.decisions)) {
+      jsonResponse(res, 400, { error: "decisions must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.decisions.length; i++) {
+      const result = validateDecision(raw.decisions[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Decision at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "projects", projectName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Delete API handler
+// ---------------------------------------------------------------------------
+
+function handleDeleteProject(
+  res: ServerResponse,
+  requirementsDir: string,
+  projectName: string,
+): void {
+  try {
+    const dirPath = join(requirementsDir, "projects", projectName);
+    if (!existsSync(dirPath)) {
+      jsonResponse(res, 404, { error: `Project "${projectName}" not found` });
+      return;
+    }
+    rmSync(dirPath, { recursive: true, force: true });
+    console.log(`[design-duck:server] Deleted project directory: ${dirPath}`);
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 500, { error: message });
   }
 }
 

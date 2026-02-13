@@ -64,11 +64,6 @@ export interface RequirementsState {
   /**
    * Fetches vision.yaml and all project requirements from the server,
    * parses them, and replaces the current store state with the result.
-   *
-   * @param requirementsPath - URL path prefix where the YAML files are served.
-   *   Defaults to "/requirements" (served by the built-in Design Duck server).
-   * @param projectsApiUrl - URL for the projects list API.
-   *   Defaults to "/api/projects".
    */
   loadFromFiles: (requirementsPath?: string, projectsApiUrl?: string) => Promise<void>;
 
@@ -76,16 +71,25 @@ export interface RequirementsState {
    * Starts watching for requirement file changes.
    * Connects to the server's SSE endpoint for instant notifications,
    * falls back to polling if SSE is unavailable.
-   *
-   * Safe to call multiple times — subsequent calls are no-ops while watching.
    */
   startWatching: (options?: WatchOptions) => void;
 
   /**
    * Stops watching for file changes and cleans up resources.
-   * Safe to call multiple times or when not watching.
    */
   stopWatching: () => void;
+
+  /** Saves the vision document to the server (PUT /api/vision). */
+  saveVision: (vision: Vision) => Promise<void>;
+
+  /** Saves a project's requirements to the server (PUT /api/projects/:name/requirements). */
+  saveProjectRequirements: (projectName: string, data: ProjectRequirements) => Promise<void>;
+
+  /** Saves a project's design document to the server (PUT /api/projects/:name/design). */
+  saveProjectDesign: (projectName: string, data: ProjectDesign) => Promise<void>;
+
+  /** Deletes a project from the server (DELETE /api/projects/:name). */
+  deleteProject: (projectName: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -257,6 +261,64 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     }, intervalMs);
 
     set({ watching: true });
+  },
+
+  saveVision: async (vision: Vision) => {
+    console.log("[design-duck:store] Saving vision...");
+    const res = await fetch("/api/vision", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(vision),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save vision");
+    }
+    // SSE will trigger a reload automatically; also update local state immediately
+    set({ vision });
+  },
+
+  saveProjectRequirements: async (projectName: string, data: ProjectRequirements) => {
+    console.log(`[design-duck:store] Saving requirements for ${projectName}...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/requirements`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save requirements");
+    }
+    set({ projects: { ...get().projects, [projectName]: data } });
+  },
+
+  saveProjectDesign: async (projectName: string, data: ProjectDesign) => {
+    console.log(`[design-duck:store] Saving design for ${projectName}...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/design`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save design");
+    }
+    set({ designs: { ...get().designs, [projectName]: data } });
+  },
+
+  deleteProject: async (projectName: string) => {
+    console.log(`[design-duck:store] Deleting project ${projectName}...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to delete project");
+    }
+    // Remove from local state immediately
+    const { [projectName]: _p, ...remainingProjects } = get().projects;
+    const { [projectName]: _d, ...remainingDesigns } = get().designs;
+    set({ projects: remainingProjects, designs: remainingDesigns });
   },
 
   stopWatching: () => {
