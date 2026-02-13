@@ -240,5 +240,10 @@ Next steps:
   2. cd ..
   3. ./desgin-duck/duck context vision # start the workflow
 
+If you have the 'dd' shell alias set up, just use:
+  dd context vision
+  dd ui
+  dd validate
+
 Or point your AI agent at desgin-duck/AGENTS.md for the full workflow.`);
 }

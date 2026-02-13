@@ -104,6 +104,23 @@ desgin-duck/requirements/
 | \`design-duck validate\`  | Validate all YAML files              |
 | \`design-duck upgrade\`   | Upgrade to latest version            |
 
+## Short \`dd\` Alias
+
+If the \`dd\` shell function is installed (added to \`~/.zshrc\` or \`~/.bashrc\`),
+you can use \`dd\` instead of \`./desgin-duck/duck\` or \`design-duck\` for all
+commands:
+
+\`\`\`bash
+dd init                          # scaffold + npm install in one step
+dd context vision                # generate context prompt
+dd ui                            # start the live UI
+dd validate                      # validate YAML files
+dd context requirements <project>
+\`\`\`
+
+When running commands in the terminal on behalf of the user, prefer \`dd\` if
+available — it is shorter and works from the project root.
+
 ## Rules
 
 - **YAML is the source of truth.** Edit the files directly; the UI updates via
