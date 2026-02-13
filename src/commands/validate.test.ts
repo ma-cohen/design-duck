@@ -72,6 +72,17 @@ requirements:
     expect(process.exitCode).toBe(1);
   });
 
+  test("exits with code 1 when project has empty visionAlignment", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: ""\nrequirements: []',
+      "utf-8",
+    );
+    validate(testDir);
+    expect(process.exitCode).toBe(1);
+  });
+
   test("exits with code 1 when project has invalid requirement", () => {
     writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
     const projectYaml = `visionAlignment: "align"

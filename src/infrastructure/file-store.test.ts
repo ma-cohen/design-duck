@@ -45,10 +45,13 @@ problem: "Teams struggle with requirements"
     expect(() => readVision(testDir)).toThrow(/must contain a YAML object/);
   });
 
-  test("throws error when vision field is missing", () => {
+  test("defaults missing vision fields to empty string", () => {
     const yaml = `mission: "m"\nproblem: "p"`;
     writeFileSync(join(testDir, "vision.yaml"), yaml, "utf-8");
-    expect(() => readVision(testDir)).toThrow(/vision/);
+    const vision = readVision(testDir);
+    expect(vision.vision).toBe("");
+    expect(vision.mission).toBe("m");
+    expect(vision.problem).toBe("p");
   });
 
   test("throws error when file is empty", () => {
@@ -169,22 +172,27 @@ requirements: []`;
     expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/must contain a YAML object/);
   });
 
-  test("throws error when visionAlignment is missing", () => {
+  test("defaults missing visionAlignment to empty string", () => {
     const yaml = `requirements: []`;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-    expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/visionAlignment/);
+    const result = readProjectRequirements(testDir, "my-project");
+    expect(result.visionAlignment).toBe("");
+    expect(result.requirements).toHaveLength(0);
   });
 
-  test("throws error when visionAlignment is empty", () => {
+  test("accepts empty visionAlignment", () => {
     const yaml = `visionAlignment: ""\nrequirements: []`;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-    expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/visionAlignment/);
+    const result = readProjectRequirements(testDir, "my-project");
+    expect(result.visionAlignment).toBe("");
   });
 
-  test("throws error when requirements field is missing", () => {
+  test("defaults missing requirements field to empty array", () => {
     const yaml = `visionAlignment: "some alignment"`;
     writeFileSync(join(testDir, "projects", "my-project", "requirements.yaml"), yaml, "utf-8");
-    expect(() => readProjectRequirements(testDir, "my-project")).toThrow(/must have a 'requirements' array/);
+    const result = readProjectRequirements(testDir, "my-project");
+    expect(result.visionAlignment).toBe("some alignment");
+    expect(result.requirements).toHaveLength(0);
   });
 
   test("throws error when requirement has missing userValue", () => {

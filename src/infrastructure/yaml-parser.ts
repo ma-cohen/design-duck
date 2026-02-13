@@ -24,7 +24,6 @@ import type {
   ProjectImplementation,
 } from "../domain/requirements/requirement";
 import {
-  assertVision,
   assertRequirement,
   assertDecision,
   assertGeneralValidation,
@@ -47,13 +46,13 @@ export function parseVisionYaml(content: string): Vision {
     throw new Error("vision.yaml must contain a YAML object");
   }
 
-  try {
-    assertVision(parsed);
-    return parsed;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`vision.yaml: ${msg}`);
-  }
+  const file = parsed as Record<string, unknown>;
+
+  return {
+    vision: typeof file.vision === "string" ? file.vision : "",
+    mission: typeof file.mission === "string" ? file.mission : "",
+    problem: typeof file.problem === "string" ? file.problem : "",
+  };
 }
 
 /**
@@ -72,29 +71,25 @@ export function parseProjectRequirementsYaml(content: string): ProjectRequiremen
 
   const file = parsed as Record<string, unknown>;
 
-  if (typeof file.visionAlignment !== "string" || file.visionAlignment.trim() === "") {
-    throw new Error("requirements.yaml must have a non-empty 'visionAlignment' string");
-  }
-
-  if (!Array.isArray(file.requirements)) {
-    throw new Error("requirements.yaml must have a 'requirements' array");
-  }
+  const visionAlignment = typeof file.visionAlignment === "string" ? file.visionAlignment : "";
 
   const requirements: Requirement[] = [];
 
-  for (let i = 0; i < file.requirements.length; i++) {
-    const raw = file.requirements[i];
-    try {
-      assertRequirement(raw);
-      requirements.push(raw);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`requirements.yaml requirement at index ${i}: ${msg}`);
+  if (Array.isArray(file.requirements)) {
+    for (let i = 0; i < file.requirements.length; i++) {
+      const raw = file.requirements[i];
+      try {
+        assertRequirement(raw);
+        requirements.push(raw);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`requirements.yaml requirement at index ${i}: ${msg}`);
+      }
     }
   }
 
   return {
-    visionAlignment: file.visionAlignment as string,
+    visionAlignment,
     requirements,
   };
 }

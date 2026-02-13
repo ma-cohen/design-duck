@@ -309,6 +309,57 @@ describe("useRequirementsStore", () => {
     expect(state.designs["beta"]).toBeUndefined();
   });
 
+  // --- Empty / partial fields ---
+
+  test("loadFromFiles() loads projects with empty visionAlignment", async () => {
+    const emptyAlignmentYaml = `visionAlignment: ""
+requirements: []`;
+
+    stubFetch(VALID_VISION_YAML, ["my-project"], {
+      "my-project": emptyAlignmentYaml,
+    });
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(state.vision).not.toBeNull();
+    expect(Object.keys(state.projects)).toEqual(["my-project"]);
+    expect(state.projects["my-project"].visionAlignment).toBe("");
+    expect(state.projects["my-project"].requirements).toHaveLength(0);
+    expect(state.error).toBeNull();
+  });
+
+  test("loadFromFiles() loads projects with missing requirements array", async () => {
+    const noRequirementsYaml = `visionAlignment: "Some alignment"`;
+
+    stubFetch(VALID_VISION_YAML, ["my-project"], {
+      "my-project": noRequirementsYaml,
+    });
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(state.projects["my-project"].requirements).toHaveLength(0);
+    expect(state.error).toBeNull();
+  });
+
+  test("loadFromFiles() loads empty vision fields without error", async () => {
+    const emptyVisionYaml = `vision: ""
+mission: ""
+problem: ""`;
+
+    stubFetch(emptyVisionYaml, [], {});
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(state.vision).not.toBeNull();
+    expect(state.vision!.vision).toBe("");
+    expect(state.vision!.mission).toBe("");
+    expect(state.vision!.problem).toBe("");
+    expect(state.error).toBeNull();
+  });
+
   // --- Watching ---
 
   test("startWatching() sets watching to true", () => {

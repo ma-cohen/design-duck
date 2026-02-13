@@ -22,7 +22,6 @@ import { dump as yamlDump } from "js-yaml";
 import { watchRequirementsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
 import {
-  validateVision,
   validateRequirement,
   validateDecision,
   validateGeneralValidation,
@@ -391,9 +390,14 @@ async function handlePutVision(
 ): Promise<void> {
   try {
     const raw = JSON.parse(await readBody(req));
-    const result = validateVision(raw);
-    if (!result.valid) {
-      jsonResponse(res, 400, { error: "Validation failed", details: result.errors });
+
+    // Structural validation only — empty fields are allowed (strict checks live in the validate command)
+    if (raw === null || typeof raw !== "object") {
+      jsonResponse(res, 400, { error: "Body must be a JSON object" });
+      return;
+    }
+    if (typeof raw.vision !== "string" || typeof raw.mission !== "string" || typeof raw.problem !== "string") {
+      jsonResponse(res, 400, { error: "vision, mission, and problem must be strings" });
       return;
     }
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
@@ -460,9 +464,9 @@ async function handlePutRequirements(
   try {
     const raw = JSON.parse(await readBody(req));
 
-    // Validate structure
-    if (typeof raw.visionAlignment !== "string" || raw.visionAlignment.trim() === "") {
-      jsonResponse(res, 400, { error: "visionAlignment must be a non-empty string" });
+    // Structural validation only — empty visionAlignment is allowed (strict checks live in the validate command)
+    if (typeof raw.visionAlignment !== "string") {
+      jsonResponse(res, 400, { error: "visionAlignment must be a string" });
       return;
     }
     if (!Array.isArray(raw.requirements)) {

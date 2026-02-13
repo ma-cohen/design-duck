@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation } from "../infrastructure/file-store";
+import { validateVision } from "../domain/requirements/requirement";
 
 /**
  * Validates all requirement files in the desgin-duck/requirements/ directory.
@@ -30,9 +31,19 @@ export function validate(targetDir: string = process.cwd()): void {
   // Validate vision.yaml
   console.log("Validating vision.yaml...");
   try {
-    readVision(reqDir);
-    console.log("✓ vision.yaml is valid");
-    
+    const vision = readVision(reqDir);
+    // Parser is lenient — run strict validation explicitly
+    const visionResult = validateVision(vision);
+    if (!visionResult.valid) {
+      hasErrors = true;
+      console.error("✗ vision.yaml validation failed:");
+      for (const e of visionResult.errors) {
+        console.error(`  ${e}`);
+      }
+    } else {
+      console.log("✓ vision.yaml is valid");
+    }
+
     if (process.env.DEBUG) {
       console.error("[design-duck:validate] Successfully validated vision.yaml");
     }
@@ -104,6 +115,11 @@ export function validate(targetDir: string = process.cwd()): void {
     let requirementIds: string[] = [];
     try {
       const projectReqs = readProjectRequirements(reqDir, projectName);
+      // Parser is lenient — run strict checks explicitly
+      if (!projectReqs.visionAlignment || projectReqs.visionAlignment.trim() === "") {
+        hasErrors = true;
+        console.error(`✗ ${projectName}/requirements.yaml: visionAlignment must be a non-empty string`);
+      }
       totalRequirements += projectReqs.requirements.length;
       requirementIds = projectReqs.requirements.map((r) => r.id);
       console.log(
