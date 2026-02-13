@@ -467,25 +467,21 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 ## Steps
 
-1. Fetch the latest CLI from GitHub (a clean reinstall is required for GitHub
-   dependencies — \`npm update\` alone does not reliably refresh them):
-
-   \`\`\`bash
-   cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd ..
-   \`\`\`
-
-2. Run the upgrade command to apply migrations and regenerate files:
+1. Run the upgrade command — it automatically cleans and reinstalls the latest
+   version from GitHub before applying migrations:
 
    \`\`\`bash
    dd upgrade
    \`\`\`
 
-3. Review the output for any migration messages or warnings.
+2. Review the output for any migration messages or warnings.
 
-4. Report to the user what was upgraded and if any action is needed.
+3. Report to the user what was upgraded and if any action is needed.
 
 ## Notes
 
+- The upgrade command handles the full clean reinstall automatically (removes
+  \`node_modules\` and \`package-lock.json\` to force a fresh fetch from GitHub).
 - Backups of overwritten files are saved in \`desgin-duck/.backup/\`.
 - AGENTS.md and command files are always regenerated to stay current.
 `;

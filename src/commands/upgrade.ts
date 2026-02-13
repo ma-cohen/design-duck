@@ -10,7 +10,7 @@
  * 7. Write the new .version
  */
 
-import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, cpSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { VERSION } from "../index";
@@ -63,6 +63,14 @@ export function upgrade(targetDir: string = process.cwd()): void {
   if (!process.env._DD_SKIP_REINSTALL) {
     console.log("Checking for updates...");
     try {
+      // GitHub dependencies are pinned by commit hash in package-lock.json,
+      // so a plain `npm install` just re-installs the cached version.
+      // Remove the lock file and node_modules to force a fresh resolve.
+      const lockFile = join(duckDir, "package-lock.json");
+      const nodeModules = join(duckDir, "node_modules");
+      if (existsSync(lockFile)) rmSync(lockFile);
+      if (existsSync(nodeModules)) rmSync(nodeModules, { recursive: true });
+
       execSync("npm install", {
         cwd: duckDir,
         stdio: process.env.DEBUG ? "inherit" : "pipe",
