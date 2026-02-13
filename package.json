@@ -12,11 +12,12 @@
     "dist-ui/"
   ],
   "scripts": {
-    "build": "bun run build:cli && bun run build:ui",
-    "build:cli": "bun build src/cli.ts --outdir=dist --target=bun",
-    "build:ui": "bunx vite build",
-    "start": "bun run src/cli.ts",
-    "dev:ui": "bunx vite --open",
+    "build": "npm run build:cli && npm run build:ui",
+    "build:cli": "esbuild src/cli.ts --bundle --outfile=dist/cli.js --platform=node --format=esm",
+    "build:ui": "vite build",
+    "prepare": "npm run build",
+    "start": "node dist/cli.js",
+    "dev:ui": "vite --open",
     "test": "bun test"
   },
   "engines": {
@@ -35,6 +36,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
     "bun-types": "latest",
+    "esbuild": "^0.25.0",
     "js-yaml": "^4.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

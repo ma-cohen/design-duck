@@ -10,40 +10,26 @@ All state lives in plain YAML files. A live UI updates instantly when files chan
 
 ## Getting Started
 
-### 1. Install
+Design Duck works in **any project**, regardless of technology (Python, Java,
+Go, Rust, Node.js, etc.). The only prerequisite is [Node.js](https://nodejs.org) (v18+).
+
+### 1. Initialize
 
 ```bash
-# From GitHub
-npm install github:ma-cohen/desgin-duck#main
-
-# Or from a local clone
-npm install file:../path/to/desgin-duck
+npx github:ma-cohen/desgin-duck#main init
 ```
 
-### 2. Initialize
+This creates a `desgin-duck/` directory in your project with YAML templates,
+an AI agent guide, and everything needed to run locally.
+
+### 2. Install (one-time)
 
 ```bash
-npx design-duck init
+cd desgin-duck && npm install && cd ..
 ```
 
-This creates a `desgin-duck/` directory in your project with:
-
-```
-desgin-duck/
-├── AGENTS.md                        # AI agent instructions & workflow guide
-└── requirements/
-    ├── vision.yaml                  # Vision, mission & core problem
-    ├── design.yaml                  # Global design decisions
-    ├── implementation.yaml          # Global validations (linting, tests, CI)
-    └── projects/
-        └── example-project/
-            ├── requirements.yaml    # User-value requirements
-            ├── design.yaml          # Design decisions & options
-            └── implementation.yaml  # Todos, validations & test specs
-```
-
-The `AGENTS.md` file is an instruction guide for your AI agent — it explains the
-full workflow and all commands. Point your agent at it to get started.
+This installs Design Duck locally inside the `desgin-duck/` folder. After this,
+all commands are fast and local — no network access needed.
 
 ### 3. Work with Your AI Agent
 
@@ -66,7 +52,7 @@ Review in UI ◀─────────────────────�
 #### Phase 1: Define the Vision
 
 ```bash
-npx design-duck context vision
+./desgin-duck/duck context vision
 ```
 
 Give the output to your agent. It will fill in `vision.yaml` with a clear
@@ -75,7 +61,7 @@ vision, mission, and problem statement.
 #### Phase 2: Split into Projects
 
 ```bash
-npx design-duck context projects
+./desgin-duck/duck context projects
 ```
 
 The agent reads your vision and suggests how to break the work into projects,
@@ -84,7 +70,7 @@ creating directories under `requirements/projects/`.
 #### Phase 3: Gather Requirements
 
 ```bash
-npx design-duck context requirements <project>
+./desgin-duck/duck context requirements <project>
 ```
 
 For each project, the agent gets the vision context and produces user-value
@@ -93,7 +79,7 @@ requirements — focused on what users need, not technical details.
 #### Phase 4: Brainstorm Design
 
 ```bash
-npx design-duck context design <project>
+./desgin-duck/duck context design <project>
 ```
 
 The agent proposes design decisions with multiple options, pros, and cons.
@@ -103,7 +89,7 @@ All choices are left as `null` for you to decide.
 #### Phase 5: Choose Design
 
 ```bash
-npx design-duck context choose <project>
+./desgin-duck/duck context choose <project>
 ```
 
 The agent evaluates the options and recommends choices. Review and adjust
@@ -112,7 +98,7 @@ as needed — you have the final say.
 #### Phase 6: Plan Implementation
 
 ```bash
-npx design-duck context implementation <project>
+./desgin-duck/duck context implementation <project>
 ```
 
 The agent creates a phased plan with actionable todos, validation rules,
@@ -121,7 +107,7 @@ and test specifications — all linked back to requirements.
 #### Global Validations (any time)
 
 ```bash
-npx design-duck context validations
+./desgin-duck/duck context validations
 ```
 
 Define cross-cutting rules (linting, testing, security, etc.) that every
@@ -131,7 +117,7 @@ context automatically.
 ### 4. Validate
 
 ```bash
-npx design-duck validate
+./desgin-duck/duck validate
 ```
 
 Checks all YAML files against the schema and verifies that `requirementRefs`
@@ -140,7 +126,7 @@ and `globalDecisionRefs` point to valid IDs.
 ### 5. View in UI
 
 ```bash
-npx design-duck ui
+./desgin-duck/duck ui
 ```
 
 Opens a browser at `http://localhost:3456` showing your vision, projects,
@@ -149,14 +135,24 @@ designs, and implementation plans.
 **Live reload**: edit any YAML file and the UI updates automatically — no
 refresh needed.
 
+### Upgrading
+
+```bash
+cd desgin-duck && npm update && cd ..  # get latest CLI
+./desgin-duck/duck upgrade             # run migrations & regenerate AGENTS.md
+```
+
 ## CLI Commands
 
-| Command               | Description                                          |
-| --------------------- | ---------------------------------------------------- |
-| `init`                | Scaffold `desgin-duck/` directory with AGENTS.md and YAML templates |
-| `context <phase> [p]` | Generate AI context prompt for a workflow phase      |
-| `validate`            | Validate all YAML files and cross-references         |
-| `ui`                  | Start the live UI on port 3456                       |
+All commands are run from your **project root** via the `duck` wrapper:
+
+| Command                       | Description                                          |
+| ----------------------------- | ---------------------------------------------------- |
+| `./desgin-duck/duck init`     | Scaffold `desgin-duck/` directory with AGENTS.md and YAML templates |
+| `./desgin-duck/duck context <phase> [p]` | Generate AI context prompt for a workflow phase |
+| `./desgin-duck/duck validate` | Validate all YAML files and cross-references         |
+| `./desgin-duck/duck ui`       | Start the live UI on port 3456                       |
+| `./desgin-duck/duck upgrade`  | Run migrations and regenerate AGENTS.md              |
 
 ### Context Phases
 
@@ -174,6 +170,11 @@ refresh needed.
 
 ```
 desgin-duck/
+├── duck                                 # CLI wrapper (bash)
+├── duck.cmd                             # CLI wrapper (Windows)
+├── package.json                         # npm dependencies
+├── .gitignore                           # ignores node_modules/
+├── node_modules/                        # installed locally (gitignored)
 ├── AGENTS.md                            # AI agent instructions
 └── requirements/
     ├── vision.yaml                      # Vision, mission, core problem
@@ -245,16 +246,17 @@ Each option has: `id`, `title`, `description`, `pros` (array), `cons` (array).
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) (for building and running from source)
+- [Node.js](https://nodejs.org) (v18+) — required for building
+- [Bun](https://bun.sh) — optional, used for running tests
 
 ### Commands
 
 ```bash
-bun install            # Install dependencies
-bun test               # Run tests
-bun run build          # Build CLI + UI for distribution
-bun run dev:ui         # Dev mode with Vite HMR (for working on the UI)
-bun run src/cli.ts ui  # Run CLI from source
+npm install            # Install dependencies
+npm run build          # Build CLI + UI for distribution
+npm run dev:ui         # Dev mode with Vite HMR (for working on the UI)
+node dist/cli.js ui    # Run built CLI
+bun test               # Run tests (requires Bun)
 ```
 
 ### Project Structure

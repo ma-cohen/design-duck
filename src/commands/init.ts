@@ -1,8 +1,35 @@
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, chmodSync } from "node:fs";
 import { join } from "node:path";
 import { AGENT_MD } from "../templates/agents-md";
 import { writeProjectVersion } from "../infrastructure/version";
+
+/** package.json for the desgin-duck/ folder — depends on the tool from GitHub */
+const DUCK_PACKAGE_JSON = `{
+  "private": true,
+  "description": "Design Duck — local requirements management. Run: ./duck ui",
+  "dependencies": {
+    "design-duck": "github:ma-cohen/desgin-duck#main"
+  }
+}
+`;
+
+/** .gitignore for the desgin-duck/ folder — keep node_modules out of version control */
+const DUCK_GITIGNORE = `node_modules/
+`;
+
+/** Bash wrapper script — runs the CLI from node_modules */
+const DUCK_SH = `#!/usr/bin/env bash
+# Design Duck CLI wrapper — run from your project root: ./desgin-duck/duck <command>
+DIR="$(cd "$(dirname "$0")" && pwd)"
+node "$DIR/node_modules/design-duck/dist/cli.js" "$@"
+`;
+
+/** Windows wrapper script */
+const DUCK_CMD = `@echo off
+REM Design Duck CLI wrapper — run from your project root: .\\desgin-duck\\duck <command>
+node "%~dp0node_modules\\design-duck\\dist\\cli.js" %*
+`;
 
 const VISION_YAML = `# Vision, mission, and core problem
 vision: ""
@@ -151,6 +178,34 @@ export function init(targetDir: string = process.cwd()): void {
   writeProjectVersion(targetDir);
   console.log("  Created .version");
 
+  // Write package.json for local npm install
+  const pkgJsonPath = join(duckDir, "package.json");
+  if (!existsSync(pkgJsonPath)) {
+    writeFileSync(pkgJsonPath, DUCK_PACKAGE_JSON, "utf-8");
+    console.log("  Created package.json");
+  }
+
+  // Write .gitignore to exclude node_modules
+  const gitignorePath = join(duckDir, ".gitignore");
+  if (!existsSync(gitignorePath)) {
+    writeFileSync(gitignorePath, DUCK_GITIGNORE, "utf-8");
+    console.log("  Created .gitignore");
+  }
+
+  // Write duck wrapper scripts (bash + Windows)
+  const duckShPath = join(duckDir, "duck");
+  writeFileSync(duckShPath, DUCK_SH, "utf-8");
+  try {
+    chmodSync(duckShPath, 0o755);
+  } catch {
+    // chmod may fail on Windows — that's fine, they use duck.cmd
+  }
+  console.log("  Created duck (CLI wrapper)");
+
+  const duckCmdPath = join(duckDir, "duck.cmd");
+  writeFileSync(duckCmdPath, DUCK_CMD, "utf-8");
+  console.log("  Created duck.cmd (Windows CLI wrapper)");
+
   if (!existsSync(join(targetDir, ".git"))) {
     try {
       execSync("git init", { cwd: targetDir, stdio: "pipe" });
@@ -166,6 +221,9 @@ export function init(targetDir: string = process.cwd()): void {
 Design Duck initialized! Your folder structure:
 
   desgin-duck/
+  ├── duck                             # CLI wrapper (run: ./desgin-duck/duck <command>)
+  ├── duck.cmd                         # CLI wrapper (Windows)
+  ├── package.json                     # npm dependencies
   ├── AGENTS.md                        # AI agent instructions & workflow guide
   └── requirements/
       ├── vision.yaml                  # Vision, mission & core problem
@@ -177,6 +235,10 @@ Design Duck initialized! Your folder structure:
               ├── design.yaml          # Design decisions & options
               └── implementation.yaml  # Todos, validations & test specs
 
-Start by running: design-duck context vision
+Next steps:
+  1. cd desgin-duck && npm install     # one-time setup
+  2. cd ..
+  3. ./desgin-duck/duck context vision # start the workflow
+
 Or point your AI agent at desgin-duck/AGENTS.md for the full workflow.`);
 }

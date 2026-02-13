@@ -124,4 +124,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
   // 7. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
+  console.log(
+    "\nTo also update the CLI tool, run:\n  cd desgin-duck && npm update && cd .."
+  );
 }

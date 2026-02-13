@@ -5,21 +5,23 @@
  * files from a built-in HTTP server. No Vite or build tooling needed.
  */
 
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { startUiServer } from "../infrastructure/ui-server";
 
 /**
  * Finds the dist-ui/ directory containing pre-built UI assets.
  *
- * Works both when running from source (src/commands/ui.ts) and
- * when bundled (dist/cli.js).
+ * Works in three modes:
+ * - Bundled (dist/cli.js):                ../dist-ui/
+ * - Source  (src/commands/ui.ts):          ../../dist-ui/
+ * - npm-installed (node_modules/.../dist): ../dist-ui/
  */
 function findDistUiDir(): string {
-  // import.meta.dirname resolves to the directory of the running file:
-  // - Bundled: .../dist/        → ../dist-ui/ = .../dist-ui/
-  // - Source:  .../src/commands/ → ../../dist-ui/ = .../dist-ui/
-  const thisDir = import.meta.dirname;
+  // Support both Bun (import.meta.dirname) and Node.js (fileURLToPath)
+  const thisDir =
+    (import.meta as any).dirname ?? dirname(fileURLToPath(import.meta.url));
   const candidates = [
     join(thisDir, "..", "dist-ui"),
     join(thisDir, "..", "..", "dist-ui"),
