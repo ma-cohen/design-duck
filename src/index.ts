@@ -5,7 +5,7 @@
  * This is the main library entry point for programmatic usage.
  */
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
 // Domain exports will be added here as they are implemented
 // export * from './domain/requirements';

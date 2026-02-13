@@ -66,7 +66,6 @@ export function ui(): void {
     startUiServer({
       distUiDir,
       requirementsDir,
-      port: 3456,
       open: true,
     });
   } catch (err) {

@@ -85,6 +85,8 @@ const MIME_TYPES: Record<string, string> = {
  */
 export function startUiServer(options: UiServerOptions): UiServerHandle {
   const { port = 3456, distUiDir, requirementsDir, open = true } = options;
+  const maxPort = port + 100;
+  let currentPort = port;
 
   if (!existsSync(distUiDir)) {
     throw new Error(
@@ -128,7 +130,7 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
 
   // Create HTTP server
   const server = createServer((req, res) => {
-    const url = new URL(req.url || "/", `http://localhost:${port}`);
+    const url = new URL(req.url || "/", `http://localhost:${currentPort}`);
     const pathname = url.pathname;
 
     if (process.env.DEBUG) {
@@ -221,26 +223,8 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     serveFile(filePath, res);
   });
 
-  server.listen(port, () => {
-    const url = `http://localhost:${port}`;
-    console.log(`\nDesign Duck UI running at ${url}\n`);
-
-    if (open) {
-      openBrowser(url);
-    }
-  });
-
-  server.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
-      console.error(
-        `Port ${port} is already in use. Try a different port with --port.`,
-      );
-    } else {
-      console.error(`[design-duck:server] Server error: ${err.message}`);
-    }
-  });
-
-  return {
+  // Return handle — `port` is updated once the server successfully binds
+  const handle: UiServerHandle = {
     port,
     close: () => {
       console.log("[design-duck:server] Shutting down...");
@@ -252,6 +236,41 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       server.close();
     },
   };
+
+  // Retry-based port selection: try currentPort, increment on EADDRINUSE
+  function tryListen() {
+    server.listen(currentPort, () => {
+      handle.port = currentPort;
+      const url = `http://localhost:${currentPort}`;
+      if (currentPort !== port) {
+        console.log(`(Port ${port} was in use, using ${currentPort} instead)`);
+      }
+      console.log(`\nDesign Duck UI running at ${url}\n`);
+
+      if (open) {
+        openBrowser(url);
+      }
+    });
+  }
+
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      if (currentPort < maxPort) {
+        currentPort++;
+        tryListen();
+      } else {
+        console.error(
+          `All ports in range ${port}-${maxPort} are in use. Cannot start the UI server.`,
+        );
+      }
+    } else {
+      console.error(`[design-duck:server] Server error: ${err.message}`);
+    }
+  });
+
+  tryListen();
+
+  return handle;
 }
 
 // ---------------------------------------------------------------------------

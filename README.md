@@ -129,8 +129,9 @@ and `globalDecisionRefs` point to valid IDs.
 ./desgin-duck/duck ui
 ```
 
-Opens a browser at `http://localhost:3456` showing your vision, projects,
-designs, and implementation plans.
+Opens a browser showing your vision, projects, designs, and implementation
+plans. The server auto-selects an available port starting from 3456, so you
+can run multiple projects simultaneously.
 
 **Live reload**: edit any YAML file and the UI updates automatically — no
 refresh needed.
@@ -151,7 +152,7 @@ All commands are run from your **project root** via the `duck` wrapper:
 | `./desgin-duck/duck init`     | Scaffold `desgin-duck/` directory with AGENTS.md and YAML templates |
 | `./desgin-duck/duck context <phase> [p]` | Generate AI context prompt for a workflow phase |
 | `./desgin-duck/duck validate` | Validate all YAML files and cross-references         |
-| `./desgin-duck/duck ui`       | Start the live UI on port 3456                       |
+| `./desgin-duck/duck ui`       | Start the live UI (auto-selects port from 3456)      |
 | `./desgin-duck/duck upgrade`  | Run migrations and regenerate AGENTS.md              |
 
 ### Context Phases

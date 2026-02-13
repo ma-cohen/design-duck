@@ -12,8 +12,17 @@ state and updates automatically when files change.
 
 ## Workflow
 
-Follow these phases **in order**. Each phase has a CLI command that generates a
-context prompt — run it, read the output, then perform the work described.
+**Before you begin:** Start the live UI so the user can see progress in real time:
+
+\`\`\`bash
+design-duck ui
+\`\`\`
+
+This opens a browser dashboard that auto-updates as you edit the YAML files.
+The port is selected automatically, so it won't conflict with other projects.
+
+Then follow these phases **in order**. Each phase has a CLI command that generates
+a context prompt — run it, read the output, then perform the work described.
 
 ### 1. Define the Vision
 
@@ -100,7 +109,7 @@ desgin-duck/requirements/
 | Command                  | Purpose                              |
 | ------------------------ | ------------------------------------ |
 | \`design-duck init\`      | Scaffold the requirements directory  |
-| \`design-duck ui\`        | Start the live UI (port 3456)        |
+| \`design-duck ui\`        | Start the live UI (auto-selects port starting from 3456) |
 | \`design-duck validate\`  | Validate all YAML files              |
 | \`design-duck upgrade\`   | Upgrade to latest version            |
 

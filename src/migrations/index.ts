@@ -8,6 +8,7 @@
  */
 
 import type { Migration } from "./types";
+import { migration as m020 } from "./0.2.0";
 
 /**
  * All registered migrations, sorted by target version (oldest first).
@@ -15,7 +16,5 @@ import type { Migration } from "./types";
  * the user's current version and the installed version.
  */
 export const migrations: Migration[] = [
-  // Example: when version 0.2.0 is released, add:
-  // import { migration as m020 } from "./0.2.0";
-  // m020,
+  m020,
 ];
