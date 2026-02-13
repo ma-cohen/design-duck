@@ -2,15 +2,18 @@
 
 ## Overview
 
-Design Duck is a requirements gathering and management tool that helps teams capture, organize, and visualize software requirements. It uses a file-based architecture allowing an AI agent to edit requirements in real-time while a UI renders the current state, enabling collaborative human-agent requirement refinement.
+Design Duck is a vision-driven requirements gathering and management tool that helps teams capture, organize, and visualize software requirements. It uses a file-based architecture allowing an AI agent to edit requirements in real-time while a UI renders the current state, enabling collaborative human-agent requirement refinement.
+
+Requirements are organized around a central **vision document** that defines the mission and core problem. Individual **projects** each contain their own user-focused requirements, along with a statement of how the project helps achieve the overall vision.
 
 ## Design Guidelines
 
 ### Core Principles
 
+- **Vision-Driven** - All requirements trace back to a central vision, mission, and problem statement
+- **User Value Focus** - Requirements always center on how the product delivers value to users — no technical/derived requirements
+- **Per-Project Organization** - Requirements are split by project, each declaring how it serves the vision
 - **File-First Architecture** - All requirements stored as structured YAML files, enabling agent editing + live UI rendering
-- **User Value Focus** - Main requirements always center on how the product delivers value to users
-- **Requirement Traceability** - Derived requirements explicitly link back to the main requirements they support
 - **Zero-Config for Consumers** - Install the package, run the CLI, everything works. No build tooling required in consuming projects.
 
 ### Key Design Decisions
@@ -21,9 +24,9 @@ Design Duck is a requirements gathering and management tool that helps teams cap
 | Distribution | Bun package + pre-built UI | Self-contained CLI with built-in HTTP server and pre-built React UI | Requires Bun for building, but consumers need nothing |
 | Package consumption | No npm publish required | Consumable via git or local path; `npm install github:user/repo` or `npm install file:../path` | No central registry; users need repo access or local clone |
 | Runtime | Bun | Zero dependencies, built-in TypeScript, fast bundler | Newer runtime, less ecosystem |
-| Requirement Types | Main + Derived hierarchy | Clear separation between user value vs technical enablers | Requires discipline to categorize correctly |
+| Requirement Model | Vision + per-project user requirements | Clear separation: one vision drives multiple projects, each with user-value requirements only | No technical/derived requirements — those belong in architecture docs |
 | State Management | Zustand | Simple, SSE-friendly, works outside React for agent updates | Less structured than Redux |
-| Real-time Updates | File watcher + SSE | Server-side file watcher pushes events via SSE to browser; instant updates, no polling waste | Requires SSE-capable browser (all modern browsers) |
+| Real-time Updates | File watcher + SSE | Server-side recursive file watcher pushes events via SSE to browser; instant updates, no polling waste | Requires SSE-capable browser (all modern browsers) |
 | UI Serving | Built-in HTTP server | Self-contained, no Vite/webpack needed at runtime; pre-built UI shipped with package | UI must be rebuilt when changing components |
 | UI Framework | React + Tailwind | Fast iteration, modern tooling | Build-time only dependency |
 
@@ -38,18 +41,22 @@ Design Duck is a requirements gathering and management tool that helps teams cap
 │  │   AI Agent   │         │           File System                 │   │
 │  │  (Cursor)    │────────▶│                                      │   │
 │  │              │  writes │  requirements/                        │   │
-│  └──────────────┘         │  ├── project.yaml     (metadata)     │   │
-│                           │  ├── main.yaml        (user value)   │   │
-│                           │  └── derived.yaml     (technical)    │   │
+│  └──────────────┘         │  ├── vision.yaml     (vision/mission)│   │
+│                           │  └── projects/                        │   │
+│                           │      ├── <project-a>/                 │   │
+│                           │      │   └── requirements.yaml        │   │
+│                           │      └── <project-b>/                 │   │
+│                           │          └── requirements.yaml        │   │
 │                           └──────────┬───────────────────────────┘   │
 │                                      │                               │
-│                              watches │ (fs.watch)                    │
+│                              watches │ (fs.watch recursive)          │
 │                                      ▼                               │
 │  ┌───────────────────────────────────────────────────────────────┐   │
 │  │              Built-in HTTP Server (ui-server.ts)               │   │
 │  │                                                               │   │
 │  │  GET /                → Pre-built UI (dist-ui/index.html)     │   │
 │  │  GET /assets/*        → Pre-built JS/CSS (dist-ui/assets/)    │   │
+│  │  GET /api/projects    → JSON list of project names            │   │
 │  │  GET /requirements/*  → YAML files from consumer's project    │   │
 │  │  GET /events          → SSE stream (file change events)       │   │
 │  └───────────────────────────────┬───────────────────────────────┘   │
@@ -58,12 +65,12 @@ Design Duck is a requirements gathering and management tool that helps teams cap
 │                                  ▼                                   │
 │  ┌──────────────┐    ┌──────────────────────────────────────────┐   │
 │  │   React UI   │    │              Zustand Store                │   │
-│  │  (browser)   │◀──▶│  - mainRequirements[]                    │   │
-│  │              │    │  - derivedRequirements[]                  │   │
-│  │  - Tree View │    │  - loadFromFiles()  → fetch YAML via HTTP│   │
-│  │  - Cards     │    │  - startWatching()  → SSE + poll fallback│   │
-│  └──────────────┘    │  - stopWatching()                        │   │
-│                      └──────────────────────────────────────────┘   │
+│  │  (browser)   │◀──▶│  - vision: Vision                        │   │
+│  │              │    │  - projects: Record<string, Project>      │   │
+│  │  - Vision    │    │  - loadFromFiles()  → fetch YAML via HTTP│   │
+│  │  - Projects  │    │  - startWatching()  → SSE + poll fallback│   │
+│  │  - Cards     │    │  - stopWatching()                        │   │
+│  └──────────────┘    └──────────────────────────────────────────┘   │
 │                                                                       │
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -74,16 +81,29 @@ Design Duck is a requirements gathering and management tool that helps teams cap
 
 ```
 requirements/
-├── project.yaml                 # Project metadata
-├── main.yaml                    # All user-value requirements
-├── main-2.yaml                  # (optional) Pagination for large projects
-└── derived.yaml                 # All technical/enabling requirements
+├── vision.yaml                      # Vision, mission, core problem
+└── projects/
+    ├── <project-a>/
+    │   └── requirements.yaml        # Vision alignment + user requirements
+    └── <project-b>/
+        └── requirements.yaml
 ```
 
-### Main Requirements File (main.yaml)
+### Vision File (vision.yaml)
 
 ```yaml
-# main.yaml - User-value requirements
+# vision.yaml - Vision, mission, and core problem
+vision: "A world where every team can efficiently gather and manage requirements"
+mission: "Provide a simple, AI-powered tool for collaborative requirements gathering"
+problem: "Teams struggle to capture, organize, and maintain software requirements effectively"
+```
+
+### Project Requirements File (requirements.yaml)
+
+```yaml
+# requirements.yaml - Per-project user-value requirements
+visionAlignment: "This project helps achieve the vision by enabling users to quickly search and find products"
+
 requirements:
   - id: req-001
     description: Users need to quickly find products by searching with partial names
@@ -98,39 +118,15 @@ requirements:
     status: draft
 ```
 
-### Derived Requirements File (derived.yaml)
+### Requirement Fields
 
-```yaml
-# derived.yaml - Technical/enabling requirements
-requirements:
-  - id: der-001
-    description: Use Elasticsearch for search backend to meet performance needs
-    derivedFrom:
-      - req-001
-    rationale: Enables sub-200ms search, team has experience, hiring pool available
-    category: technical  # technical | operational | quality | constraint
-    priority: high
-    status: draft
-
-  - id: der-002
-    description: Use React with TypeScript for frontend development
-    derivedFrom:
-      - req-001
-      - req-002
-    rationale: Large hiring pool, team expertise, type safety reduces bugs
-    category: operational
-    priority: high
-    status: draft
-```
-
-### Derived Requirement Categories
-
-| Category | Purpose | Examples |
-|----------|---------|----------|
-| `technical` | Technology/framework choices | React, TypeScript, specific DB |
-| `operational` | Team/hiring/process needs | Framework for hiring, documentation |
-| `quality` | Stability/performance enablers | Testing strategy, monitoring |
-| `constraint` | External limitations | Compliance, budget, timeline |
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier (e.g. `req-001`) |
+| `description` | Yes | What the user needs |
+| `userValue` | Yes | Why this matters to the user |
+| `priority` | Yes | `high`, `medium`, or `low` |
+| `status` | Yes | `draft`, `review`, or `approved` |
 
 ## Domain Structure
 
@@ -138,21 +134,21 @@ requirements:
 src/
 ├── domain/                      # Pure business logic (no React)
 │   └── requirements/
-│       ├── requirement.ts       # Types & validation
+│       ├── requirement.ts       # Types & validation (Requirement, Vision)
 │       └── requirement.test.ts
 │
 ├── infrastructure/              # File system & server operations
 │   ├── yaml-parser.ts          # Pure YAML parsing (browser-safe, no Node imports)
 │   ├── file-store.ts           # Filesystem readers (Node/Bun only, re-exports parsers)
-│   ├── file-watcher.ts         # Watch for external YAML changes (fs.watch)
-│   ├── ui-server.ts            # Built-in HTTP server (static files + YAML + SSE)
+│   ├── file-watcher.ts         # Watch for external YAML changes (recursive fs.watch)
+│   ├── ui-server.ts            # Built-in HTTP server (static files + YAML + SSE + projects API)
 │   └── vite-requirements-plugin.ts  # Vite plugin (dev mode only)
 │
 ├── stores/                      # Zustand stores (browser)
 │   └── requirements-store.ts   # State + loadFromFiles() + SSE watching
 │
 ├── commands/                    # CLI command handlers
-│   ├── init.ts                 # Scaffold requirements/
+│   ├── init.ts                 # Scaffold requirements/ with vision + example project
 │   ├── ui.ts                   # Start built-in UI server
 │   └── validate.ts             # Validate YAML files
 │
@@ -162,21 +158,22 @@ src/
 │   └── index.css               # Tailwind styles
 │
 └── components/                  # React UI components
-    ├── RequirementList.tsx
-    ├── RequirementCard.tsx
-    └── RequirementTree.tsx      # Shows main → derived relationships
+    ├── VisionHeader.tsx         # Displays vision, mission, problem
+    ├── ProjectSection.tsx       # Project with vision alignment + requirements
+    ├── RequirementCard.tsx      # Single requirement card
+    └── RequirementList.tsx      # List of requirement cards
 ```
 
 ## Key Flows
 
 ### Agent Creates/Updates Requirement
 ```
-1. Agent edits main.yaml or derived.yaml (adds/modifies requirement)
-2. File watcher (fs.watch) detects YAML change
+1. Agent edits vision.yaml or projects/<name>/requirements.yaml
+2. Recursive file watcher (fs.watch) detects YAML change
 3. Server sends SSE event "requirements-changed" to all connected browsers
 4. Zustand store receives SSE event, calls loadFromFiles()
-5. Store fetches updated YAML via HTTP from the server
-6. UI re-renders with updated requirements
+5. Store fetches project list via /api/projects, then fetches each project's YAML + vision.yaml
+6. UI re-renders with updated vision and project requirements
 ```
 
 ### User Views Requirements
@@ -185,8 +182,9 @@ src/
 2. Built-in HTTP server starts on localhost:3456
 3. Server serves pre-built React UI from dist-ui/
 4. Server serves requirements/ YAML files from the project's working directory
-5. Server starts file watcher on requirements/ directory
-6. Browser connects to SSE endpoint for live updates
+5. Server provides /api/projects endpoint listing project directories
+6. Server starts recursive file watcher on requirements/ directory
+7. Browser connects to SSE endpoint for live updates
 ```
 
 ## Build Pipeline
@@ -238,9 +236,9 @@ bun test
 
 | Command | Description |
 |---------|-------------|
-| `init` | Creates `requirements/` folder with project.yaml, main.yaml, derived.yaml. Runs `git init` if not already a repo. |
+| `init` | Creates `requirements/` folder with vision.yaml and an example project. Runs `git init` if not already a repo. |
 | `ui` | Starts built-in HTTP server on port 3456, opens browser, watches for YAML file changes with live reload via SSE |
-| `validate` | Validates all requirement files against schema, reports errors to stdout |
+| `validate` | Validates all requirement files (vision + all projects) against schema, reports errors to stdout |
 
 ## Out of Scope (Phase 1)
 
@@ -248,3 +246,40 @@ bun test
 - Multi-user collaboration
 - Export to other formats (Word, PDF)
 - Integration with project management tools
+
+## Changelog
+
+### Change 1: Vision-Driven Per-Project Requirements
+**Date:** 2026-02-11
+
+**What Changed:**
+- Replaced flat main.yaml + derived.yaml structure with vision.yaml + per-project requirements
+- Removed derived requirements entirely — requirements are user-focused only
+- Added vision document (vision, mission, problem statement)
+- Each project has a visionAlignment statement explaining how it serves the vision
+- File watcher updated to recursive watching for nested project directories
+- Server added /api/projects endpoint for dynamic project discovery
+- UI restructured to show vision header + per-project requirement sections
+
+**Why:**
+- Requirements should only describe user value, not technical decisions (those belong in architecture docs)
+- A central vision document ensures all projects align to the same goal
+- Per-project splitting enables better organization for multi-project efforts
+
+**Impact:**
+- All domain types changed (DerivedRequirement removed, Vision added, MainRequirement → Requirement)
+- All infrastructure files updated (parser, file-store, watcher, server)
+- Store completely restructured for multi-project support
+- UI components replaced (RequirementTree → VisionHeader + ProjectSection)
+- CLI commands updated (init, validate)
+- All tests rewritten
+
+**Previous:**
+- `requirements/project.yaml` + `requirements/main.yaml` + `requirements/derived.yaml`
+- MainRequirement + DerivedRequirement types
+- Single-project, flat structure
+
+**New:**
+- `requirements/vision.yaml` + `requirements/projects/<name>/requirements.yaml`
+- Vision + Requirement types
+- Multi-project, vision-driven structure

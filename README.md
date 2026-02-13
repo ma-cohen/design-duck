@@ -1,8 +1,10 @@
 # Design Duck
 
-Requirements gathering and management tool for human-agent collaboration.
+Vision-driven requirements gathering and management tool for human-agent collaboration.
 
 Design Duck uses a file-based architecture: an AI agent edits YAML requirement files while a live UI renders the current state. When the agent (or anyone) modifies a requirement file, the UI updates instantly.
+
+Requirements are organized around a central **vision document** and split **per project**, with each project declaring how it helps achieve the vision.
 
 ## Quick Start
 
@@ -23,17 +25,32 @@ npx design-duck init
 ```
 
 This creates a `requirements/` directory with:
-- `project.yaml` -- project metadata
-- `main.yaml` -- user-value requirements
-- `derived.yaml` -- technical/enabling requirements
+- `vision.yaml` -- vision, mission, and core problem statement
+- `projects/example-project/requirements.yaml` -- example project requirements
 
 It also runs `git init` if the directory isn't already a git repo.
 
-### 3. Add Requirements
+### 3. Define Your Vision
 
-Edit `requirements/main.yaml`:
+Edit `requirements/vision.yaml`:
 
 ```yaml
+vision: "A world where every team manages requirements efficiently"
+mission: "Provide simple, AI-powered tools for collaborative requirements gathering"
+problem: "Teams struggle to capture, organize, and maintain software requirements"
+```
+
+### 4. Add Project Requirements
+
+Create a project directory and add `requirements.yaml`:
+
+```
+requirements/projects/my-project/requirements.yaml
+```
+
+```yaml
+visionAlignment: "This project helps achieve the vision by enabling efficient product search"
+
 requirements:
   - id: req-001
     description: Users can search products by name
@@ -42,35 +59,21 @@ requirements:
     status: draft        # draft | review | approved
 ```
 
-Edit `requirements/derived.yaml`:
-
-```yaml
-requirements:
-  - id: der-001
-    description: Use Elasticsearch for search backend
-    derivedFrom:
-      - req-001
-    rationale: Enables sub-200ms search performance
-    category: technical  # technical | operational | quality | constraint
-    priority: high
-    status: draft
-```
-
-### 4. Validate
+### 5. Validate
 
 ```bash
 npx design-duck validate
 ```
 
-Checks all requirement files against the schema and reports errors.
+Checks the vision file and all project requirement files against the schema.
 
-### 5. View in UI
+### 6. View in UI
 
 ```bash
 npx design-duck ui
 ```
 
-Opens a browser at `http://localhost:3456` showing your requirements in a traceability tree (main requirements with their derived requirements nested underneath).
+Opens a browser at `http://localhost:3456` showing your vision and per-project requirements.
 
 **Live reload**: edit any YAML file and the UI updates automatically -- no refresh needed. This works via a file watcher and Server-Sent Events.
 
@@ -78,8 +81,8 @@ Opens a browser at `http://localhost:3456` showing your requirements in a tracea
 
 | Command    | Description |
 |------------|-------------|
-| `init`     | Scaffold `requirements/` directory with starter files |
-| `validate` | Validate all requirement files against the schema |
+| `init`     | Scaffold `requirements/` directory with vision and example project |
+| `validate` | Validate vision and all project requirement files against the schema |
 | `ui`       | Start the UI server with live reload on port 3456 |
 
 ## How It Works
@@ -88,7 +91,7 @@ Opens a browser at `http://localhost:3456` showing your requirements in a tracea
 You / AI Agent                    Design Duck
 ─────────────                    ───────────
                                  
-Edit main.yaml  ──────────────▶  File watcher detects change
+Edit requirements.yaml ────────▶  File watcher detects change
                                        │
                                        ▼
                                  Server sends SSE event
@@ -102,34 +105,29 @@ Edit main.yaml  ──────────────▶  File watcher dete
 
 The `ui` command starts a self-contained HTTP server that:
 - Serves the pre-built React UI (no build tools needed in your project)
-- Serves your `requirements/*.yaml` files
-- Watches for file changes and pushes live updates to the browser via SSE
+- Serves your `requirements/*.yaml` files (vision + per-project)
+- Provides a `/api/projects` endpoint listing available projects
+- Watches for file changes recursively and pushes live updates via SSE
 
-## Requirement Types
+## File Structure
 
-### Main Requirements (`main.yaml`)
+```
+requirements/
+├── vision.yaml                          # Vision, mission, core problem
+└── projects/
+    ├── project-a/
+    │   └── requirements.yaml            # Vision alignment + requirements
+    └── project-b/
+        └── requirements.yaml
+```
 
-Capture what value the product delivers to users.
+## Requirement Fields
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `id` | Yes | Unique identifier (e.g. `req-001`) |
 | `description` | Yes | What the user needs |
 | `userValue` | Yes | Why this matters to the user |
-| `priority` | Yes | `high`, `medium`, or `low` |
-| `status` | Yes | `draft`, `review`, or `approved` |
-
-### Derived Requirements (`derived.yaml`)
-
-Technical or enabling requirements that support main requirements.
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier (e.g. `der-001`) |
-| `description` | Yes | What needs to be done |
-| `derivedFrom` | Yes | Array of main requirement IDs this supports |
-| `rationale` | Yes | Why this approach was chosen |
-| `category` | Yes | `technical`, `operational`, `quality`, or `constraint` |
 | `priority` | Yes | `high`, `medium`, or `low` |
 | `status` | Yes | `draft`, `review`, or `approved` |
 
@@ -154,10 +152,10 @@ bun run src/cli.ts ui  # Run CLI from source
 ```
 src/
 ├── commands/           # CLI command handlers (init, ui, validate)
-├── domain/             # Requirement types and validation
+├── domain/             # Requirement types and validation (Requirement, Vision)
 ├── infrastructure/     # File I/O, YAML parsing, file watcher, HTTP server
 ├── stores/             # Zustand state management
-├── components/         # React UI components
+├── components/         # React UI components (VisionHeader, ProjectSection, etc.)
 └── ui/                 # React entry point
 ```
 

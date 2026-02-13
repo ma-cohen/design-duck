@@ -93,7 +93,7 @@ export function watchRequirementsDir(
   let watcher: FSWatcher;
 
   try {
-    watcher = watch(requirementsDir, (eventType, filename) => {
+    watcher = watch(requirementsDir, { recursive: true }, (eventType, filename) => {
       if (closed) return;
 
       // On some platforms (macOS) filename can be null.

@@ -1,9 +1,9 @@
 /**
  * Zustand store for managing requirements state.
  *
- * Fetches main.yaml and derived.yaml over HTTP (served by the built-in
- * Design Duck server), then parses and validates them using the shared
- * file-store parsing logic.
+ * Fetches vision.yaml and per-project requirements.yaml files over HTTP
+ * (served by the built-in Design Duck server), then parses and validates
+ * them using the shared parsing logic.
  *
  * Supports auto-reload via file watching:
  * - Primary: connects to the server's SSE endpoint (/events) for instant
@@ -13,12 +13,12 @@
 
 import { create } from "zustand";
 import {
-  parseMainRequirementsYaml,
-  parseDerivedRequirementsYaml,
+  parseVisionYaml,
+  parseProjectRequirementsYaml,
 } from "../infrastructure/yaml-parser";
 import type {
-  MainRequirement,
-  DerivedRequirement,
+  Vision,
+  ProjectRequirements,
 } from "../domain/requirements/requirement";
 
 /** Options for configuring file watching behavior. */
@@ -38,13 +38,18 @@ export interface WatchOptions {
    * @default "/events"
    */
   eventsUrl?: string;
+  /**
+   * API endpoint URL for listing projects.
+   * @default "/api/projects"
+   */
+  projectsApiUrl?: string;
 }
 
 export interface RequirementsState {
-  /** Validated main (user-value) requirements. */
-  mainRequirements: MainRequirement[];
-  /** Validated derived (technical/enabling) requirements. */
-  derivedRequirements: DerivedRequirement[];
+  /** Validated vision document. */
+  vision: Vision | null;
+  /** Per-project requirements keyed by project name. */
+  projects: Record<string, ProjectRequirements>;
   /** True while a loadFromFiles() call is in progress. */
   loading: boolean;
   /** Human-readable error message from the last failed load, or null. */
@@ -53,13 +58,15 @@ export interface RequirementsState {
   watching: boolean;
 
   /**
-   * Fetches main.yaml and derived.yaml from the given base path, parses them,
-   * and replaces the current store state with the result.
+   * Fetches vision.yaml and all project requirements from the server,
+   * parses them, and replaces the current store state with the result.
    *
    * @param requirementsPath - URL path prefix where the YAML files are served.
    *   Defaults to "/requirements" (served by the built-in Design Duck server).
+   * @param projectsApiUrl - URL for the projects list API.
+   *   Defaults to "/api/projects".
    */
-  loadFromFiles: (requirementsPath?: string) => Promise<void>;
+  loadFromFiles: (requirementsPath?: string, projectsApiUrl?: string) => Promise<void>;
 
   /**
    * Starts watching for requirement file changes.
@@ -94,48 +101,65 @@ export function _getWatcherInternals() {
 // ---------------------------------------------------------------------------
 
 export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
-  mainRequirements: [],
-  derivedRequirements: [],
+  vision: null,
+  projects: {},
   loading: false,
   error: null,
   watching: false,
 
-  loadFromFiles: async (requirementsPath = "/requirements") => {
+  loadFromFiles: async (requirementsPath = "/requirements", projectsApiUrl = "/api/projects") => {
     console.log("[design-duck:store] Loading requirements...");
     set({ loading: true, error: null });
 
     try {
-      const [mainRes, derivedRes] = await Promise.all([
-        fetch(`${requirementsPath}/main.yaml`),
-        fetch(`${requirementsPath}/derived.yaml`),
-      ]);
-
-      if (!mainRes.ok) {
+      // Fetch vision
+      const visionRes = await fetch(`${requirementsPath}/vision.yaml`);
+      if (!visionRes.ok) {
         throw new Error(
-          `Failed to fetch main.yaml: ${mainRes.status} ${mainRes.statusText}`,
+          `Failed to fetch vision.yaml: ${visionRes.status} ${visionRes.statusText}`,
         );
       }
-      if (!derivedRes.ok) {
+      const visionContent = await visionRes.text();
+      const vision = parseVisionYaml(visionContent);
+
+      // Fetch project list
+      const projectsRes = await fetch(projectsApiUrl);
+      if (!projectsRes.ok) {
         throw new Error(
-          `Failed to fetch derived.yaml: ${derivedRes.status} ${derivedRes.statusText}`,
+          `Failed to fetch projects list: ${projectsRes.status} ${projectsRes.statusText}`,
         );
       }
+      const projectNames: string[] = await projectsRes.json();
 
-      const mainContent = await mainRes.text();
-      const derivedContent = await derivedRes.text();
+      // Fetch all project requirements in parallel
+      const projects: Record<string, ProjectRequirements> = {};
+      const projectFetches = projectNames.map(async (name) => {
+        const res = await fetch(`${requirementsPath}/projects/${name}/requirements.yaml`);
+        if (!res.ok) {
+          throw new Error(
+            `Failed to fetch ${name}/requirements.yaml: ${res.status} ${res.statusText}`,
+          );
+        }
+        const content = await res.text();
+        projects[name] = parseProjectRequirementsYaml(content);
+      });
 
-      const mainRequirements = parseMainRequirementsYaml(mainContent);
-      const derivedRequirements = parseDerivedRequirementsYaml(derivedContent);
+      await Promise.all(projectFetches);
+
+      const totalReqs = Object.values(projects).reduce(
+        (sum, p) => sum + p.requirements.length,
+        0,
+      );
 
       set({
-        mainRequirements,
-        derivedRequirements,
+        vision,
+        projects,
         loading: false,
         error: null,
       });
 
       console.log(
-        `[design-duck:store] Loaded ${mainRequirements.length} main and ${derivedRequirements.length} derived requirements`,
+        `[design-duck:store] Loaded vision + ${Object.keys(projects).length} project(s) with ${totalReqs} total requirements`,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -156,6 +180,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       intervalMs = 2000,
       requirementsPath = "/requirements",
       eventsUrl = "/events",
+      projectsApiUrl = "/api/projects",
     } = options ?? {};
 
     console.log("[design-duck:store] Starting file watcher integration");
@@ -173,7 +198,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
           console.log(
             "[design-duck:store] SSE event received, reloading requirements",
           );
-          get().loadFromFiles(requirementsPath);
+          get().loadFromFiles(requirementsPath, projectsApiUrl);
         });
 
         es.addEventListener("connected", () => {
@@ -205,7 +230,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
     pollingTimer = setInterval(() => {
       console.log("[design-duck:store] Polling for requirement changes");
-      get().loadFromFiles(requirementsPath);
+      get().loadFromFiles(requirementsPath, projectsApiUrl);
     }, intervalMs);
 
     set({ watching: true });

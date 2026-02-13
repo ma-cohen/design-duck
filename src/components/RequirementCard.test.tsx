@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { renderToString } from "react-dom/server";
 import { RequirementCard } from "./RequirementCard";
-import type { MainRequirement } from "../domain/requirements/requirement";
+import type { Requirement } from "../domain/requirements/requirement";
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const HIGH_DRAFT: MainRequirement = {
+const HIGH_DRAFT: Requirement = {
   id: "req-001",
   description: "Users need to search products",
   userValue: "Reduces time to find products",
@@ -15,7 +15,7 @@ const HIGH_DRAFT: MainRequirement = {
   status: "draft",
 };
 
-const MEDIUM_REVIEW: MainRequirement = {
+const MEDIUM_REVIEW: Requirement = {
   id: "req-002",
   description: "Users can save wishlists",
   userValue: "Return to considered items",
@@ -23,7 +23,7 @@ const MEDIUM_REVIEW: MainRequirement = {
   status: "review",
 };
 
-const LOW_APPROVED: MainRequirement = {
+const LOW_APPROVED: Requirement = {
   id: "req-003",
   description: "Users can export orders",
   userValue: "Keep records of purchases",

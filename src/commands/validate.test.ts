@@ -12,7 +12,7 @@ describe("validate", () => {
   beforeEach(() => {
     testDir = join(tmpdir(), `design-duck-test-${Date.now()}`);
     reqDir = join(testDir, "desgin-duck", "requirements");
-    mkdirSync(reqDir, { recursive: true });
+    mkdirSync(join(reqDir, "projects", "test-project"), { recursive: true });
     process.exitCode = 0;
   });
 
@@ -27,167 +27,164 @@ describe("validate", () => {
     expect(process.exitCode).toBe(1);
   });
 
-  test("validates empty main.yaml and derived.yaml successfully", () => {
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: []", "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
+  test("validates valid vision.yaml and project requirements", () => {
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "align"\nrequirements: []',
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(0);
   });
 
-  test("validates valid main.yaml with requirements", () => {
-    const mainYaml = `requirements:
+  test("validates valid project with requirements", () => {
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
+    const projectYaml = `visionAlignment: "Helps with search"
+requirements:
   - id: req-001
     description: Users need to search products
     userValue: Reduces time to find products
     priority: high
     status: draft
 `;
-    writeFileSync(join(reqDir, "main.yaml"), mainYaml, "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      projectYaml,
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(0);
   });
 
-  test("validates valid derived.yaml with requirements", () => {
-    const derivedYaml = `requirements:
-  - id: der-001
-    description: Use Elasticsearch for search
-    derivedFrom:
-      - req-001
-    rationale: Enables fast search
-    category: technical
-    priority: high
-    status: draft
-`;
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: []", "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), derivedYaml, "utf-8");
-    
-    validate(testDir);
-    expect(process.exitCode).toBe(0);
-  });
+  test("exits with code 1 when vision.yaml is missing", () => {
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "a"\nrequirements: []',
+      "utf-8",
+    );
 
-  test("exits with code 1 when main.yaml is missing", () => {
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
     validate(testDir);
     expect(process.exitCode).toBe(1);
   });
 
-  test("exits with code 1 when derived.yaml is missing", () => {
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: []", "utf-8");
-    
+  test("exits with code 1 when vision.yaml has invalid content", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: ""\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "a"\nrequirements: []',
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(1);
   });
 
-  test("exits with code 1 when main.yaml has malformed YAML", () => {
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: [invalid yaml", "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
-    validate(testDir);
-    expect(process.exitCode).toBe(1);
-  });
-
-  test("exits with code 1 when main.yaml has invalid requirement", () => {
-    const mainYaml = `requirements:
+  test("exits with code 1 when project has invalid requirement", () => {
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
+    const projectYaml = `visionAlignment: "align"
+requirements:
   - id: req-001
     description: Missing userValue field
     priority: high
     status: draft
 `;
-    writeFileSync(join(reqDir, "main.yaml"), mainYaml, "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      projectYaml,
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(1);
   });
 
-  test("exits with code 1 when derived.yaml has invalid requirement", () => {
-    const derivedYaml = `requirements:
-  - id: der-001
-    description: Missing derivedFrom field
-    rationale: Some rationale
-    category: technical
-    priority: high
-    status: draft
-`;
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: []", "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), derivedYaml, "utf-8");
-    
-    validate(testDir);
-    expect(process.exitCode).toBe(1);
-  });
-
-  test("exits with code 1 when main.yaml has invalid priority", () => {
-    const mainYaml = `requirements:
+  test("exits with code 1 when project has invalid priority", () => {
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
+    const projectYaml = `visionAlignment: "align"
+requirements:
   - id: req-001
     description: Users need to search products
     userValue: Reduces time to find products
     priority: invalid
     status: draft
 `;
-    writeFileSync(join(reqDir, "main.yaml"), mainYaml, "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), "requirements: []", "utf-8");
-    
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      projectYaml,
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(1);
   });
 
-  test("exits with code 1 when derived.yaml has invalid category", () => {
-    const derivedYaml = `requirements:
-  - id: der-001
-    description: Use Elasticsearch for search
-    derivedFrom:
-      - req-001
-    rationale: Enables fast search
-    category: invalid
-    priority: high
-    status: draft
-`;
-    writeFileSync(join(reqDir, "main.yaml"), "requirements: []", "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), derivedYaml, "utf-8");
-    
-    validate(testDir);
-    expect(process.exitCode).toBe(1);
-  });
+  test("validates multiple projects", () => {
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
 
-  test("validates multiple requirements in both files", () => {
-    const mainYaml = `requirements:
+    mkdirSync(join(reqDir, "projects", "second-project"), { recursive: true });
+
+    const project1Yaml = `visionAlignment: "First alignment"
+requirements:
   - id: req-001
     description: Users need to search products
     userValue: Reduces time to find products
     priority: high
     status: draft
+`;
+    const project2Yaml = `visionAlignment: "Second alignment"
+requirements:
   - id: req-002
-    description: Users can save items to wishlist
+    description: Users can save wishlists
     userValue: Increases conversion
     priority: medium
     status: review
 `;
-    const derivedYaml = `requirements:
-  - id: der-001
-    description: Use Elasticsearch for search
-    derivedFrom:
-      - req-001
-    rationale: Enables fast search
-    category: technical
-    priority: high
-    status: draft
-  - id: der-002
-    description: Use React with TypeScript
-    derivedFrom:
-      - req-001
-      - req-002
-    rationale: Large hiring pool
-    category: operational
-    priority: high
-    status: approved
-`;
-    writeFileSync(join(reqDir, "main.yaml"), mainYaml, "utf-8");
-    writeFileSync(join(reqDir, "derived.yaml"), derivedYaml, "utf-8");
-    
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      project1Yaml,
+      "utf-8",
+    );
+    writeFileSync(
+      join(reqDir, "projects", "second-project", "requirements.yaml"),
+      project2Yaml,
+      "utf-8",
+    );
+
+    validate(testDir);
+    expect(process.exitCode).toBe(0);
+  });
+
+  test("handles no projects gracefully", () => {
+    rmSync(join(reqDir, "projects"), { recursive: true });
+    writeFileSync(
+      join(reqDir, "vision.yaml"),
+      'vision: "v"\nmission: "m"\nproblem: "p"',
+      "utf-8",
+    );
+
     validate(testDir);
     expect(process.exitCode).toBe(0);
   });

@@ -1,10 +1,11 @@
 /**
  * Built-in HTTP server for the Design Duck UI.
  *
- * Serves three things:
+ * Serves four things:
  * 1. Pre-built static UI files from dist-ui/ (shipped with the package)
  * 2. Requirements YAML files from the consumer's project (process.cwd())
  * 3. An SSE endpoint (/events) for real-time file change notifications
+ * 4. A /api/projects endpoint listing available project directories
  *
  * This removes the need for Vite or any build tooling in consuming projects.
  */
@@ -14,7 +15,7 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 import { execSync } from "node:child_process";
 import { watchRequirementsDir } from "./file-watcher";
@@ -130,6 +131,12 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       return;
     }
 
+    // API: list project directories
+    if (pathname === "/api/projects") {
+      handleProjectsList(requirementsDir, res);
+      return;
+    }
+
     // Serve requirements YAML files from the consumer's project
     if (pathname.startsWith("/requirements/")) {
       const filename = pathname.slice("/requirements/".length);
@@ -209,6 +216,40 @@ function handleSSE(
       `[design-duck:server] SSE client disconnected (${clients.size} remaining)`,
     );
   });
+}
+
+// ---------------------------------------------------------------------------
+// Projects API
+// ---------------------------------------------------------------------------
+
+function handleProjectsList(
+  requirementsDir: string,
+  res: ServerResponse,
+): void {
+  try {
+    const projectsDir = join(requirementsDir, "projects");
+    let projects: string[] = [];
+
+    if (existsSync(projectsDir)) {
+      const entries = readdirSync(projectsDir);
+      projects = entries.filter((entry) => {
+        try {
+          return statSync(join(projectsDir, entry)).isDirectory();
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.end(JSON.stringify(projects));
+  } catch {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Failed to list projects" }));
+  }
 }
 
 // ---------------------------------------------------------------------------

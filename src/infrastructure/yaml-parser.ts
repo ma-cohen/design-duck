@@ -10,80 +10,74 @@
  */
 
 import { load as parseYaml } from "js-yaml";
-import type { MainRequirement, DerivedRequirement } from "../domain/requirements/requirement";
+import type { Vision, Requirement, ProjectRequirements } from "../domain/requirements/requirement";
 import {
-  assertMainRequirement,
-  assertDerivedRequirement,
+  assertVision,
+  assertRequirement,
 } from "../domain/requirements/requirement";
 
 /**
- * Parses a YAML string into validated MainRequirement objects.
+ * Parses a YAML string into a validated Vision object.
  *
- * @param content - Raw YAML string from main.yaml
- * @returns Array of validated main requirements
+ * @param content - Raw YAML string from vision.yaml
+ * @returns Validated vision object
  * @throws Error if malformed YAML or validation fails
  */
-export function parseMainRequirementsYaml(content: string): MainRequirement[] {
+export function parseVisionYaml(content: string): Vision {
   const parsed = parseYaml(content) as unknown;
 
   if (!parsed || typeof parsed !== "object") {
-    throw new Error("main.yaml must contain a YAML object");
+    throw new Error("vision.yaml must contain a YAML object");
   }
 
-  const file = parsed as Record<string, unknown>;
-
-  if (!Array.isArray(file.requirements)) {
-    throw new Error("main.yaml must have a 'requirements' array");
+  try {
+    assertVision(parsed);
+    return parsed;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`vision.yaml: ${msg}`);
   }
-
-  const requirements: MainRequirement[] = [];
-
-  for (let i = 0; i < file.requirements.length; i++) {
-    const raw = file.requirements[i];
-    try {
-      assertMainRequirement(raw);
-      requirements.push(raw);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`main.yaml requirement at index ${i}: ${msg}`);
-    }
-  }
-
-  return requirements;
 }
 
 /**
- * Parses a YAML string into validated DerivedRequirement objects.
+ * Parses a YAML string into validated ProjectRequirements (visionAlignment + requirements).
  *
- * @param content - Raw YAML string from derived.yaml
- * @returns Array of validated derived requirements
+ * @param content - Raw YAML string from a project's requirements.yaml
+ * @returns Validated project requirements object
  * @throws Error if malformed YAML or validation fails
  */
-export function parseDerivedRequirementsYaml(content: string): DerivedRequirement[] {
+export function parseProjectRequirementsYaml(content: string): ProjectRequirements {
   const parsed = parseYaml(content) as unknown;
 
   if (!parsed || typeof parsed !== "object") {
-    throw new Error("derived.yaml must contain a YAML object");
+    throw new Error("requirements.yaml must contain a YAML object");
   }
 
   const file = parsed as Record<string, unknown>;
 
-  if (!Array.isArray(file.requirements)) {
-    throw new Error("derived.yaml must have a 'requirements' array");
+  if (typeof file.visionAlignment !== "string" || file.visionAlignment.trim() === "") {
+    throw new Error("requirements.yaml must have a non-empty 'visionAlignment' string");
   }
 
-  const requirements: DerivedRequirement[] = [];
+  if (!Array.isArray(file.requirements)) {
+    throw new Error("requirements.yaml must have a 'requirements' array");
+  }
+
+  const requirements: Requirement[] = [];
 
   for (let i = 0; i < file.requirements.length; i++) {
     const raw = file.requirements[i];
     try {
-      assertDerivedRequirement(raw);
+      assertRequirement(raw);
       requirements.push(raw);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`derived.yaml requirement at index ${i}: ${msg}`);
+      throw new Error(`requirements.yaml requirement at index ${i}: ${msg}`);
     }
   }
 
-  return requirements;
+  return {
+    visionAlignment: file.visionAlignment as string,
+    requirements,
+  };
 }

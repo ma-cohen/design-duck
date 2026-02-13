@@ -1,13 +1,13 @@
 /**
- * Renders a list of main requirements using RequirementCard.
+ * Renders a list of requirements using RequirementCard.
  * Handles empty, loading, and error states.
  */
 
-import type { MainRequirement } from "../domain/requirements/requirement";
+import type { Requirement } from "../domain/requirements/requirement";
 import { RequirementCard } from "./RequirementCard";
 
 export interface RequirementListProps {
-  requirements: MainRequirement[];
+  requirements: Requirement[];
   loading: boolean;
   error: string | null;
 }
@@ -20,7 +20,7 @@ export function RequirementList({ requirements, loading, error }: RequirementLis
   if (loading) {
     return (
       <div className="py-12 text-center" data-testid="requirements-loading">
-        <p className="text-sm text-gray-500">Loading requirements…</p>
+        <p className="text-sm text-gray-500">Loading requirements...</p>
       </div>
     );
   }
@@ -43,9 +43,9 @@ export function RequirementList({ requirements, loading, error }: RequirementLis
     return (
       <div className="py-12 text-center" data-testid="requirements-empty">
         <p className="text-sm text-gray-500">
-          No requirements found. Add requirements to{" "}
+          No requirements found. Add requirements to your project's{" "}
           <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono">
-            desgin-duck/requirements/main.yaml
+            requirements.yaml
           </code>{" "}
           to get started.
         </p>

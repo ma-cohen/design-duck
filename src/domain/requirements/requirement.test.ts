@@ -1,13 +1,69 @@
 import { describe, expect, test } from "bun:test";
 import {
-  validateMainRequirement,
-  validateDerivedRequirement,
-  assertMainRequirement,
-  assertDerivedRequirement,
+  validateVision,
+  validateRequirement,
+  assertVision,
+  assertRequirement,
 } from "./requirement";
 
-describe("validateMainRequirement", () => {
-  test("accepts valid main requirement", () => {
+describe("validateVision", () => {
+  test("accepts valid vision", () => {
+    const v = {
+      vision: "A world where teams manage requirements efficiently",
+      mission: "Provide simple tools for requirement gathering",
+      problem: "Teams struggle with requirements management",
+    };
+    expect(validateVision(v)).toEqual({ valid: true });
+  });
+
+  test("rejects non-object", () => {
+    expect(validateVision(null)).toEqual({
+      valid: false,
+      errors: ["Vision must be an object"],
+    });
+    expect(validateVision("x")).toEqual({
+      valid: false,
+      errors: ["Vision must be an object"],
+    });
+  });
+
+  test("rejects missing or empty vision field", () => {
+    const v = { vision: "", mission: "m", problem: "p" };
+    const out = validateVision(v);
+    expect(out.valid).toBe(false);
+    expect((out as { errors: string[] }).errors).toEqual(
+      expect.arrayContaining([expect.stringContaining("vision")]),
+    );
+  });
+
+  test("rejects missing or empty mission field", () => {
+    const v = { vision: "v", mission: "", problem: "p" };
+    const out = validateVision(v);
+    expect(out.valid).toBe(false);
+    expect((out as { errors: string[] }).errors).toEqual(
+      expect.arrayContaining([expect.stringContaining("mission")]),
+    );
+  });
+
+  test("rejects missing or empty problem field", () => {
+    const v = { vision: "v", mission: "m", problem: "" };
+    const out = validateVision(v);
+    expect(out.valid).toBe(false);
+    expect((out as { errors: string[] }).errors).toEqual(
+      expect.arrayContaining([expect.stringContaining("problem")]),
+    );
+  });
+
+  test("rejects all fields empty", () => {
+    const v = { vision: "", mission: "", problem: "" };
+    const out = validateVision(v);
+    expect(out.valid).toBe(false);
+    expect((out as { errors: string[] }).errors).toHaveLength(3);
+  });
+});
+
+describe("validateRequirement", () => {
+  test("accepts valid requirement", () => {
     const r = {
       id: "req-001",
       description: "Users need to search by partial names",
@@ -15,26 +71,26 @@ describe("validateMainRequirement", () => {
       priority: "high",
       status: "draft",
     };
-    expect(validateMainRequirement(r)).toEqual({ valid: true });
+    expect(validateRequirement(r)).toEqual({ valid: true });
   });
 
   test("rejects non-object", () => {
-    expect(validateMainRequirement(null)).toEqual({
+    expect(validateRequirement(null)).toEqual({
       valid: false,
       errors: ["Requirement must be an object"],
     });
-    expect(validateMainRequirement("x")).toEqual({
+    expect(validateRequirement("x")).toEqual({
       valid: false,
       errors: ["Requirement must be an object"],
     });
   });
 
   test("rejects missing or invalid id", () => {
-    expect(validateMainRequirement({ id: "" })).toEqual({
+    expect(validateRequirement({ id: "" })).toEqual({
       valid: false,
       errors: expect.arrayContaining([expect.stringContaining("id")]),
     });
-    expect(validateMainRequirement({ id: "  " })).toEqual({
+    expect(validateRequirement({ id: "  " })).toEqual({
       valid: false,
       errors: expect.arrayContaining([expect.stringContaining("id")]),
     });
@@ -48,7 +104,7 @@ describe("validateMainRequirement", () => {
       priority: "critical",
       status: "draft",
     };
-    const out = validateMainRequirement(r);
+    const out = validateRequirement(r);
     expect(out.valid).toBe(false);
     expect((out as { errors: string[] }).errors).toEqual(
       expect.arrayContaining([expect.stringContaining("priority")]),
@@ -63,7 +119,7 @@ describe("validateMainRequirement", () => {
       priority: "high",
       status: "done",
     };
-    const out = validateMainRequirement(r);
+    const out = validateRequirement(r);
     expect(out.valid).toBe(false);
     expect((out as { errors: string[] }).errors).toEqual(
       expect.arrayContaining([expect.stringContaining("status")]),
@@ -71,63 +127,24 @@ describe("validateMainRequirement", () => {
   });
 });
 
-describe("validateDerivedRequirement", () => {
-  test("accepts valid derived requirement", () => {
-    const r = {
-      id: "der-001",
-      description: "Use Elasticsearch for search",
-      derivedFrom: ["req-001"],
-      rationale: "Enables sub-200ms search",
-      category: "technical",
-      priority: "high",
-      status: "draft",
+describe("assertVision", () => {
+  test("does not throw for valid vision", () => {
+    const v = {
+      vision: "v",
+      mission: "m",
+      problem: "p",
     };
-    expect(validateDerivedRequirement(r)).toEqual({ valid: true });
+    expect(() => assertVision(v)).not.toThrow();
   });
 
-  test("rejects non-object", () => {
-    expect(validateDerivedRequirement(null)).toEqual({
-      valid: false,
-      errors: ["Requirement must be an object"],
-    });
-  });
-
-  test("rejects invalid derivedFrom", () => {
-    const r = {
-      id: "der-001",
-      description: "x",
-      derivedFrom: ["req-001", ""],
-      rationale: "y",
-      category: "technical",
-      priority: "high",
-      status: "draft",
-    };
-    const out = validateDerivedRequirement(r);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("derivedFrom")]),
-    );
-  });
-
-  test("rejects invalid category", () => {
-    const r = {
-      id: "der-001",
-      description: "x",
-      derivedFrom: ["req-001"],
-      rationale: "y",
-      category: "other",
-      priority: "high",
-      status: "draft",
-    };
-    const out = validateDerivedRequirement(r);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("category")]),
+  test("throws for invalid vision", () => {
+    expect(() => assertVision({ vision: "" })).toThrow(
+      /Invalid vision/,
     );
   });
 });
 
-describe("assertMainRequirement", () => {
+describe("assertRequirement", () => {
   test("does not throw for valid requirement", () => {
     const r = {
       id: "req-001",
@@ -136,33 +153,12 @@ describe("assertMainRequirement", () => {
       priority: "high",
       status: "draft",
     };
-    expect(() => assertMainRequirement(r)).not.toThrow();
+    expect(() => assertRequirement(r)).not.toThrow();
   });
 
   test("throws for invalid requirement", () => {
-    expect(() => assertMainRequirement({ id: "" })).toThrow(
-      /Invalid main requirement/,
-    );
-  });
-});
-
-describe("assertDerivedRequirement", () => {
-  test("does not throw for valid requirement", () => {
-    const r = {
-      id: "der-001",
-      description: "x",
-      derivedFrom: ["req-001"],
-      rationale: "y",
-      category: "technical",
-      priority: "high",
-      status: "draft",
-    };
-    expect(() => assertDerivedRequirement(r)).not.toThrow();
-  });
-
-  test("throws for invalid requirement", () => {
-    expect(() => assertDerivedRequirement({ id: "" })).toThrow(
-      /Invalid derived requirement/,
+    expect(() => assertRequirement({ id: "" })).toThrow(
+      /Invalid requirement/,
     );
   });
 });

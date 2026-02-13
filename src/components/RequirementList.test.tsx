@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { renderToString } from "react-dom/server";
 import { RequirementList } from "./RequirementList";
-import type { MainRequirement } from "../domain/requirements/requirement";
+import type { Requirement } from "../domain/requirements/requirement";
 
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const REQUIREMENTS: MainRequirement[] = [
+const REQUIREMENTS: Requirement[] = [
   {
     id: "req-001",
     description: "Users need to search products",
@@ -76,7 +76,7 @@ describe("RequirementList", () => {
     );
     expect(html).toContain("requirements-empty");
     expect(html).toContain("No requirements found");
-    expect(html).toContain("main.yaml");
+    expect(html).toContain("requirements.yaml");
   });
 
   // --- Normal rendering ---

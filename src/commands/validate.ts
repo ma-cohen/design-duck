@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readMainRequirements, readDerivedRequirements } from "../infrastructure/file-store";
+import { readVision, listProjects, readProjectRequirements } from "../infrastructure/file-store";
 
 /**
  * Validates all requirement files in the desgin-duck/requirements/ directory.
@@ -26,48 +26,58 @@ export function validate(targetDir: string = process.cwd()): void {
   }
 
   let hasErrors = false;
-  let mainCount = 0;
-  let derivedCount = 0;
 
-  // Validate main.yaml
-  console.log("Validating main.yaml...");
+  // Validate vision.yaml
+  console.log("Validating vision.yaml...");
   try {
-    const mainReqs = readMainRequirements(reqDir);
-    mainCount = mainReqs.length;
-    console.log(`✓ main.yaml is valid (${mainCount} requirements)`);
+    readVision(reqDir);
+    console.log("✓ vision.yaml is valid");
     
     if (process.env.DEBUG) {
-      console.error(`[design-duck:validate] Successfully validated ${mainCount} main requirements`);
+      console.error("[design-duck:validate] Successfully validated vision.yaml");
     }
   } catch (err) {
     hasErrors = true;
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`✗ main.yaml validation failed:`);
+    console.error("✗ vision.yaml validation failed:");
     console.error(`  ${msg}`);
     
     if (process.env.DEBUG) {
-      console.error(`[design-duck:validate] main.yaml error:`, err);
+      console.error("[design-duck:validate] vision.yaml error:", err);
     }
   }
 
-  // Validate derived.yaml
-  console.log("Validating derived.yaml...");
-  try {
-    const derivedReqs = readDerivedRequirements(reqDir);
-    derivedCount = derivedReqs.length;
-    console.log(`✓ derived.yaml is valid (${derivedCount} requirements)`);
-    
-    if (process.env.DEBUG) {
-      console.error(`[design-duck:validate] Successfully validated ${derivedCount} derived requirements`);
-    }
-  } catch (err) {
-    hasErrors = true;
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`✗ derived.yaml validation failed:`);
-    console.error(`  ${msg}`);
-    
-    if (process.env.DEBUG) {
-      console.error(`[design-duck:validate] derived.yaml error:`, err);
+  // Validate all project requirements
+  const projects = listProjects(reqDir);
+  let totalRequirements = 0;
+
+  if (projects.length === 0) {
+    console.log("No projects found in desgin-duck/requirements/projects/.");
+  }
+
+  for (const projectName of projects) {
+    console.log(`Validating project "${projectName}"...`);
+    try {
+      const projectReqs = readProjectRequirements(reqDir, projectName);
+      totalRequirements += projectReqs.requirements.length;
+      console.log(
+        `✓ ${projectName}/requirements.yaml is valid (${projectReqs.requirements.length} requirements)`,
+      );
+      
+      if (process.env.DEBUG) {
+        console.error(
+          `[design-duck:validate] Successfully validated project "${projectName}" with ${projectReqs.requirements.length} requirements`,
+        );
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${projectName}/requirements.yaml validation failed:`);
+      console.error(`  ${msg}`);
+      
+      if (process.env.DEBUG) {
+        console.error(`[design-duck:validate] ${projectName} error:`, err);
+      }
     }
   }
 
@@ -77,7 +87,9 @@ export function validate(targetDir: string = process.cwd()): void {
     console.error("Validation failed. Fix the errors above and try again.");
     process.exitCode = 1;
   } else {
-    console.log(`All requirements are valid! (${mainCount} main, ${derivedCount} derived)`);
+    console.log(
+      `All requirements are valid! (${projects.length} project(s), ${totalRequirements} total requirements)`,
+    );
     process.exitCode = 0;
   }
 }

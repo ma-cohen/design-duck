@@ -1,8 +1,8 @@
 /**
- * Renders a single main requirement as a card with priority and status badges.
+ * Renders a single requirement as a card with priority and status badges.
  */
 
-import type { MainRequirement, Priority, Status } from "../domain/requirements/requirement";
+import type { Requirement, Priority, Status } from "../domain/requirements/requirement";
 
 const PRIORITY_STYLES: Record<Priority, string> = {
   high: "bg-red-100 text-red-800",
@@ -17,7 +17,7 @@ const STATUS_STYLES: Record<Status, string> = {
 };
 
 export interface RequirementCardProps {
-  requirement: MainRequirement;
+  requirement: Requirement;
 }
 
 export function RequirementCard({ requirement }: RequirementCardProps) {
