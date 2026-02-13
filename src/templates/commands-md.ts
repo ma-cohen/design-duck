@@ -421,10 +421,11 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 ## Steps
 
-1. Update the npm package to get the latest CLI:
+1. Fetch the latest CLI from GitHub (a clean reinstall is required for GitHub
+   dependencies — \`npm update\` alone does not reliably refresh them):
 
    \`\`\`bash
-   cd desgin-duck && npm update && cd ..
+   cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd ..
    \`\`\`
 
 2. Run the upgrade command to apply migrations and regenerate files:

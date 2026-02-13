@@ -2,10 +2,11 @@
  * design-duck upgrade – migrate an existing project to the latest version.
  *
  * 1. Read desgin-duck/.version (default to "0.1.0" if missing)
- * 2. Compare to the installed VERSION
- * 3. Collect and run applicable migrations
- * 4. Regenerate AGENTS.md
- * 5. Write the new .version
+ * 2. Detect stale CLI (project version ahead of installed)
+ * 3. Check if already up-to-date
+ * 4. Collect and run applicable migrations
+ * 5. Regenerate AGENTS.md & command files
+ * 6. Write the new .version
  */
 
 import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
@@ -65,13 +66,25 @@ export function upgrade(targetDir: string = process.cwd()): void {
     );
   }
 
-  // 2. Check if already up-to-date
-  if (compareSemver(currentVersion, VERSION) >= 0) {
+  // 2. Detect stale CLI — .version is ahead of the installed package
+  if (compareSemver(currentVersion, VERSION) > 0) {
+    console.error(
+      `Version mismatch: your project is at v${currentVersion} but the installed CLI is v${VERSION}.\n` +
+      `The CLI was not updated properly. Run a clean reinstall:\n\n` +
+      `  cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd ..\n\n` +
+      `Then run 'dd upgrade' again.`
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  // 3. Check if already up-to-date
+  if (compareSemver(currentVersion, VERSION) === 0) {
     console.log(`Already up to date (v${VERSION}).`);
     return;
   }
 
-  // 3. Collect applicable migrations
+  // 4. Collect applicable migrations
   const applicable = migrations.filter(
     (m) =>
       compareSemver(m.version, currentVersion) > 0 &&
@@ -87,10 +100,10 @@ export function upgrade(targetDir: string = process.cwd()): void {
     }
     console.log("");
 
-    // 4. Back up AGENTS.md before any migrations
+    // 5. Back up AGENTS.md before any migrations
     backupFile(join(duckDir, "AGENTS.md"), duckDir, currentVersion);
 
-    // 5. Run each migration in order
+    // 6. Run each migration in order
     for (const m of applicable) {
       if (process.env.DEBUG) {
         console.error(`[design-duck:upgrade] running migration -> v${m.version}`);
@@ -113,7 +126,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
     console.log("  No schema migrations needed.");
   }
 
-  // 6. Regenerate AGENTS.md (always — it's tool-generated)
+  // 7. Regenerate AGENTS.md (always — it's tool-generated)
   if (applicable.length === 0) {
     // Back up even when there are no schema migrations, since AGENTS.md may have changed
     backupFile(join(duckDir, "AGENTS.md"), duckDir, currentVersion);
@@ -122,7 +135,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
   writeFileSync(agentMdPath, AGENT_MD, "utf-8");
   console.log("  Regenerated AGENTS.md");
 
-  // 7. Regenerate command markdown files (always — they're tool-generated)
+  // 8. Regenerate command markdown files (always — they're tool-generated)
   const commandsDir = join(duckDir, "commands");
   // Back up existing command files before overwriting
   if (existsSync(commandsDir)) {
@@ -136,10 +149,11 @@ export function upgrade(targetDir: string = process.cwd()): void {
   }
   console.log("  Regenerated commands/ (tag-and-go agent shortcuts)");
 
-  // 8. Write the new version
+  // 9. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
   console.log(
-    "\nTo also update the CLI tool, run:\n  cd desgin-duck && npm update && cd .."
+    "\nTip: If a future upgrade says the CLI is stale, run:\n" +
+    "  cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd .."
   );
 }
