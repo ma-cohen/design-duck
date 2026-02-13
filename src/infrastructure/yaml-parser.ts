@@ -116,5 +116,7 @@ export function parseProjectDesignYaml(content: string): ProjectDesign {
     }
   }
 
-  return { decisions };
+  const notes = typeof file.notes === "string" ? file.notes : null;
+
+  return { notes, decisions };
 }

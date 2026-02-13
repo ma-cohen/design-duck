@@ -8,6 +8,7 @@ import type { ProjectDesign } from "../domain/requirements/requirement";
 // ---------------------------------------------------------------------------
 
 const DESIGN: ProjectDesign = {
+  notes: "Some research notes about the project architecture.",
   decisions: [
     {
       id: "dec-001",
@@ -64,7 +65,7 @@ describe("DesignSection", () => {
   });
 
   test("renders empty state when no decisions", () => {
-    const empty: ProjectDesign = { decisions: [] };
+    const empty: ProjectDesign = { notes: null, decisions: [] };
     const html = renderToString(<DesignSection design={empty} projectName="test-project" />);
     expect(html).toContain("design-section-empty");
     expect(html).toContain("No design decisions yet");

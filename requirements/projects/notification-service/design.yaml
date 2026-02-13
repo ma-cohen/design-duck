@@ -1,0 +1,128 @@
+notes: |
+  Benchmarks show we need < 500ms delivery for in-app notifications.
+  Email can be async with up to 5 min delay acceptable.
+  Consider future integration with Slack/Teams webhooks.
+  
+  Email providers evaluated: SendGrid, AWS SES, Postmark.
+  SendGrid has the best developer experience but SES is cheapest at scale.
+decisions:
+  - id: DEC-NOTIF-001
+    topic: "Notification delivery mechanism"
+    context: "We need to decide how to deliver real-time in-app notifications to connected users"
+    requirementRefs:
+      - NOTIF-003
+    options:
+      - id: websockets
+        title: "WebSockets"
+        description: "Persistent bidirectional connection for real-time push"
+        pros:
+          - "True real-time delivery"
+          - "Low latency"
+          - "Bidirectional communication"
+        cons:
+          - "More complex infrastructure"
+          - "Connection management overhead"
+      - id: sse
+        title: "Server-Sent Events (SSE)"
+        description: "One-way server push over HTTP"
+        pros:
+          - "Simpler than WebSockets"
+          - "Built on standard HTTP"
+          - "Auto-reconnect built into the browser"
+        cons:
+          - "One-directional only"
+          - "Limited browser connection pool"
+      - id: polling
+        title: "Short polling"
+        description: "Client polls the server at regular intervals"
+        pros:
+          - "Simplest to implement"
+          - "Works everywhere"
+        cons:
+          - "Higher latency"
+          - "Wastes bandwidth with empty responses"
+          - "Not truly real-time"
+    chosen: sse
+    chosenReason: "SSE gives us real-time push with simpler infrastructure than WebSockets, and we already use it in Design Duck itself"
+  - id: DEC-NOTIF-002
+    topic: "Email delivery provider"
+    context: "We need a reliable email delivery service for sending notification emails at scale"
+    requirementRefs:
+      - NOTIF-001
+    options:
+      - id: sendgrid
+        title: "SendGrid"
+        description: "Twilio SendGrid cloud email API"
+        pros:
+          - "Excellent developer experience and docs"
+          - "Built-in template engine"
+          - "Good deliverability reputation"
+        cons:
+          - "More expensive at high volume"
+          - "Vendor lock-in on templates"
+      - id: aws-ses
+        title: "AWS SES"
+        description: "Amazon Simple Email Service"
+        pros:
+          - "Very cost-effective at scale ($0.10 per 1000 emails)"
+          - "Integrates natively with our AWS infrastructure"
+          - "High sending limits"
+        cons:
+          - "Minimal built-in tooling"
+          - "Sandbox mode requires manual approval"
+          - "Bounce/complaint handling needs custom setup"
+      - id: postmark
+        title: "Postmark"
+        description: "Transactional email service focused on deliverability"
+        pros:
+          - "Best-in-class deliverability"
+          - "Fast delivery times"
+          - "Great analytics dashboard"
+        cons:
+          - "Most expensive option"
+          - "Only transactional email (no marketing)"
+    chosen: null
+    chosenReason: null
+  - id: DEC-NOTIF-003
+    topic: "Notification storage and queuing"
+    context: "We need to decide how to store notification state and queue outgoing notifications reliably"
+    requirementRefs:
+      - NOTIF-001
+      - NOTIF-002
+      - NOTIF-003
+    options:
+      - id: postgres-queue
+        title: "PostgreSQL with a notifications table"
+        description: "Store notifications in a Postgres table, poll for pending deliveries"
+        pros:
+          - "No additional infrastructure"
+          - "ACID guarantees"
+          - "Easy to query notification history"
+        cons:
+          - "Polling adds latency"
+          - "Table can grow very large"
+          - "Not designed for high-throughput queuing"
+      - id: redis-queue
+        title: "Redis Streams"
+        description: "Use Redis Streams as a lightweight message queue with Postgres for history"
+        pros:
+          - "Very low latency"
+          - "Built-in consumer groups for scaling"
+          - "Lightweight and fast"
+        cons:
+          - "Additional infrastructure to maintain"
+          - "Data not as durable as Postgres"
+          - "Need two systems (Redis + Postgres)"
+      - id: dedicated-mq
+        title: "Dedicated message queue (RabbitMQ/SQS)"
+        description: "Use a dedicated message broker for notification delivery"
+        pros:
+          - "Purpose-built for reliable message delivery"
+          - "Dead letter queues for failed notifications"
+          - "Decouples producers from consumers"
+        cons:
+          - "Significant operational overhead"
+          - "Overkill for our current scale"
+          - "Additional cost and complexity"
+    chosen: null
+    chosenReason: null

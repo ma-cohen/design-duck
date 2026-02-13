@@ -26,6 +26,7 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
   const [addingDecision, setAddingDecision] = useState(false);
   const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [editingNotes, setEditingNotes] = useState(false);
 
   console.debug(
     `[design-duck:ui] Rendering DesignSection with ${design.decisions.length} decisions`,
@@ -53,14 +54,14 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
       newDecisions = [...design.decisions, updated];
     }
 
-    await saveProjectDesign(projectName, { decisions: newDecisions });
+    await saveProjectDesign(projectName, { notes: design.notes, decisions: newDecisions });
     setEditingDecision(null);
     setAddingDecision(false);
   };
 
   const handleDeleteDecision = async (decId: string) => {
     const newDecisions = design.decisions.filter((d) => d.id !== decId);
-    await saveProjectDesign(projectName, { decisions: newDecisions });
+    await saveProjectDesign(projectName, { notes: design.notes, decisions: newDecisions });
     setConfirmDelete(null);
   };
 
@@ -68,19 +69,56 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
     const newDecisions = design.decisions.map((d) =>
       d.id === decisionId ? { ...d, options: newOptions } : d,
     );
-    await saveProjectDesign(projectName, { decisions: newDecisions });
+    await saveProjectDesign(projectName, { notes: design.notes, decisions: newDecisions });
   };
 
   const handleChooseOption = async (decisionId: string, optionId: string | null, reason: string | null) => {
     const newDecisions = design.decisions.map((d) =>
       d.id === decisionId ? { ...d, chosen: optionId, chosenReason: reason } : d,
     );
-    await saveProjectDesign(projectName, { decisions: newDecisions });
+    await saveProjectDesign(projectName, { notes: design.notes, decisions: newDecisions });
+  };
+
+  const handleSaveNotes = async (values: Record<string, string | string[]>) => {
+    const newNotes = (values.notes as string).trim() || null;
+    await saveProjectDesign(projectName, { notes: newNotes, decisions: design.decisions });
+    setEditingNotes(false);
   };
 
   return (
     <>
       <div data-testid="design-section">
+        {/* Notes block */}
+        <div className="mb-5" data-testid="design-notes">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+              Research &amp; Notes
+            </span>
+            <button
+              type="button"
+              onClick={() => setEditingNotes(true)}
+              className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+              data-testid={`edit-notes-${projectName}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              {design.notes ? "Edit Notes" : "Add Notes"}
+            </button>
+          </div>
+          {design.notes ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800">
+                {design.notes}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 italic">
+              No notes yet. Add research, links, or analysis to help inform design decisions.
+            </p>
+          )}
+        </div>
+
         <div className="mb-3 flex items-center justify-between">
           <h4 className="text-sm font-semibold text-gray-700">
             Design Decisions
@@ -141,6 +179,19 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
           }}
           onSave={handleSaveDecision}
           onClose={() => setEditingDecision(null)}
+        />
+      )}
+
+      {/* Edit notes modal */}
+      {editingNotes && (
+        <EditModal
+          title="Edit Research & Notes"
+          fields={[
+            { key: "notes", label: "Notes", type: "textarea", required: false, placeholder: "Research, links, analysis, or any context that helps inform design decisions..." },
+          ]}
+          initialValues={{ notes: design.notes ?? "" }}
+          onSave={handleSaveNotes}
+          onClose={() => setEditingNotes(false)}
         />
       )}
 

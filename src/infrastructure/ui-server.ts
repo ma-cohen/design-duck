@@ -413,6 +413,12 @@ async function handlePutDesign(
   try {
     const raw = JSON.parse(await readBody(req));
 
+    // Validate optional notes field
+    if (raw.notes !== undefined && raw.notes !== null && typeof raw.notes !== "string") {
+      jsonResponse(res, 400, { error: "notes must be a string or null" });
+      return;
+    }
+
     if (!Array.isArray(raw.decisions)) {
       jsonResponse(res, 400, { error: "decisions must be an array" });
       return;
@@ -428,7 +434,14 @@ async function handlePutDesign(
       }
     }
 
-    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    // Build clean object for YAML serialization (notes + decisions)
+    const toWrite: Record<string, unknown> = {};
+    if (raw.notes) {
+      toWrite.notes = raw.notes;
+    }
+    toWrite.decisions = raw.decisions;
+
+    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
     const dirPath = join(requirementsDir, "projects", projectName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");

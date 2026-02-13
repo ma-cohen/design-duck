@@ -132,6 +132,8 @@ export interface Decision {
 
 /** A project's design document containing decisions. */
 export interface ProjectDesign {
+  /** Free-text notes for research, links, analysis, or any context that helps inform decisions. */
+  notes: string | null;
   decisions: Decision[];
 }
 
