@@ -15,10 +15,12 @@ import { create } from "zustand";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
+  parseProjectDesignYaml,
 } from "../infrastructure/yaml-parser";
 import type {
   Vision,
   ProjectRequirements,
+  ProjectDesign,
 } from "../domain/requirements/requirement";
 
 /** Options for configuring file watching behavior. */
@@ -50,6 +52,8 @@ export interface RequirementsState {
   vision: Vision | null;
   /** Per-project requirements keyed by project name. */
   projects: Record<string, ProjectRequirements>;
+  /** Per-project design documents keyed by project name (only present when design.yaml exists). */
+  designs: Record<string, ProjectDesign>;
   /** True while a loadFromFiles() call is in progress. */
   loading: boolean;
   /** Human-readable error message from the last failed load, or null. */
@@ -103,6 +107,7 @@ export function _getWatcherInternals() {
 export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   vision: null,
   projects: {},
+  designs: {},
   loading: false,
   error: null,
   watching: false,
@@ -131,9 +136,11 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const projectNames: string[] = await projectsRes.json();
 
-      // Fetch all project requirements in parallel
+      // Fetch all project requirements and designs in parallel
       const projects: Record<string, ProjectRequirements> = {};
+      const designs: Record<string, ProjectDesign> = {};
       const projectFetches = projectNames.map(async (name) => {
+        // Fetch requirements (required)
         const res = await fetch(`${requirementsPath}/projects/${name}/requirements.yaml`);
         if (!res.ok) {
           throw new Error(
@@ -142,6 +149,17 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         }
         const content = await res.text();
         projects[name] = parseProjectRequirementsYaml(content);
+
+        // Fetch design (optional — 404 is fine)
+        try {
+          const designRes = await fetch(`${requirementsPath}/projects/${name}/design.yaml`);
+          if (designRes.ok) {
+            const designContent = await designRes.text();
+            designs[name] = parseProjectDesignYaml(designContent);
+          }
+        } catch {
+          // design.yaml not available — that's fine
+        }
       });
 
       await Promise.all(projectFetches);
@@ -150,16 +168,21 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         (sum, p) => sum + p.requirements.length,
         0,
       );
+      const totalDecisions = Object.values(designs).reduce(
+        (sum, d) => sum + d.decisions.length,
+        0,
+      );
 
       set({
         vision,
         projects,
+        designs,
         loading: false,
         error: null,
       });
 
       console.log(
-        `[design-duck:store] Loaded vision + ${Object.keys(projects).length} project(s) with ${totalReqs} total requirements`,
+        `[design-duck:store] Loaded vision + ${Object.keys(projects).length} project(s) with ${totalReqs} requirements and ${totalDecisions} design decisions`,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

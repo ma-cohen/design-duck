@@ -3,7 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { readVision, listProjects, readProjectRequirements } from "./file-store";
+import { readVision, listProjects, readProjectRequirements, readProjectDesign } from "./file-store";
 
 describe("readVision", () => {
   let testDir: string;
@@ -229,5 +229,111 @@ requirements:
     const result = readProjectRequirements(testDir, "my-project");
     expect(result.requirements).toHaveLength(1);
     expect(result.requirements[0].id).toBe("req-001");
+  });
+});
+
+describe("readProjectDesign", () => {
+  let testDir: string;
+
+  beforeEach(() => {
+    testDir = join(tmpdir(), `design-duck-test-${Date.now()}`);
+    mkdirSync(join(testDir, "projects", "my-project"), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(testDir, { recursive: true, force: true });
+  });
+
+  test("returns null when design.yaml does not exist", () => {
+    const result = readProjectDesign(testDir, "my-project");
+    expect(result).toBeNull();
+  });
+
+  test("parses valid design.yaml with one decision", () => {
+    const yaml = `decisions:
+  - id: dec-001
+    topic: Search Technology
+    context: We need fast search
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Elasticsearch
+        description: Dedicated search engine
+        pros:
+          - Fast search
+        cons:
+          - Complex setup
+    chosen: opt-a
+    chosenReason: Performance is critical
+`;
+    writeFileSync(join(testDir, "projects", "my-project", "design.yaml"), yaml, "utf-8");
+
+    const result = readProjectDesign(testDir, "my-project");
+    expect(result).not.toBeNull();
+    expect(result!.decisions).toHaveLength(1);
+    expect(result!.decisions[0].id).toBe("dec-001");
+    expect(result!.decisions[0].topic).toBe("Search Technology");
+    expect(result!.decisions[0].options).toHaveLength(1);
+    expect(result!.decisions[0].chosen).toBe("opt-a");
+  });
+
+  test("parses design with null chosen fields", () => {
+    const yaml = `decisions:
+  - id: dec-001
+    topic: Undecided topic
+    context: Still exploring
+    requirementRefs: []
+    options:
+      - id: opt-a
+        title: Option A
+        description: First option
+        pros:
+          - Pro A
+        cons:
+          - Con A
+    chosen: null
+    chosenReason: null
+`;
+    writeFileSync(join(testDir, "projects", "my-project", "design.yaml"), yaml, "utf-8");
+
+    const result = readProjectDesign(testDir, "my-project");
+    expect(result).not.toBeNull();
+    expect(result!.decisions[0].chosen).toBeNull();
+    expect(result!.decisions[0].chosenReason).toBeNull();
+  });
+
+  test("throws error for invalid design.yaml content", () => {
+    writeFileSync(join(testDir, "projects", "my-project", "design.yaml"), "just a string", "utf-8");
+    expect(() => readProjectDesign(testDir, "my-project")).toThrow(/must contain a YAML object/);
+  });
+
+  test("throws error when decisions field is missing", () => {
+    writeFileSync(join(testDir, "projects", "my-project", "design.yaml"), "something: else", "utf-8");
+    expect(() => readProjectDesign(testDir, "my-project")).toThrow(/must have a 'decisions' array/);
+  });
+
+  test("throws error when a decision has invalid option", () => {
+    const yaml = `decisions:
+  - id: dec-001
+    topic: Topic
+    context: Context
+    requirementRefs: []
+    options:
+      - id: ""
+        title: Bad option
+        description: Missing id
+        pros: []
+        cons: []
+    chosen: null
+    chosenReason: null
+`;
+    writeFileSync(join(testDir, "projects", "my-project", "design.yaml"), yaml, "utf-8");
+    expect(() => readProjectDesign(testDir, "my-project")).toThrow(/decision at index 0/);
+  });
+
+  test("returns null for nonexistent project directory", () => {
+    const result = readProjectDesign(testDir, "nonexistent");
+    expect(result).toBeNull();
   });
 });

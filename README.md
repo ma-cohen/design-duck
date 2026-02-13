@@ -57,15 +57,49 @@ requirements:
     userValue: Quickly find desired products
 ```
 
-### 5. Validate
+### 5. Add Design Decisions (Optional)
+
+Create a `design.yaml` alongside the project's `requirements.yaml` to document design alternatives and tradeoffs:
+
+```yaml
+# requirements/projects/my-project/design.yaml
+decisions:
+  - id: dec-001
+    topic: Search Technology
+    context: "We need sub-second search across millions of products"
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Elasticsearch
+        description: Dedicated search engine
+        pros:
+          - Sub-200ms full-text search
+          - Scales horizontally
+        cons:
+          - Operational overhead
+      - id: opt-b
+        title: PostgreSQL full-text search
+        description: Use existing database
+        pros:
+          - No extra infrastructure
+        cons:
+          - Slower for large datasets
+    chosen: opt-a
+    chosenReason: "Performance is critical for user experience"
+```
+
+Design files are optional -- create them when you're ready to start a design session.
+
+### 6. Validate
 
 ```bash
 npx design-duck validate
 ```
 
-Checks the vision file and all project requirement files against the schema.
+Checks the vision file, all project requirement files, and any design files against the schema. Also verifies that design decision `requirementRefs` point to actual requirement IDs.
 
-### 6. View in UI
+### 7. View in UI
 
 ```bash
 npx design-duck ui
@@ -80,7 +114,7 @@ Opens a browser at `http://localhost:3456` showing your vision and per-project r
 | Command    | Description |
 |------------|-------------|
 | `init`     | Scaffold `requirements/` directory with vision and example project |
-| `validate` | Validate vision and all project requirement files against the schema |
+| `validate` | Validate vision, requirement, and design files; cross-reference requirement refs |
 | `ui`       | Start the UI server with live reload on port 3456 |
 
 ## How It Works
@@ -114,9 +148,11 @@ requirements/
 ├── vision.yaml                          # Vision, mission, core problem
 └── projects/
     ├── project-a/
-    │   └── requirements.yaml            # Vision alignment + requirements
+    │   ├── requirements.yaml            # Vision alignment + requirements
+    │   └── design.yaml                  # Optional: design decisions
     └── project-b/
-        └── requirements.yaml
+        ├── requirements.yaml
+        └── design.yaml
 ```
 
 ## Requirement Fields
@@ -126,6 +162,20 @@ requirements/
 | `id` | Yes | Unique identifier (e.g. `req-001`) |
 | `description` | Yes | What the user needs |
 | `userValue` | Yes | Why this matters to the user |
+
+## Decision Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier (e.g. `dec-001`) |
+| `topic` | Yes | What question this decision answers |
+| `context` | Yes | Background / why this matters |
+| `requirementRefs` | Yes | Array of requirement IDs this addresses |
+| `options` | Yes | Design alternatives (at least one) |
+| `chosen` | No | ID of the selected option (null while exploring) |
+| `chosenReason` | No | Why this option was picked |
+
+Each option has: `id`, `title`, `description`, `pros` (array), `cons` (array).
 
 ## Development
 
@@ -148,10 +198,10 @@ bun run src/cli.ts ui  # Run CLI from source
 ```
 src/
 ├── commands/           # CLI command handlers (init, ui, validate)
-├── domain/             # Requirement types and validation (Requirement, Vision)
+├── domain/             # Types and validation (Requirement, Vision, Decision, DesignOption)
 ├── infrastructure/     # File I/O, YAML parsing, file watcher, HTTP server
 ├── stores/             # Zustand state management
-├── components/         # React UI components (VisionHeader, ProjectSection, etc.)
+├── components/         # React UI components (VisionHeader, ProjectSection, DesignSection, etc.)
 └── ui/                 # React entry point
 ```
 

@@ -7,16 +7,17 @@
  * backward compatibility.
  */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
+  parseProjectDesignYaml,
 } from "./yaml-parser";
-import type { Vision, ProjectRequirements } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
 
 // Re-export pure parsers for backward compatibility
-export { parseVisionYaml, parseProjectRequirementsYaml } from "./yaml-parser";
+export { parseVisionYaml, parseProjectRequirementsYaml, parseProjectDesignYaml } from "./yaml-parser";
 
 // ---------------------------------------------------------------------------
 // Filesystem readers (Node/Bun only)
@@ -131,4 +132,47 @@ export function readProjectRequirements(
     }
     throw err;
   }
+}
+
+/**
+ * Reads and parses a project's design.yaml into validated ProjectDesign.
+ * Returns null if the file does not exist (design is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @param projectName - Name of the project subdirectory
+ * @returns Validated project design, or null if design.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readProjectDesign(
+  requirementsDir: string,
+  projectName: string,
+): ProjectDesign | null {
+  const filePath = join(requirementsDir, "projects", projectName, "design.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading project design from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No design.yaml found for project "${projectName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from ${projectName}/design.yaml`);
+  }
+
+  const design = parseProjectDesignYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${design.decisions.length} decisions for project ${projectName}`,
+    );
+  }
+
+  return design;
 }

@@ -3,13 +3,14 @@
  * This is the main orchestrating component for the requirements UI.
  */
 
-import type { Vision, ProjectRequirements } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
 import { VisionHeader } from "./VisionHeader";
 import { ProjectSection } from "./ProjectSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
   projects: Record<string, ProjectRequirements>;
+  designs?: Record<string, ProjectDesign>;
   loading: boolean;
   error: string | null;
 }
@@ -17,6 +18,7 @@ export interface RequirementTreeProps {
 export function RequirementTree({
   vision,
   projects,
+  designs = {},
   loading,
   error,
 }: RequirementTreeProps) {
@@ -82,6 +84,7 @@ export function RequirementTree({
               key={name}
               projectName={name}
               project={projects[name]}
+              design={designs[name] ?? null}
             />
           ))}
         </div>

@@ -23,6 +23,24 @@ requirements:
 const EMPTY_PROJECT_YAML = `visionAlignment: "Some alignment"
 requirements: []`;
 
+const VALID_DESIGN_YAML = `decisions:
+  - id: dec-001
+    topic: Search Technology
+    context: We need fast search
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Elasticsearch
+        description: Dedicated search engine
+        pros:
+          - Fast search
+        cons:
+          - Complex setup
+    chosen: opt-a
+    chosenReason: Performance is critical
+`;
+
 function makeResponse(body: string, ok = true, status = 200): Response {
   return new Response(body, {
     status,
@@ -42,10 +60,15 @@ function stubFetch(
   visionBody: string | null,
   projectNames: string[],
   projectBodies: Record<string, string>,
-  options?: { visionStatus?: number; projectsStatus?: number },
+  options?: {
+    visionStatus?: number;
+    projectsStatus?: number;
+    designBodies?: Record<string, string>;
+  },
 ) {
   const visionStatus = options?.visionStatus ?? (visionBody === null ? 404 : 200);
   const projectsStatus = options?.projectsStatus ?? 200;
+  const designBodies = options?.designBodies ?? {};
 
   const fn = mock((url: string | URL | Request) => {
     const urlStr = typeof url === "string" ? url : url instanceof URL ? url.href : url.url;
@@ -67,6 +90,12 @@ function stubFetch(
       }
     }
 
+    for (const name of Object.keys(designBodies)) {
+      if (urlStr.includes(`/projects/${name}/design.yaml`)) {
+        return Promise.resolve(makeResponse(designBodies[name]));
+      }
+    }
+
     return Promise.resolve(makeResponse("", false, 404));
   });
 
@@ -85,6 +114,7 @@ describe("useRequirementsStore", () => {
     useRequirementsStore.setState({
       vision: null,
       projects: {},
+      designs: {},
       loading: false,
       error: null,
       watching: false,
@@ -101,6 +131,7 @@ describe("useRequirementsStore", () => {
     const state = useRequirementsStore.getState();
     expect(state.vision).toBeNull();
     expect(state.projects).toEqual({});
+    expect(state.designs).toEqual({});
     expect(state.loading).toBe(false);
     expect(state.error).toBeNull();
   });
@@ -234,6 +265,48 @@ describe("useRequirementsStore", () => {
       mission: "Provide tools for requirements",
       problem: "Teams struggle with requirements",
     });
+  });
+
+  // --- Designs ---
+
+  test("loadFromFiles() populates designs when design.yaml exists", async () => {
+    stubFetch(VALID_VISION_YAML, ["my-project"], { "my-project": VALID_PROJECT_YAML }, {
+      designBodies: { "my-project": VALID_DESIGN_YAML },
+    });
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(Object.keys(state.designs)).toEqual(["my-project"]);
+    expect(state.designs["my-project"].decisions).toHaveLength(1);
+    expect(state.designs["my-project"].decisions[0].id).toBe("dec-001");
+    expect(state.designs["my-project"].decisions[0].topic).toBe("Search Technology");
+    expect(state.designs["my-project"].decisions[0].chosen).toBe("opt-a");
+  });
+
+  test("loadFromFiles() leaves designs empty when no design.yaml", async () => {
+    stubFetch(VALID_VISION_YAML, ["my-project"], { "my-project": VALID_PROJECT_YAML });
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(state.designs).toEqual({});
+  });
+
+  test("loadFromFiles() handles mix of projects with and without designs", async () => {
+    stubFetch(VALID_VISION_YAML, ["alpha", "beta"], {
+      "alpha": VALID_PROJECT_YAML,
+      "beta": EMPTY_PROJECT_YAML,
+    }, {
+      designBodies: { "alpha": VALID_DESIGN_YAML },
+    });
+
+    await useRequirementsStore.getState().loadFromFiles();
+
+    const state = useRequirementsStore.getState();
+    expect(Object.keys(state.designs)).toEqual(["alpha"]);
+    expect(state.designs["alpha"].decisions).toHaveLength(1);
+    expect(state.designs["beta"]).toBeUndefined();
   });
 
   // --- Watching ---

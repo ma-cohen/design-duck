@@ -1,16 +1,19 @@
 /**
- * Renders a project's requirements with its vision alignment statement.
+ * Renders a project's requirements with its vision alignment statement,
+ * and optionally its design decisions.
  */
 
-import type { ProjectRequirements } from "../domain/requirements/requirement";
+import type { ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
 import { RequirementCard } from "./RequirementCard";
+import { DesignSection } from "./DesignSection";
 
 export interface ProjectSectionProps {
   projectName: string;
   project: ProjectRequirements;
+  design?: ProjectDesign | null;
 }
 
-export function ProjectSection({ projectName, project }: ProjectSectionProps) {
+export function ProjectSection({ projectName, project, design }: ProjectSectionProps) {
   console.debug(
     `[design-duck:ui] Rendering ProjectSection: ${projectName} with ${project.requirements.length} requirements`,
   );
@@ -42,6 +45,12 @@ export function ProjectSection({ projectName, project }: ProjectSectionProps) {
           {project.requirements.map((req) => (
             <RequirementCard key={req.id} requirement={req} />
           ))}
+        </div>
+      )}
+
+      {design && (
+        <div className="mt-5 border-t border-gray-100 pt-5">
+          <DesignSection design={design} />
         </div>
       )}
     </section>

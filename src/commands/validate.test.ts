@@ -108,4 +108,87 @@ requirements:
     validate(testDir);
     expect(process.exitCode).toBe(0);
   });
+
+  // --- Design validation ---
+
+  test("validates valid design.yaml alongside requirements", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "align"\nrequirements:\n  - id: req-001\n    description: x\n    userValue: y\n',
+      "utf-8",
+    );
+    const designYaml = `decisions:
+  - id: dec-001
+    topic: Topic
+    context: Context
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Option A
+        description: Description
+        pros:
+          - Pro
+        cons:
+          - Con
+    chosen: opt-a
+    chosenReason: Good reason
+`;
+    writeFileSync(join(reqDir, "projects", "test-project", "design.yaml"), designYaml, "utf-8");
+    validate(testDir);
+    expect(process.exitCode).toBe(0);
+  });
+
+  test("passes when project has no design.yaml", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "align"\nrequirements: []',
+      "utf-8",
+    );
+    validate(testDir);
+    expect(process.exitCode).toBe(0);
+  });
+
+  test("exits with code 1 when design.yaml has invalid content", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "align"\nrequirements: []',
+      "utf-8",
+    );
+    writeFileSync(join(reqDir, "projects", "test-project", "design.yaml"), "just a string", "utf-8");
+    validate(testDir);
+    expect(process.exitCode).toBe(1);
+  });
+
+  test("exits with code 1 when design.yaml references unknown requirement", () => {
+    writeFileSync(join(reqDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
+    writeFileSync(
+      join(reqDir, "projects", "test-project", "requirements.yaml"),
+      'visionAlignment: "align"\nrequirements:\n  - id: req-001\n    description: x\n    userValue: y\n',
+      "utf-8",
+    );
+    const designYaml = `decisions:
+  - id: dec-001
+    topic: Topic
+    context: Context
+    requirementRefs:
+      - req-999
+    options:
+      - id: opt-a
+        title: Option A
+        description: Description
+        pros:
+          - Pro
+        cons:
+          - Con
+    chosen: null
+    chosenReason: null
+`;
+    writeFileSync(join(reqDir, "projects", "test-project", "design.yaml"), designYaml, "utf-8");
+    validate(testDir);
+    expect(process.exitCode).toBe(1);
+  });
 });

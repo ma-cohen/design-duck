@@ -1,0 +1,56 @@
+# Design decisions for the example project
+decisions:
+  - id: dec-001
+    topic: Search Technology
+    context: "We need sub-second search across millions of products"
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Elasticsearch
+        description: Dedicated search engine with full-text capabilities
+        pros:
+          - Sub-200ms full-text search
+          - Scales horizontally
+          - Rich relevance ranking
+        cons:
+          - Operational overhead
+          - Extra infrastructure cost
+      - id: opt-b
+        title: PostgreSQL full-text search
+        description: Use existing database for search
+        pros:
+          - No extra infrastructure
+          - Simpler architecture
+        cons:
+          - Slower for large datasets
+          - Limited relevance ranking
+    chosen: opt-a
+    chosenReason: "Performance is critical for our user experience — users expect instant results"
+
+  - id: dec-002
+    topic: Wishlist Storage
+    context: "Users need to persist wishlists across sessions and devices"
+    requirementRefs:
+      - req-002
+    options:
+      - id: opt-x
+        title: Server-side database
+        description: Store wishlists in the main application database
+        pros:
+          - Works across all devices automatically
+          - No data loss on browser clear
+        cons:
+          - Requires user authentication
+          - Server load for every wishlist action
+      - id: opt-y
+        title: Local storage with sync
+        description: Store locally first, sync to server when online
+        pros:
+          - Instant UI feedback
+          - Works offline
+        cons:
+          - Sync conflict resolution needed
+          - More complex implementation
+    chosen: null
+    chosenReason: null

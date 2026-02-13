@@ -44,9 +44,11 @@ Requirements are organized around a central **vision document** that defines the
 │  └──────────────┘         │  ├── vision.yaml     (vision/mission)│   │
 │                           │  └── projects/                        │   │
 │                           │      ├── <project-a>/                 │   │
-│                           │      │   └── requirements.yaml        │   │
+│                           │      │   ├── requirements.yaml        │   │
+│                           │      │   └── design.yaml (optional)   │   │
 │                           │      └── <project-b>/                 │   │
-│                           │          └── requirements.yaml        │   │
+│                           │          ├── requirements.yaml        │   │
+│                           │          └── design.yaml (optional)   │   │
 │                           └──────────┬───────────────────────────┘   │
 │                                      │                               │
 │                              watches │ (fs.watch recursive)          │
@@ -67,8 +69,9 @@ Requirements are organized around a central **vision document** that defines the
 │  │   React UI   │    │              Zustand Store                │   │
 │  │  (browser)   │◀──▶│  - vision: Vision                        │   │
 │  │              │    │  - projects: Record<string, Project>      │   │
-│  │  - Vision    │    │  - loadFromFiles()  → fetch YAML via HTTP│   │
-│  │  - Projects  │    │  - startWatching()  → SSE + poll fallback│   │
+│  │  - Vision    │    │  - designs: Record<string, Design>       │   │
+│  │  - Projects  │    │  - loadFromFiles()  → fetch YAML via HTTP│   │
+│  │  - Designs   │    │  - startWatching()  → SSE + poll fallback│   │
 │  │  - Cards     │    │  - stopWatching()                        │   │
 │  └──────────────┘    └──────────────────────────────────────────┘   │
 │                                                                       │
@@ -84,9 +87,11 @@ requirements/
 ├── vision.yaml                      # Vision, mission, core problem
 └── projects/
     ├── <project-a>/
-    │   └── requirements.yaml        # Vision alignment + user requirements
+    │   ├── requirements.yaml        # Vision alignment + user requirements
+    │   └── design.yaml              # Optional: design decisions with alternatives
     └── <project-b>/
-        └── requirements.yaml
+        ├── requirements.yaml
+        └── design.yaml
 ```
 
 ### Vision File (vision.yaml)
@@ -122,13 +127,69 @@ requirements:
 | `description` | Yes | What the user needs |
 | `userValue` | Yes | Why this matters to the user |
 
+### Design File (design.yaml)
+
+Each project can optionally have a `design.yaml` file alongside `requirements.yaml`. This enables design sessions where you explore alternatives, document tradeoffs, and link decisions back to requirements.
+
+```yaml
+# design.yaml - Design decisions for this project
+decisions:
+  - id: dec-001
+    topic: Search Technology
+    context: "We need sub-second search across millions of products"
+    requirementRefs:
+      - req-001
+    options:
+      - id: opt-a
+        title: Elasticsearch
+        description: Dedicated search engine
+        pros:
+          - Sub-200ms full-text search
+          - Scales horizontally
+        cons:
+          - Operational overhead
+          - Extra infrastructure cost
+      - id: opt-b
+        title: PostgreSQL full-text search
+        description: Use existing database
+        pros:
+          - No extra infrastructure
+          - Simpler architecture
+        cons:
+          - Slower for large datasets
+    chosen: opt-a
+    chosenReason: "Performance is critical for our user experience"
+```
+
+### Decision Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier (e.g. `dec-001`) |
+| `topic` | Yes | What question this decision answers |
+| `context` | Yes | Background / why this decision matters |
+| `requirementRefs` | Yes | Array of requirement IDs this addresses (can be empty) |
+| `options` | Yes | Design alternatives (at least one) |
+| `chosen` | No | ID of the selected option (null while exploring) |
+| `chosenReason` | No | Why this option was picked |
+
+### Design Option Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | Yes | Unique identifier within the decision |
+| `title` | Yes | Short name for the option |
+| `description` | Yes | What this option entails |
+| `pros` | Yes | Array of advantages (can be empty) |
+| `cons` | Yes | Array of disadvantages (can be empty) |
+
 ## Domain Structure
 
 ```
 src/
 ├── domain/                      # Pure business logic (no React)
 │   └── requirements/
-│       ├── requirement.ts       # Types & validation (Requirement, Vision)
+│       ├── requirement.ts       # Types & validation (Requirement, Vision, Decision, DesignOption)
 │       └── requirement.test.ts
 │
 ├── infrastructure/              # File system & server operations
@@ -153,21 +214,25 @@ src/
 │
 └── components/                  # React UI components
     ├── VisionHeader.tsx         # Displays vision, mission, problem
-    ├── ProjectSection.tsx       # Project with vision alignment + requirements
+    ├── ProjectSection.tsx       # Project with vision alignment + requirements + design
     ├── RequirementCard.tsx      # Single requirement card
-    └── RequirementList.tsx      # List of requirement cards
+    ├── RequirementList.tsx      # List of requirement cards
+    ├── DesignSection.tsx        # Design decisions section for a project
+    ├── DecisionCard.tsx         # Single decision with options and chosen status
+    └── OptionCard.tsx           # Single design option with pros/cons
 ```
 
 ## Key Flows
 
-### Agent Creates/Updates Requirement
+### Agent Creates/Updates Requirement or Design
 ```
-1. Agent edits vision.yaml or projects/<name>/requirements.yaml
+1. Agent edits vision.yaml, requirements.yaml, or design.yaml
 2. Recursive file watcher (fs.watch) detects YAML change
 3. Server sends SSE event "requirements-changed" to all connected browsers
 4. Zustand store receives SSE event, calls loadFromFiles()
-5. Store fetches project list via /api/projects, then fetches each project's YAML + vision.yaml
-6. UI re-renders with updated vision and project requirements
+5. Store fetches project list via /api/projects, then fetches each project's
+   requirements.yaml + design.yaml (if it exists) + vision.yaml
+6. UI re-renders with updated vision, project requirements, and design decisions
 ```
 
 ### User Views Requirements
@@ -232,7 +297,7 @@ bun test
 |---------|-------------|
 | `init` | Creates `requirements/` folder with vision.yaml and an example project. Runs `git init` if not already a repo. |
 | `ui` | Starts built-in HTTP server on port 3456, opens browser, watches for YAML file changes with live reload via SSE |
-| `validate` | Validates all requirement files (vision + all projects) against schema, reports errors to stdout |
+| `validate` | Validates all requirement and design files (vision + all projects), cross-references design requirement refs, reports errors to stdout |
 
 ## Out of Scope (Phase 1)
 
@@ -277,3 +342,32 @@ bun test
 - `requirements/vision.yaml` + `requirements/projects/<name>/requirements.yaml`
 - Vision + Requirement types
 - Multi-project, vision-driven structure
+
+### Change 2: Design Session Feature
+**Date:** 2026-02-11
+
+**What Changed:**
+- Added optional `design.yaml` per project for design decisions with alternatives
+- New domain types: `DesignOption`, `Decision`, `ProjectDesign` with validation
+- New YAML parser: `parseProjectDesignYaml` (browser-safe)
+- New file-store reader: `readProjectDesign` (returns null when no design.yaml)
+- Zustand store extended with `designs: Record<string, ProjectDesign>`, fetched in parallel with requirements
+- New UI components: `DesignSection`, `DecisionCard`, `OptionCard`
+- `ProjectSection` updated to render design decisions below requirements
+- `RequirementTree` passes designs through to project sections
+- `validate` command checks design.yaml (if present) and cross-references `requirementRefs` against actual requirement IDs
+- Example `design.yaml` added to `example-project` with search technology and wishlist storage decisions
+
+**Why:**
+- Teams need to go from "what do we want" (requirements) to "how do we build it" (design decisions)
+- Design decisions should be traceable back to requirements
+- Comparing alternatives with documented pros/cons leads to better decisions
+- YAML-based design files integrate with the existing live-edit + live-render approach
+
+**Impact:**
+- Domain: 3 new types, 4 new validation functions, 2 new assert functions
+- Infrastructure: yaml-parser and file-store extended
+- Store: new `designs` state, parallel fetching of design.yaml
+- UI: 3 new components, 2 updated components
+- CLI: validate command extended with design validation + cross-referencing
+- Tests: comprehensive tests added for all new code across domain, infrastructure, store, components, and CLI

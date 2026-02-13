@@ -11,6 +11,7 @@ export function App() {
   const {
     vision,
     projects,
+    designs,
     loading,
     error,
     loadFromFiles,
@@ -41,6 +42,7 @@ export function App() {
         <RequirementTree
           vision={vision}
           projects={projects}
+          designs={designs}
           loading={loading}
           error={error}
         />

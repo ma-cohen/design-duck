@@ -10,10 +10,11 @@
  */
 
 import { load as parseYaml } from "js-yaml";
-import type { Vision, Requirement, ProjectRequirements } from "../domain/requirements/requirement";
+import type { Vision, Requirement, ProjectRequirements, Decision, ProjectDesign } from "../domain/requirements/requirement";
 import {
   assertVision,
   assertRequirement,
+  assertDecision,
 } from "../domain/requirements/requirement";
 
 /**
@@ -80,4 +81,40 @@ export function parseProjectRequirementsYaml(content: string): ProjectRequiremen
     visionAlignment: file.visionAlignment as string,
     requirements,
   };
+}
+
+/**
+ * Parses a YAML string into a validated ProjectDesign (decisions with options).
+ *
+ * @param content - Raw YAML string from a project's design.yaml
+ * @returns Validated project design object
+ * @throws Error if malformed YAML or validation fails
+ */
+export function parseProjectDesignYaml(content: string): ProjectDesign {
+  const parsed = parseYaml(content) as unknown;
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("design.yaml must contain a YAML object");
+  }
+
+  const file = parsed as Record<string, unknown>;
+
+  if (!Array.isArray(file.decisions)) {
+    throw new Error("design.yaml must have a 'decisions' array");
+  }
+
+  const decisions: Decision[] = [];
+
+  for (let i = 0; i < file.decisions.length; i++) {
+    const raw = file.decisions[i];
+    try {
+      assertDecision(raw);
+      decisions.push(raw);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`design.yaml decision at index ${i}: ${msg}`);
+    }
+  }
+
+  return { decisions };
 }
