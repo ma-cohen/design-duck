@@ -16,11 +16,15 @@ import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
   parseProjectDesignYaml,
+  parseGeneralValidationsYaml,
+  parseProjectImplementationYaml,
 } from "../infrastructure/yaml-parser";
 import type {
   Vision,
   ProjectRequirements,
   ProjectDesign,
+  GeneralValidations,
+  ProjectImplementation,
 } from "../domain/requirements/requirement";
 
 /** Options for configuring file watching behavior. */
@@ -54,6 +58,10 @@ export interface RequirementsState {
   projects: Record<string, ProjectRequirements>;
   /** Per-project design documents keyed by project name (only present when design.yaml exists). */
   designs: Record<string, ProjectDesign>;
+  /** Root-level general validations (from implementation.yaml). */
+  generalValidations: GeneralValidations | null;
+  /** Per-project implementation documents keyed by project name. */
+  implementations: Record<string, ProjectImplementation>;
   /** True while a loadFromFiles() call is in progress. */
   loading: boolean;
   /** Human-readable error message from the last failed load, or null. */
@@ -88,6 +96,12 @@ export interface RequirementsState {
   /** Saves a project's design document to the server (PUT /api/projects/:name/design). */
   saveProjectDesign: (projectName: string, data: ProjectDesign) => Promise<void>;
 
+  /** Saves the root-level general validations to the server (PUT /api/implementation). */
+  saveGeneralValidations: (data: GeneralValidations) => Promise<void>;
+
+  /** Saves a project's implementation document to the server (PUT /api/projects/:name/implementation). */
+  saveProjectImplementation: (projectName: string, data: ProjectImplementation) => Promise<void>;
+
   /** Deletes a project from the server (DELETE /api/projects/:name). */
   deleteProject: (projectName: string) => Promise<void>;
 }
@@ -112,6 +126,8 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   vision: null,
   projects: {},
   designs: {},
+  generalValidations: null,
+  implementations: {},
   loading: false,
   error: null,
   watching: false,
@@ -131,6 +147,18 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const visionContent = await visionRes.text();
       const vision = parseVisionYaml(visionContent);
 
+      // Fetch root-level general validations (optional — 404 is fine)
+      let generalValidations: GeneralValidations | null = null;
+      try {
+        const implRes = await fetch(`${requirementsPath}/implementation.yaml`);
+        if (implRes.ok) {
+          const implContent = await implRes.text();
+          generalValidations = parseGeneralValidationsYaml(implContent);
+        }
+      } catch {
+        // implementation.yaml not available — that's fine
+      }
+
       // Fetch project list
       const projectsRes = await fetch(projectsApiUrl);
       if (!projectsRes.ok) {
@@ -140,9 +168,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const projectNames: string[] = await projectsRes.json();
 
-      // Fetch all project requirements and designs in parallel
+      // Fetch all project requirements, designs, and implementations in parallel
       const projects: Record<string, ProjectRequirements> = {};
       const designs: Record<string, ProjectDesign> = {};
+      const implementations: Record<string, ProjectImplementation> = {};
       const projectFetches = projectNames.map(async (name) => {
         // Fetch requirements (required)
         const res = await fetch(`${requirementsPath}/projects/${name}/requirements.yaml`);
@@ -164,6 +193,17 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         } catch {
           // design.yaml not available — that's fine
         }
+
+        // Fetch implementation (optional — 404 is fine)
+        try {
+          const implRes = await fetch(`${requirementsPath}/projects/${name}/implementation.yaml`);
+          if (implRes.ok) {
+            const implContent = await implRes.text();
+            implementations[name] = parseProjectImplementationYaml(implContent);
+          }
+        } catch {
+          // implementation.yaml not available — that's fine
+        }
       });
 
       await Promise.all(projectFetches);
@@ -181,6 +221,8 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         vision,
         projects,
         designs,
+        generalValidations,
+        implementations,
         loading: false,
         error: null,
       });
@@ -306,6 +348,34 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     set({ designs: { ...get().designs, [projectName]: data } });
   },
 
+  saveGeneralValidations: async (data: GeneralValidations) => {
+    console.log("[design-duck:store] Saving general validations...");
+    const res = await fetch("/api/implementation", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save general validations");
+    }
+    set({ generalValidations: data });
+  },
+
+  saveProjectImplementation: async (projectName: string, data: ProjectImplementation) => {
+    console.log(`[design-duck:store] Saving implementation for ${projectName}...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/implementation`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save implementation");
+    }
+    set({ implementations: { ...get().implementations, [projectName]: data } });
+  },
+
   deleteProject: async (projectName: string) => {
     console.log(`[design-duck:store] Deleting project ${projectName}...`);
     const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}`, {
@@ -318,7 +388,8 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     // Remove from local state immediately
     const { [projectName]: _p, ...remainingProjects } = get().projects;
     const { [projectName]: _d, ...remainingDesigns } = get().designs;
-    set({ projects: remainingProjects, designs: remainingDesigns });
+    const { [projectName]: _i, ...remainingImplementations } = get().implementations;
+    set({ projects: remainingProjects, designs: remainingDesigns, implementations: remainingImplementations });
   },
 
   stopWatching: () => {

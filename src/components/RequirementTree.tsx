@@ -5,16 +5,19 @@
  *   - Detail view (project selected): full project section with requirements & design
  */
 
-import type { Vision, ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
 import { ProjectSection } from "./ProjectSection";
 import { ProjectCard } from "./ProjectCard";
+import { GeneralValidationsSection } from "./GeneralValidationsSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
   projects: Record<string, ProjectRequirements>;
   designs?: Record<string, ProjectDesign>;
+  generalValidations?: GeneralValidations | null;
+  implementations?: Record<string, ProjectImplementation>;
   loading: boolean;
   error: string | null;
   selectedProject: string | null;
@@ -25,6 +28,8 @@ export function RequirementTree({
   vision,
   projects,
   designs = {},
+  generalValidations,
+  implementations = {},
   loading,
   error,
   selectedProject,
@@ -44,8 +49,8 @@ export function RequirementTree({
 
   if (loading) {
     return (
-      <div className="py-12 text-center" data-testid="tree-loading">
-        <p className="text-sm text-gray-500">Loading requirements...</p>
+      <div className="py-16 text-center" data-testid="tree-loading">
+        <p className="text-base text-slate-300">Loading requirements...</p>
       </div>
     );
   }
@@ -53,23 +58,23 @@ export function RequirementTree({
   if (error) {
     return (
       <div
-        className="rounded-lg border border-red-200 bg-red-50 px-5 py-4"
+        className="rounded-lg border border-red-800 bg-red-900/30 px-6 py-5"
         data-testid="tree-error"
       >
-        <p className="text-sm font-medium text-red-800">
+        <p className="text-base font-medium text-red-300">
           Failed to load requirements
         </p>
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1.5 text-base text-red-400">{error}</p>
       </div>
     );
   }
 
   if (!vision && projectNames.length === 0) {
     return (
-      <div className="py-12 text-center" data-testid="tree-empty">
-        <p className="text-sm text-gray-500">
+      <div className="py-16 text-center" data-testid="tree-empty">
+        <p className="text-base text-slate-300">
           No requirements found. Run{" "}
-          <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono">
+          <code className="rounded bg-slate-600 px-2 py-1 text-sm font-mono text-slate-200">
             design-duck init
           </code>{" "}
           to get started.
@@ -86,6 +91,8 @@ export function RequirementTree({
           projectName={selectedProject}
           project={projects[selectedProject]}
           design={designs[selectedProject] ?? null}
+          implementation={implementations[selectedProject] ?? null}
+          generalValidations={generalValidations ?? null}
           onDeleteProject={handleDeleteProject}
         />
       </div>
@@ -97,11 +104,13 @@ export function RequirementTree({
     <div data-testid="requirement-tree">
       <VisionHeader vision={vision} />
 
+      <GeneralValidationsSection generalValidations={generalValidations ?? null} />
+
       {projectNames.length === 0 ? (
-        <div className="py-8 text-center" data-testid="no-projects">
-          <p className="text-sm text-gray-500">
+        <div className="py-10 text-center" data-testid="no-projects">
+          <p className="text-base text-slate-300">
             No projects found. Add a project directory under{" "}
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono">
+            <code className="rounded bg-slate-600 px-2 py-1 text-sm font-mono text-slate-200">
               requirements/projects/
             </code>
           </p>

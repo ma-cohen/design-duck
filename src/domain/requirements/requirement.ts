@@ -258,3 +258,199 @@ export function assertDecision(raw: unknown): asserts raw is Decision {
     throw new Error(`Invalid decision: ${result.errors.join("; ")}`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Implementation types and validation
+// ---------------------------------------------------------------------------
+
+/** A root-level general validation that applies to all projects. */
+export interface GeneralValidation {
+  id: string;
+  description: string;
+  category: string;
+}
+
+/** Root-level general validations document (implementation.yaml). */
+export interface GeneralValidations {
+  validations: GeneralValidation[];
+}
+
+/** A single implementation todo item linked to requirements. */
+export interface ImplementationTodo {
+  id: string;
+  description: string;
+  status: "pending" | "in-progress" | "done";
+  requirementRefs: string[];
+}
+
+/** A project-specific validation linked to requirements. */
+export interface ImplementationValidation {
+  id: string;
+  description: string;
+  requirementRefs: string[];
+}
+
+/** A test specification linked to requirements. */
+export interface TestSpec {
+  id: string;
+  description: string;
+  requirementRefs: string[];
+  type: "unit" | "integration" | "e2e";
+}
+
+/** A project's implementation document with plan, todos, validations, and tests. */
+export interface ProjectImplementation {
+  plan: string | null;
+  todos: ImplementationTodo[];
+  validations: ImplementationValidation[];
+  tests: TestSpec[];
+}
+
+const VALID_TODO_STATUSES = new Set(["pending", "in-progress", "done"]);
+const VALID_TEST_TYPES = new Set(["unit", "integration", "e2e"]);
+
+/**
+ * Validates a general validation entry.
+ */
+export function validateGeneralValidation(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["GeneralValidation must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const idErr = nonEmptyString(o.id, "id");
+  if (idErr) errors.push(idErr);
+  const descErr = nonEmptyString(o.description, "description");
+  if (descErr) errors.push(descErr);
+  const catErr = nonEmptyString(o.category, "category");
+  if (catErr) errors.push(catErr);
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates an implementation todo item.
+ */
+export function validateImplementationTodo(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["ImplementationTodo must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const idErr = nonEmptyString(o.id, "id");
+  if (idErr) errors.push(idErr);
+  const descErr = nonEmptyString(o.description, "description");
+  if (descErr) errors.push(descErr);
+
+  if (typeof o.status !== "string" || !VALID_TODO_STATUSES.has(o.status)) {
+    errors.push("status must be one of: pending, in-progress, done");
+  }
+
+  if (!Array.isArray(o.requirementRefs)) {
+    errors.push("requirementRefs must be an array");
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates an implementation validation entry.
+ */
+export function validateImplementationValidation(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["ImplementationValidation must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const idErr = nonEmptyString(o.id, "id");
+  if (idErr) errors.push(idErr);
+  const descErr = nonEmptyString(o.description, "description");
+  if (descErr) errors.push(descErr);
+
+  if (!Array.isArray(o.requirementRefs)) {
+    errors.push("requirementRefs must be an array");
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validates a test specification.
+ */
+export function validateTestSpec(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["TestSpec must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const idErr = nonEmptyString(o.id, "id");
+  if (idErr) errors.push(idErr);
+  const descErr = nonEmptyString(o.description, "description");
+  if (descErr) errors.push(descErr);
+
+  if (typeof o.type !== "string" || !VALID_TEST_TYPES.has(o.type)) {
+    errors.push("type must be one of: unit, integration, e2e");
+  }
+
+  if (!Array.isArray(o.requirementRefs)) {
+    errors.push("requirementRefs must be an array");
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Asserts that a value is a valid GeneralValidation; throws with errors if not.
+ */
+export function assertGeneralValidation(raw: unknown): asserts raw is GeneralValidation {
+  const result = validateGeneralValidation(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid general validation: ${result.errors.join("; ")}`);
+  }
+}
+
+/**
+ * Asserts that a value is a valid ImplementationTodo; throws with errors if not.
+ */
+export function assertImplementationTodo(raw: unknown): asserts raw is ImplementationTodo {
+  const result = validateImplementationTodo(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid implementation todo: ${result.errors.join("; ")}`);
+  }
+}
+
+/**
+ * Asserts that a value is a valid ImplementationValidation; throws with errors if not.
+ */
+export function assertImplementationValidation(raw: unknown): asserts raw is ImplementationValidation {
+  const result = validateImplementationValidation(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid implementation validation: ${result.errors.join("; ")}`);
+  }
+}
+
+/**
+ * Asserts that a value is a valid TestSpec; throws with errors if not.
+ */
+export function assertTestSpec(raw: unknown): asserts raw is TestSpec {
+  const result = validateTestSpec(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid test spec: ${result.errors.join("; ")}`);
+  }
+}

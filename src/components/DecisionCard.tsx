@@ -83,18 +83,18 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
   return (
     <>
       <div
-        className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+        className="rounded-lg border border-slate-600 bg-slate-700 p-6 shadow-sm"
         data-testid={`decision-card-${id}`}
       >
-        <div className="mb-1 flex items-center justify-between">
-          <h4 className="text-sm font-bold text-gray-900">{topic}</h4>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="text-base font-bold text-slate-50">{topic}</h4>
           {(onEdit || onDelete) && (
             <div className="flex items-center gap-1">
               {onEdit && (
                 <button
                   type="button"
                   onClick={() => onEdit(decision)}
-                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 transition-colors cursor-pointer"
+                  className="rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-indigo-400 transition-colors cursor-pointer"
                   title="Edit decision"
                   data-testid={`edit-decision-${id}`}
                 >
@@ -107,7 +107,7 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
                 <button
                   type="button"
                   onClick={() => onDelete(id)}
-                  className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                  className="rounded p-1 text-slate-400 hover:bg-red-900/30 hover:text-red-400 transition-colors cursor-pointer"
                   title="Delete decision"
                   data-testid={`delete-decision-${id}`}
                 >
@@ -120,17 +120,17 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
           )}
         </div>
 
-        <p className="mb-3 text-sm leading-relaxed text-gray-500">{context}</p>
+        <p className="mb-4 text-base leading-relaxed text-slate-300">{context}</p>
 
         {requirementRefs.length > 0 && (
-          <div className="mb-3" data-testid={`decision-refs-${id}`}>
-            <span className="text-xs font-medium text-gray-400 uppercase">
+          <div className="mb-4" data-testid={`decision-refs-${id}`}>
+            <span className="text-sm font-medium text-slate-300 uppercase">
               Addresses:{" "}
             </span>
             {requirementRefs.map((ref) => (
               <span
                 key={ref}
-                className="mr-1.5 inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                className="mr-2 inline-block rounded bg-blue-900/30 px-2.5 py-1 text-sm font-medium text-blue-200"
               >
                 {ref}
               </span>
@@ -139,16 +139,16 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
         )}
 
         {/* Options header with add button */}
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium text-gray-400 uppercase">Options</span>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-300 uppercase">Options</span>
           {onSaveOptions && (
             <button
               type="button"
               onClick={() => setAddingOption(true)}
-              className="inline-flex items-center gap-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded border border-slate-500 bg-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-500 transition-colors cursor-pointer"
               data-testid={`add-option-${id}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Add Option
@@ -171,10 +171,10 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
 
         {chosen && chosenReason && (
           <div
-            className="mt-3 rounded-md bg-green-50 px-4 py-3"
+            className="mt-4 rounded-md bg-green-900/30 px-5 py-4"
             data-testid={`decision-chosen-reason-${id}`}
           >
-            <p className="text-sm text-green-800">
+            <p className="text-base text-green-200">
               <span className="font-medium">Reason: </span>
               {chosenReason}
             </p>
@@ -213,21 +213,21 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
       {/* Choose option reason modal */}
       {choosingOptionId && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setChoosingOptionId(null); }}
           data-testid="choose-reason-backdrop"
         >
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
-            <h3 className="text-base font-bold text-gray-900">Choose Option</h3>
-            <p className="mt-1 text-sm text-gray-600">
+          <div className="w-full max-w-sm rounded-xl border border-slate-600 bg-slate-700 p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-slate-50">Choose Option</h3>
+            <p className="mt-2 text-base text-slate-300">
               You are choosing <strong>{options.find((o) => o.id === choosingOptionId)?.title ?? choosingOptionId}</strong>.
             </p>
-            <div className="mt-3">
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Reason <span className="text-gray-400">(optional)</span>
+            <div className="mt-4">
+              <label className="mb-1.5 block text-base font-medium text-slate-200">
+                Reason <span className="text-slate-400">(optional)</span>
               </label>
               <textarea
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                className="w-full rounded-md border border-slate-500 bg-slate-600 px-3 py-2.5 text-base text-slate-100 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
                 rows={3}
                 placeholder="Why did you choose this option?"
                 value={chooseReason}
@@ -235,18 +235,18 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
                 data-testid="choose-reason-input"
               />
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-5 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setChoosingOptionId(null)}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                className="rounded-md border border-slate-500 bg-slate-600 px-4 py-2.5 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmChoice}
-                className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 transition-colors cursor-pointer"
+                className="rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-green-700 transition-colors cursor-pointer"
                 data-testid="confirm-choose-btn"
               >
                 Confirm Choice
@@ -259,26 +259,26 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
       {/* Delete option confirmation */}
       {confirmDeleteOption && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setConfirmDeleteOption(null); }}
         >
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
-            <h3 className="text-base font-bold text-gray-900">Delete Option</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="w-full max-w-sm rounded-xl border border-slate-600 bg-slate-700 p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-slate-50">Delete Option</h3>
+            <p className="mt-3 text-base leading-relaxed text-slate-300">
               Are you sure you want to delete option <strong>{confirmDeleteOption}</strong>?
             </p>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-5 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setConfirmDeleteOption(null)}
-                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                className="rounded-md border border-slate-500 bg-slate-600 px-4 py-2.5 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleDeleteOption(confirmDeleteOption)}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 transition-colors cursor-pointer"
+                className="rounded-md bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Delete
               </button>

@@ -85,29 +85,29 @@ export function EditModal({ title, fields, initialValues = {}, onSave, onClose }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       data-testid="edit-modal-backdrop"
     >
-      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl" data-testid="edit-modal">
-        <h2 className="mb-4 text-lg font-bold text-gray-900">{title}</h2>
+      <div className="w-full max-w-lg rounded-xl border border-slate-600 bg-slate-700 p-8 shadow-xl" data-testid="edit-modal">
+        <h2 className="mb-5 text-xl font-bold text-slate-50">{title}</h2>
 
         {error && (
-          <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-4 rounded-md border border-red-600/40 bg-red-900/30 px-4 py-3 text-base text-red-300">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {fields.map((f) => (
             <div key={f.key}>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1.5 block text-base font-medium text-slate-200">
                 {f.label}
               </label>
 
               {f.type === "textarea" ? (
                 <textarea
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  className="w-full rounded-md border border-slate-500 bg-slate-600 px-3.5 py-2.5 text-base text-slate-100 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
                   rows={3}
                   placeholder={f.placeholder}
                   value={values[f.key] as string}
@@ -122,7 +122,7 @@ export function EditModal({ title, fields, initialValues = {}, onSave, onClose }
               ) : (
                 <input
                   type="text"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  className="w-full rounded-md border border-slate-500 bg-slate-600 px-3.5 py-2.5 text-base text-slate-100 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
                   placeholder={f.placeholder}
                   value={values[f.key] as string}
                   onChange={(e) => setField(f.key, e.target.value)}
@@ -131,17 +131,17 @@ export function EditModal({ title, fields, initialValues = {}, onSave, onClose }
             </div>
           ))}
 
-          <div className="flex justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+              className="rounded-md border border-slate-500 bg-slate-600 px-5 py-2.5 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors cursor-pointer"
+              className="rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors cursor-pointer"
             >
               Save
             </button>
@@ -184,12 +184,12 @@ function StringListInput({
       {value.length > 0 && (
         <ul className="mb-2 space-y-1">
           {value.map((item, i) => (
-            <li key={i} className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm">
+            <li key={i} className="flex items-center gap-2 rounded-md border border-slate-600 bg-slate-600 px-3 py-2 text-base text-slate-100">
               <span className="flex-1">{item}</span>
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                className="text-red-500 hover:text-red-400 transition-colors cursor-pointer"
                 title="Remove"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -203,7 +203,7 @@ function StringListInput({
       <div className="flex gap-2">
         <input
           type="text"
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+          className="flex-1 rounded-md border border-slate-500 bg-slate-600 px-3.5 py-2.5 text-base text-slate-100 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder:text-slate-400"
           placeholder={placeholder ?? "Add item..."}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -212,7 +212,7 @@ function StringListInput({
         <button
           type="button"
           onClick={add}
-          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+          className="rounded-md border border-slate-500 bg-slate-600 px-4 py-2.5 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
         >
           Add
         </button>

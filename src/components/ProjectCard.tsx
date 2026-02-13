@@ -20,23 +20,23 @@ export function ProjectCard({ projectName, project, design, onClick }: ProjectCa
     <button
       type="button"
       onClick={onClick}
-      className="group w-full cursor-pointer rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-all hover:border-indigo-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+      className="group w-full cursor-pointer rounded-xl border border-slate-600 bg-slate-700 p-6 text-left shadow-sm transition-all hover:border-indigo-600 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-800"
       data-testid={`project-card-${projectName}`}
     >
-      <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+      <h3 className="text-lg font-bold text-slate-50 group-hover:text-indigo-400 transition-colors">
         {projectName}
       </h3>
 
-      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-gray-500 italic">
+      <p className="mt-2 line-clamp-2 text-base leading-relaxed text-slate-300 italic">
         {project.visionAlignment}
       </p>
 
-      <div className="mt-4 flex items-center gap-4">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+      <div className="mt-5 flex items-center gap-4">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-950 px-3 py-1 text-sm font-medium text-blue-200">
           {reqCount} requirement{reqCount !== 1 ? "s" : ""}
         </span>
         {decisionCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-950 px-3 py-1 text-sm font-medium text-purple-200">
             {decisionCount} decision{decisionCount !== 1 ? "s" : ""}
           </span>
         )}

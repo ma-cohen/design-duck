@@ -1,0 +1,49 @@
+plan: |
+  Phase 1: Implement JWT authentication flow (AUTH-001)
+  Phase 2: Add password reset via email (AUTH-002)
+  Phase 3: Integrate Argon2id password hashing (AUTH-001)
+  Phase 4: Add optional TOTP 2FA (AUTH-003)
+todos:
+  - id: TODO-AUTH-001
+    description: "Set up JWT token generation and validation middleware"
+    status: pending
+    requirementRefs: [AUTH-001]
+  - id: TODO-AUTH-002
+    description: "Implement password reset email flow"
+    status: pending
+    requirementRefs: [AUTH-002]
+  - id: TODO-AUTH-003
+    description: "Integrate Argon2id for password hashing"
+    status: pending
+    requirementRefs: [AUTH-001]
+  - id: TODO-AUTH-004
+    description: "Build TOTP 2FA enrollment and verification"
+    status: pending
+    requirementRefs: [AUTH-003]
+validations:
+  - id: VAL-AUTH-001
+    description: "JWT tokens must expire within 15 minutes"
+    requirementRefs: [AUTH-001]
+  - id: VAL-AUTH-002
+    description: "Password reset links must be single-use and expire in 1 hour"
+    requirementRefs: [AUTH-002]
+  - id: VAL-AUTH-003
+    description: "Passwords must be hashed with Argon2id before storage"
+    requirementRefs: [AUTH-001]
+tests:
+  - id: TEST-AUTH-001
+    description: "User can sign up with email and password and receive a valid JWT"
+    requirementRefs: [AUTH-001]
+    type: integration
+  - id: TEST-AUTH-002
+    description: "Password reset email is sent and link works correctly"
+    requirementRefs: [AUTH-002]
+    type: e2e
+  - id: TEST-AUTH-003
+    description: "Argon2id hashes are generated and verified correctly"
+    requirementRefs: [AUTH-001]
+    type: unit
+  - id: TEST-AUTH-004
+    description: "TOTP enrollment generates a valid secret and QR code"
+    requirementRefs: [AUTH-003]
+    type: integration

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readVision, listProjects, readProjectRequirements, readProjectDesign } from "../infrastructure/file-store";
+import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGeneralValidations, readProjectImplementation } from "../infrastructure/file-store";
 
 /**
  * Validates all requirement files in the desgin-duck/requirements/ directory.
@@ -45,6 +45,24 @@ export function validate(targetDir: string = process.cwd()): void {
     if (process.env.DEBUG) {
       console.error("[design-duck:validate] vision.yaml error:", err);
     }
+  }
+
+  // Validate root-level implementation.yaml (optional)
+  console.log("Validating implementation.yaml...");
+  try {
+    const generalValidations = readGeneralValidations(reqDir);
+    if (generalValidations) {
+      console.log(
+        `✓ implementation.yaml is valid (${generalValidations.validations.length} general validations)`,
+      );
+    } else {
+      console.log("– implementation.yaml not found (optional, skipping)");
+    }
+  } catch (err) {
+    hasErrors = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("✗ implementation.yaml validation failed:");
+    console.error(`  ${msg}`);
   }
 
   // Validate all project requirements
@@ -124,6 +142,69 @@ export function validate(targetDir: string = process.cwd()): void {
       
       if (process.env.DEBUG) {
         console.error(`[design-duck:validate] ${projectName} design error:`, err);
+      }
+    }
+
+    // Validate implementation.yaml (optional)
+    try {
+      const impl = readProjectImplementation(reqDir, projectName);
+      if (impl) {
+        console.log(
+          `✓ ${projectName}/implementation.yaml is valid (${impl.todos.length} todos, ${impl.validations.length} validations, ${impl.tests.length} tests)`,
+        );
+
+        // Cross-reference: check that requirementRefs point to actual requirement IDs
+        if (requirementIds.length > 0) {
+          const reqIdSet = new Set(requirementIds);
+
+          for (const todo of impl.todos) {
+            for (const ref of todo.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${projectName}/implementation.yaml: todo "${todo.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+
+          for (const val of impl.validations) {
+            for (const ref of val.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${projectName}/implementation.yaml: validation "${val.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+
+          for (const test of impl.tests) {
+            for (const ref of test.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${projectName}/implementation.yaml: test "${test.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+        }
+
+        if (process.env.DEBUG) {
+          console.error(
+            `[design-duck:validate] Successfully validated implementation for project "${projectName}"`,
+          );
+        }
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${projectName}/implementation.yaml validation failed:`);
+      console.error(`  ${msg}`);
+
+      if (process.env.DEBUG) {
+        console.error(`[design-duck:validate] ${projectName} implementation error:`, err);
       }
     }
   }

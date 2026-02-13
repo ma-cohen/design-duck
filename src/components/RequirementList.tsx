@@ -19,8 +19,8 @@ export function RequirementList({ requirements, loading, error }: RequirementLis
 
   if (loading) {
     return (
-      <div className="py-12 text-center" data-testid="requirements-loading">
-        <p className="text-sm text-gray-500">Loading requirements...</p>
+      <div className="py-16 text-center" data-testid="requirements-loading">
+        <p className="text-base text-slate-300">Loading requirements...</p>
       </div>
     );
   }
@@ -28,23 +28,23 @@ export function RequirementList({ requirements, loading, error }: RequirementLis
   if (error) {
     return (
       <div
-        className="rounded-lg border border-red-200 bg-red-50 px-5 py-4"
+        className="rounded-lg border border-red-600/40 bg-red-900/30 px-6 py-5"
         data-testid="requirements-error"
       >
-        <p className="text-sm font-medium text-red-800">
+        <p className="text-base font-medium text-red-300">
           Failed to load requirements
         </p>
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1.5 text-base text-red-400">{error}</p>
       </div>
     );
   }
 
   if (requirements.length === 0) {
     return (
-      <div className="py-12 text-center" data-testid="requirements-empty">
-        <p className="text-sm text-gray-500">
+      <div className="py-16 text-center" data-testid="requirements-empty">
+        <p className="text-base text-slate-300">
           No requirements found. Add requirements to your project's{" "}
-          <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-mono">
+          <code className="rounded bg-slate-600 px-2 py-1 text-sm font-mono text-slate-200">
             requirements.yaml
           </code>{" "}
           to get started.

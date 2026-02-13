@@ -12,6 +12,8 @@ export function App() {
     vision,
     projects,
     designs,
+    generalValidations,
+    implementations,
     loading,
     error,
     loadFromFiles,
@@ -32,14 +34,14 @@ export function App() {
   }, [loadFromFiles, startWatching, stopWatching]);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
-        <div className="mx-auto max-w-5xl flex items-center gap-3">
+    <div className="min-h-screen bg-slate-800 text-slate-100">
+      <header className="border-b border-slate-600 bg-slate-700 px-8 py-5 shadow-sm">
+        <div className="mx-auto max-w-6xl flex items-center gap-4">
           {selectedProject && (
             <button
               type="button"
               onClick={() => setSelectedProject(null)}
-              className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-500 bg-slate-600 px-3 py-2 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-slate-800 transition-colors cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -48,10 +50,10 @@ export function App() {
             </button>
           )}
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
               {selectedProject ? selectedProject : "Design Duck"}
             </h1>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-1 text-base text-slate-300">
               {selectedProject
                 ? "Project requirements & design"
                 : "Vision-driven requirements management"}
@@ -60,11 +62,13 @@ export function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-8 py-10">
         <RequirementTree
           vision={vision}
           projects={projects}
           designs={designs}
+          generalValidations={generalValidations}
+          implementations={implementations}
           loading={loading}
           error={error}
           selectedProject={selectedProject}

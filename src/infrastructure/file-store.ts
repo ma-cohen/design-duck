@@ -13,11 +13,13 @@ import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
   parseProjectDesignYaml,
+  parseGeneralValidationsYaml,
+  parseProjectImplementationYaml,
 } from "./yaml-parser";
-import type { Vision, ProjectRequirements, ProjectDesign } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 
 // Re-export pure parsers for backward compatibility
-export { parseVisionYaml, parseProjectRequirementsYaml, parseProjectDesignYaml } from "./yaml-parser";
+export { parseVisionYaml, parseProjectRequirementsYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
 
 // ---------------------------------------------------------------------------
 // Filesystem readers (Node/Bun only)
@@ -175,4 +177,88 @@ export function readProjectDesign(
   }
 
   return design;
+}
+
+/**
+ * Reads and parses the root-level implementation.yaml into validated GeneralValidations.
+ * Returns null if the file does not exist (implementation is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @returns Validated general validations, or null if implementation.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readGeneralValidations(
+  requirementsDir: string,
+): GeneralValidations | null {
+  const filePath = join(requirementsDir, "implementation.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading general validations from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No implementation.yaml found — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from implementation.yaml`);
+  }
+
+  const generalValidations = parseGeneralValidationsYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${generalValidations.validations.length} general validations`,
+    );
+  }
+
+  return generalValidations;
+}
+
+/**
+ * Reads and parses a project's implementation.yaml into validated ProjectImplementation.
+ * Returns null if the file does not exist (implementation is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @param projectName - Name of the project subdirectory
+ * @returns Validated project implementation, or null if implementation.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readProjectImplementation(
+  requirementsDir: string,
+  projectName: string,
+): ProjectImplementation | null {
+  const filePath = join(requirementsDir, "projects", projectName, "implementation.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading project implementation from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No implementation.yaml found for project "${projectName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from ${projectName}/implementation.yaml`);
+  }
+
+  const implementation = parseProjectImplementationYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed implementation for project ${projectName}: ${implementation.todos.length} todos, ${implementation.validations.length} validations, ${implementation.tests.length} tests`,
+    );
+  }
+
+  return implementation;
 }
