@@ -65,7 +65,7 @@ export function checkVersionMismatch(targetDir: string = process.cwd()): boolean
   if (compareSemver(projectVersion, VERSION) < 0) {
     console.error(
       `[design-duck] Your project was set up with v${projectVersion} but v${VERSION} is installed.\n` +
-      `              Run 'design-duck upgrade' to migrate.`
+      `              Run 'dd upgrade' to migrate.`
     );
     return false;
   }

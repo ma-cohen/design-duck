@@ -1,16 +1,18 @@
 /**
  * design-duck upgrade – migrate an existing project to the latest version.
  *
- * 1. Read desgin-duck/.version (default to "0.1.0" if missing)
- * 2. Detect stale CLI (project version ahead of installed)
- * 3. Check if already up-to-date
- * 4. Collect and run applicable migrations
- * 5. Regenerate AGENTS.md & command files
- * 6. Write the new .version
+ * 1. Reinstall the package from the remote to get the latest code
+ * 2. Re-exec the CLI using the freshly installed binary
+ * 3. Read desgin-duck/.version (default to "0.1.0" if missing)
+ * 4. Check if already up-to-date
+ * 5. Collect and run applicable migrations
+ * 6. Regenerate AGENTS.md & command files
+ * 7. Write the new .version
  */
 
 import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { execSync } from "node:child_process";
 import { VERSION } from "../index";
 import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
@@ -57,7 +59,43 @@ export function upgrade(targetDir: string = process.cwd()): void {
     return;
   }
 
-  // 1. Determine current version
+  // 1. Unless we already reinstalled (re-exec pass), pull the latest package first
+  if (!process.env._DD_SKIP_REINSTALL) {
+    console.log("Checking for updates...");
+    try {
+      execSync("npm install", {
+        cwd: duckDir,
+        stdio: process.env.DEBUG ? "inherit" : "pipe",
+      });
+    } catch (err) {
+      console.error(
+        `Failed to install latest package: ${err instanceof Error ? err.message : err}`
+      );
+      process.exitCode = 1;
+      return;
+    }
+
+    // Re-exec using the freshly installed CLI so the new code is loaded
+    const cliBin = join(duckDir, "node_modules", "design-duck", "dist", "cli.js");
+    if (existsSync(cliBin)) {
+      try {
+        execSync(`node "${cliBin}" upgrade`, {
+          cwd: targetDir,
+          stdio: "inherit",
+          env: { ...process.env, _DD_SKIP_REINSTALL: "1" },
+        });
+        // Propagate the child's exit code
+        return;
+      } catch (err: any) {
+        // execSync throws on non-zero exit — propagate it
+        process.exitCode = err.status ?? 1;
+        return;
+      }
+    }
+    // If the bin doesn't exist (shouldn't happen), fall through to run in-process
+  }
+
+  // 2. Determine current version
   const currentVersion = readProjectVersion(targetDir) ?? "0.1.0";
 
   if (process.env.DEBUG) {
@@ -66,21 +104,19 @@ export function upgrade(targetDir: string = process.cwd()): void {
     );
   }
 
-  // 2. Detect stale CLI — .version is ahead of the installed package
-  if (compareSemver(currentVersion, VERSION) > 0) {
-    console.error(
-      `Version mismatch: your project is at v${currentVersion} but the installed CLI is v${VERSION}.\n` +
-      `The CLI was not updated properly. Run a clean reinstall:\n\n` +
-      `  cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd ..\n\n` +
-      `Then run 'dd upgrade' again.`
-    );
-    process.exitCode = 1;
-    return;
-  }
-
   // 3. Check if already up-to-date
   if (compareSemver(currentVersion, VERSION) === 0) {
     console.log(`Already up to date (v${VERSION}).`);
+    return;
+  }
+
+  // 4. Detect stale CLI — project version ahead of installed (shouldn't happen after reinstall)
+  if (compareSemver(currentVersion, VERSION) > 0) {
+    console.error(
+      `Version mismatch: your project is at v${currentVersion} but the latest available CLI is v${VERSION}.\n` +
+      `This likely means the remote hasn't been updated yet.`
+    );
+    process.exitCode = 1;
     return;
   }
 
@@ -152,8 +188,4 @@ export function upgrade(targetDir: string = process.cwd()): void {
   // 9. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
-  console.log(
-    "\nTip: If a future upgrade says the CLI is stale, run:\n" +
-    "  cd desgin-duck && rm -rf node_modules package-lock.json && npm install && cd .."
-  );
 }
