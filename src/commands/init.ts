@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync, chmodSync } from "node:fs";
 import { join } from "node:path";
 import { AGENT_MD } from "../templates/agents-md";
+import { COMMAND_FILES } from "../templates/commands-md";
 import { writeProjectVersion } from "../infrastructure/version";
 
 /** package.json for the desgin-duck/ folder — depends on the tool from GitHub */
@@ -174,6 +175,14 @@ export function init(targetDir: string = process.cwd()): void {
   writeFileSync(projImplPath, EXAMPLE_IMPLEMENTATION_YAML, "utf-8");
   console.log("  Created projects/example-project/implementation.yaml");
 
+  // Write command markdown files (tag-and-go agent shortcuts)
+  const commandsDir = join(duckDir, "commands");
+  mkdirSync(commandsDir, { recursive: true });
+  for (const [filename, content] of Object.entries(COMMAND_FILES)) {
+    writeFileSync(join(commandsDir, filename), content, "utf-8");
+  }
+  console.log("  Created commands/ (tag-and-go agent shortcuts)");
+
   // Write .version file to track the installed version
   writeProjectVersion(targetDir);
   console.log("  Created .version");
@@ -225,6 +234,18 @@ Design Duck initialized! Your folder structure:
   ├── duck.cmd                         # CLI wrapper (Windows)
   ├── package.json                     # npm dependencies
   ├── AGENTS.md                        # AI agent instructions & workflow guide
+  ├── commands/                        # Tag-and-go agent shortcuts (@dd-vision, etc.)
+  │   ├── dd-vision.md
+  │   ├── dd-projects.md
+  │   ├── dd-requirements.md
+  │   ├── dd-design.md
+  │   ├── dd-choose.md
+  │   ├── dd-implementation.md
+  │   ├── dd-validations.md
+  │   ├── dd-validate.md
+  │   ├── dd-ui.md
+  │   ├── dd-init.md
+  │   └── dd-upgrade.md
   └── requirements/
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions
@@ -238,9 +259,9 @@ Design Duck initialized! Your folder structure:
 Next steps:
   1. cd desgin-duck && npm install     # one-time setup
   2. cd ..
-  3. ./desgin-duck/duck context vision # start the workflow
+  3. Tag @dd-vision and tell your AI agent what to build!
 
-If you have the 'dd' shell alias set up, just use:
+If you have the 'dd' shell alias set up, you can also use:
   dd context vision
   dd ui
   dd validate

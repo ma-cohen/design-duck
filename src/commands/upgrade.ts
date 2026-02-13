@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { VERSION } from "../index";
 import { AGENT_MD } from "../templates/agents-md";
+import { COMMAND_FILES } from "../templates/commands-md";
 import { migrations } from "../migrations";
 import {
   readProjectVersion,
@@ -121,7 +122,21 @@ export function upgrade(targetDir: string = process.cwd()): void {
   writeFileSync(agentMdPath, AGENT_MD, "utf-8");
   console.log("  Regenerated AGENTS.md");
 
-  // 7. Write the new version
+  // 7. Regenerate command markdown files (always — they're tool-generated)
+  const commandsDir = join(duckDir, "commands");
+  // Back up existing command files before overwriting
+  if (existsSync(commandsDir)) {
+    for (const filename of Object.keys(COMMAND_FILES)) {
+      backupFile(join(commandsDir, filename), duckDir, currentVersion);
+    }
+  }
+  mkdirSync(commandsDir, { recursive: true });
+  for (const [filename, content] of Object.entries(COMMAND_FILES)) {
+    writeFileSync(join(commandsDir, filename), content, "utf-8");
+  }
+  console.log("  Regenerated commands/ (tag-and-go agent shortcuts)");
+
+  // 8. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
   console.log(

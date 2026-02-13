@@ -130,6 +130,29 @@ dd context requirements <project>
 When running commands in the terminal on behalf of the user, prefer \`dd\` if
 available — it is shorter and works from the project root.
 
+## Command Files (Tag & Go)
+
+Instead of remembering CLI commands, tag a command file in \`desgin-duck/commands/\`
+to have the agent run the right command automatically. Just tag the file and add
+your instructions — the agent handles the rest.
+
+| Tag                    | What it does                                |
+| ---------------------- | ------------------------------------------- |
+| \`@dd-vision\`          | Define or refine the product vision         |
+| \`@dd-projects\`        | Split the vision into projects              |
+| \`@dd-requirements\`    | Gather requirements for a project           |
+| \`@dd-design\`          | Brainstorm design decisions for a project   |
+| \`@dd-choose\`          | Evaluate and choose design options          |
+| \`@dd-implementation\`  | Create an implementation plan for a project |
+| \`@dd-validations\`     | Define global cross-cutting validations     |
+| \`@dd-validate\`        | Validate all YAML files                     |
+| \`@dd-ui\`              | Start the live UI dashboard                 |
+| \`@dd-init\`            | Initialize Design Duck                      |
+| \`@dd-upgrade\`         | Upgrade to the latest version               |
+
+**Example:** \`@dd-vision create an app for blogging\` — the agent runs the vision
+context command and fills in vision.yaml based on your description.
+
 ## Rules
 
 - **YAML is the source of truth.** Edit the files directly; the UI updates via
