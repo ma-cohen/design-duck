@@ -1,6 +1,6 @@
 {
   "name": "design-duck",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Requirements gathering and management tool",
   "type": "module",
   "main": "dist/cli.js",
