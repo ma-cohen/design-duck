@@ -23,6 +23,7 @@ import type {
   Vision,
   ProjectRequirements,
   ProjectDesign,
+  GlobalDesign,
   GeneralValidations,
   ProjectImplementation,
 } from "../domain/requirements/requirement";
@@ -54,6 +55,8 @@ export interface WatchOptions {
 export interface RequirementsState {
   /** Validated vision document. */
   vision: Vision | null;
+  /** Root-level global design decisions that all projects must follow. */
+  globalDesign: GlobalDesign | null;
   /** Per-project requirements keyed by project name. */
   projects: Record<string, ProjectRequirements>;
   /** Per-project design documents keyed by project name (only present when design.yaml exists). */
@@ -93,6 +96,9 @@ export interface RequirementsState {
   /** Saves a project's requirements to the server (PUT /api/projects/:name/requirements). */
   saveProjectRequirements: (projectName: string, data: ProjectRequirements) => Promise<void>;
 
+  /** Saves the root-level global design document to the server (PUT /api/design). */
+  saveGlobalDesign: (data: GlobalDesign) => Promise<void>;
+
   /** Saves a project's design document to the server (PUT /api/projects/:name/design). */
   saveProjectDesign: (projectName: string, data: ProjectDesign) => Promise<void>;
 
@@ -124,6 +130,7 @@ export function _getWatcherInternals() {
 
 export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   vision: null,
+  globalDesign: null,
   projects: {},
   designs: {},
   generalValidations: null,
@@ -146,6 +153,18 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const visionContent = await visionRes.text();
       const vision = parseVisionYaml(visionContent);
+
+      // Fetch root-level global design (optional — 404 is fine)
+      let globalDesign: GlobalDesign | null = null;
+      try {
+        const globalDesignRes = await fetch(`${requirementsPath}/design.yaml`);
+        if (globalDesignRes.ok) {
+          const globalDesignContent = await globalDesignRes.text();
+          globalDesign = parseProjectDesignYaml(globalDesignContent);
+        }
+      } catch {
+        // design.yaml not available — that's fine
+      }
 
       // Fetch root-level general validations (optional — 404 is fine)
       let generalValidations: GeneralValidations | null = null;
@@ -216,9 +235,11 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         (sum, d) => sum + d.decisions.length,
         0,
       );
+      const globalDecisionCount = globalDesign ? globalDesign.decisions.length : 0;
 
       set({
         vision,
+        globalDesign,
         projects,
         designs,
         generalValidations,
@@ -228,7 +249,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       });
 
       console.log(
-        `[design-duck:store] Loaded vision + ${Object.keys(projects).length} project(s) with ${totalReqs} requirements and ${totalDecisions} design decisions`,
+        `[design-duck:store] Loaded vision + ${globalDecisionCount} global decision(s) + ${Object.keys(projects).length} project(s) with ${totalReqs} requirements and ${totalDecisions} design decisions`,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -332,6 +353,20 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       throw new Error(body.error || "Failed to save requirements");
     }
     set({ projects: { ...get().projects, [projectName]: data } });
+  },
+
+  saveGlobalDesign: async (data: GlobalDesign) => {
+    console.log("[design-duck:store] Saving global design...");
+    const res = await fetch("/api/design", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save global design");
+    }
+    set({ globalDesign: data });
   },
 
   saveProjectDesign: async (projectName: string, data: ProjectDesign) => {

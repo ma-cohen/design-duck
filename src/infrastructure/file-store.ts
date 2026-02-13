@@ -16,7 +16,7 @@ import {
   parseGeneralValidationsYaml,
   parseProjectImplementationYaml,
 } from "./yaml-parser";
-import type { Vision, ProjectRequirements, ProjectDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 
 // Re-export pure parsers for backward compatibility
 export { parseVisionYaml, parseProjectRequirementsYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
@@ -59,6 +59,47 @@ export function readVision(requirementsDir: string): Vision {
     }
     throw err;
   }
+}
+
+/**
+ * Reads and parses the root-level design.yaml into a validated GlobalDesign object.
+ * Returns null if the file does not exist (global design is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @returns Validated global design, or null if design.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readGlobalDesign(
+  requirementsDir: string,
+): GlobalDesign | null {
+  const filePath = join(requirementsDir, "design.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading global design from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No root design.yaml found — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from root design.yaml`);
+  }
+
+  const design = parseProjectDesignYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${design.decisions.length} global design decisions`,
+    );
+  }
+
+  return design;
 }
 
 /**

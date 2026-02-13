@@ -125,6 +125,8 @@ export interface Decision {
   topic: string;
   context: string;
   requirementRefs: string[];
+  /** Optional references to global design decision IDs that this decision is based on. */
+  globalDecisionRefs?: string[];
   options: DesignOption[];
   chosen: string | null;
   chosenReason: string | null;
@@ -136,6 +138,9 @@ export interface ProjectDesign {
   notes: string | null;
   decisions: Decision[];
 }
+
+/** Root-level design document for system-wide decisions that all projects must follow. Same shape as ProjectDesign. */
+export type GlobalDesign = ProjectDesign;
 
 function stringArray(value: unknown, field: string): string | null {
   if (!Array.isArray(value)) {
@@ -220,6 +225,16 @@ export function validateDecision(raw: unknown): ValidationResult {
       if (!optResult.valid) {
         errors.push(`option at index ${i}: ${optResult.errors.join("; ")}`);
       }
+    }
+  }
+
+  // globalDecisionRefs: optional array of strings
+  if (o.globalDecisionRefs !== undefined && o.globalDecisionRefs !== null) {
+    if (!Array.isArray(o.globalDecisionRefs)) {
+      errors.push("globalDecisionRefs must be an array");
+    } else {
+      const gdrErr = stringArray(o.globalDecisionRefs, "globalDecisionRefs");
+      if (gdrErr) errors.push(gdrErr);
     }
   }
 

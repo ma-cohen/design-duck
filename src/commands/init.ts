@@ -8,6 +8,10 @@ mission: ""
 problem: ""
 `;
 
+const GLOBAL_DESIGN_YAML = `# High-level design decisions that all projects must follow
+decisions: []
+`;
+
 const EXAMPLE_REQUIREMENTS_YAML = `# Project requirements - user-value focused
 visionAlignment: ""
 
@@ -36,6 +40,11 @@ export function init(targetDir: string = process.cwd()): void {
   const visionPath = join(reqDir, "vision.yaml");
   writeFileSync(visionPath, VISION_YAML, "utf-8");
   console.log("  Created desgin-duck/requirements/vision.yaml");
+
+  // Write global design.yaml
+  const designPath = join(reqDir, "design.yaml");
+  writeFileSync(designPath, GLOBAL_DESIGN_YAML, "utf-8");
+  console.log("  Created desgin-duck/requirements/design.yaml");
 
   // Write example project requirements
   const reqPath = join(exampleProjectDir, "requirements.yaml");

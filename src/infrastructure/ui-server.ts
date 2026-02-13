@@ -164,6 +164,12 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       return;
     }
 
+    // Write API: PUT /api/design (root-level global design)
+    if (pathname === "/api/design" && req.method === "PUT") {
+      handlePutGlobalDesign(req, res, requirementsDir);
+      return;
+    }
+
     // Write API: PUT /api/projects/:name/requirements
     const reqMatch = pathname.match(/^\/api\/projects\/([^/]+)\/requirements$/);
     if (reqMatch && req.method === "PUT") {
@@ -374,6 +380,51 @@ async function handlePutVision(
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
     const filePath = join(requirementsDir, "vision.yaml");
     writeFileSync(filePath, yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutGlobalDesign(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    // Validate optional notes field
+    if (raw.notes !== undefined && raw.notes !== null && typeof raw.notes !== "string") {
+      jsonResponse(res, 400, { error: "notes must be a string or null" });
+      return;
+    }
+
+    if (!Array.isArray(raw.decisions)) {
+      jsonResponse(res, 400, { error: "decisions must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.decisions.length; i++) {
+      const result = validateDecision(raw.decisions[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Decision at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    // Build clean object for YAML serialization (notes + decisions)
+    const toWrite: Record<string, unknown> = {};
+    if (raw.notes) {
+      toWrite.notes = raw.notes;
+    }
+    toWrite.decisions = raw.decisions;
+
+    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
+    writeFileSync(join(requirementsDir, "design.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

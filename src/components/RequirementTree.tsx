@@ -5,15 +5,17 @@
  *   - Detail view (project selected): full project section with requirements & design
  */
 
-import type { Vision, ProjectRequirements, ProjectDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
+import { GlobalDesignSection } from "./GlobalDesignSection";
 import { ProjectSection } from "./ProjectSection";
 import { ProjectCard } from "./ProjectCard";
 import { GeneralValidationsSection } from "./GeneralValidationsSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
+  globalDesign?: GlobalDesign | null;
   projects: Record<string, ProjectRequirements>;
   designs?: Record<string, ProjectDesign>;
   generalValidations?: GeneralValidations | null;
@@ -26,6 +28,7 @@ export interface RequirementTreeProps {
 
 export function RequirementTree({
   vision,
+  globalDesign = null,
   projects,
   designs = {},
   generalValidations,
@@ -105,6 +108,8 @@ export function RequirementTree({
       <VisionHeader vision={vision} />
 
       <GeneralValidationsSection generalValidations={generalValidations ?? null} />
+
+      <GlobalDesignSection globalDesign={globalDesign} />
 
       {projectNames.length === 0 ? (
         <div className="py-10 text-center" data-testid="no-projects">

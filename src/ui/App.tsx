@@ -10,6 +10,7 @@ import { RequirementTree } from "../components/RequirementTree";
 export function App() {
   const {
     vision,
+    globalDesign,
     projects,
     designs,
     generalValidations,
@@ -65,6 +66,7 @@ export function App() {
       <main className="mx-auto max-w-6xl px-8 py-10">
         <RequirementTree
           vision={vision}
+          globalDesign={globalDesign}
           projects={projects}
           designs={designs}
           generalValidations={generalValidations}

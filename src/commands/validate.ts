@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGeneralValidations, readProjectImplementation } from "../infrastructure/file-store";
+import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation } from "../infrastructure/file-store";
 
 /**
  * Validates all requirement files in the desgin-duck/requirements/ directory.
@@ -65,6 +65,28 @@ export function validate(targetDir: string = process.cwd()): void {
     console.error(`  ${msg}`);
   }
 
+  // Validate root-level design.yaml (optional)
+  let globalDecisionIds: Set<string> = new Set();
+  let totalGlobalDecisions = 0;
+  console.log("Validating design.yaml (global)...");
+  try {
+    const globalDesign = readGlobalDesign(reqDir);
+    if (globalDesign) {
+      totalGlobalDecisions = globalDesign.decisions.length;
+      globalDecisionIds = new Set(globalDesign.decisions.map((d) => d.id));
+      console.log(
+        `✓ design.yaml is valid (${globalDesign.decisions.length} global decisions)`,
+      );
+    } else {
+      console.log("– design.yaml not found (optional, skipping)");
+    }
+  } catch (err) {
+    hasErrors = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("✗ design.yaml validation failed:");
+    console.error(`  ${msg}`);
+  }
+
   // Validate all project requirements
   const projects = listProjects(reqDir);
   let totalRequirements = 0;
@@ -123,6 +145,22 @@ export function validate(targetDir: string = process.cwd()): void {
                 console.error(
                   `✗ ${projectName}/design.yaml: decision "${dec.id}" references unknown requirement "${ref}"`,
                 );
+              }
+            }
+          }
+        }
+
+        // Cross-reference: check that globalDecisionRefs point to actual global decision IDs
+        if (globalDecisionIds.size > 0) {
+          for (const dec of design.decisions) {
+            if (dec.globalDecisionRefs) {
+              for (const ref of dec.globalDecisionRefs) {
+                if (!globalDecisionIds.has(ref)) {
+                  hasErrors = true;
+                  console.error(
+                    `✗ ${projectName}/design.yaml: decision "${dec.id}" references unknown global decision "${ref}"`,
+                  );
+                }
               }
             }
           }
@@ -215,9 +253,10 @@ export function validate(targetDir: string = process.cwd()): void {
     console.error("Validation failed. Fix the errors above and try again.");
     process.exitCode = 1;
   } else {
-    const designSummary = totalDecisions > 0 ? `, ${totalDecisions} design decisions` : "";
+    const globalDesignSummary = totalGlobalDecisions > 0 ? `, ${totalGlobalDecisions} global design decisions` : "";
+    const designSummary = totalDecisions > 0 ? `, ${totalDecisions} project design decisions` : "";
     console.log(
-      `All files are valid! (${projects.length} project(s), ${totalRequirements} total requirements${designSummary})`,
+      `All files are valid! (${projects.length} project(s), ${totalRequirements} total requirements${globalDesignSummary}${designSummary})`,
     );
     process.exitCode = 0;
   }

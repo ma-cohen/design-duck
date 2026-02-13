@@ -26,6 +26,7 @@ npx design-duck init
 
 This creates a `requirements/` directory with:
 - `vision.yaml` -- vision, mission, and core problem statement
+- `design.yaml` -- high-level design decisions that all projects must follow
 - `projects/example-project/requirements.yaml` -- example project requirements
 
 It also runs `git init` if the directory isn't already a git repo.
@@ -57,7 +58,57 @@ requirements:
     userValue: Quickly find desired products
 ```
 
-### 5. Add Design Decisions (Optional)
+### 5. Add High-Level Design Decisions (Optional)
+
+Edit `requirements/design.yaml` to record system-wide design decisions that all projects must follow. These are top-down decisions that guide project-level choices:
+
+```yaml
+# requirements/design.yaml
+notes: |
+  Key architectural constraints and research links.
+
+decisions:
+  - id: GD-001
+    topic: Primary database technology
+    context: "All services need a consistent database strategy"
+    requirementRefs: []
+    options:
+      - id: postgres
+        title: PostgreSQL
+        description: Relational database with strong ACID guarantees
+        pros:
+          - Battle-tested and widely supported
+          - Rich SQL feature set
+        cons:
+          - Horizontal scaling requires more effort
+      - id: mongodb
+        title: MongoDB
+        description: Document-oriented NoSQL database
+        pros:
+          - Flexible schema
+          - Easy horizontal scaling
+        cons:
+          - Weaker transactional guarantees
+    chosen: postgres
+    chosenReason: "Our data model is highly relational and ACID compliance is critical"
+```
+
+Project-level decisions can reference global decisions they're based on using `globalDecisionRefs`:
+
+```yaml
+# requirements/projects/my-project/design.yaml
+decisions:
+  - id: dec-001
+    topic: ORM choice
+    context: "Need an ORM that works well with our chosen database"
+    requirementRefs:
+      - req-001
+    globalDecisionRefs:
+      - GD-001
+    # ... options, chosen, etc.
+```
+
+### 6. Add Project Design Decisions (Optional)
 
 Create a `design.yaml` alongside the project's `requirements.yaml` to document design alternatives and tradeoffs:
 
@@ -91,15 +142,15 @@ decisions:
 
 Design files are optional -- create them when you're ready to start a design session.
 
-### 6. Validate
+### 7. Validate
 
 ```bash
 npx design-duck validate
 ```
 
-Checks the vision file, all project requirement files, and any design files against the schema. Also verifies that design decision `requirementRefs` point to actual requirement IDs.
+Checks the vision file, global design, all project requirement files, and any project design files against the schema. Also verifies that `requirementRefs` and `globalDecisionRefs` point to valid IDs.
 
-### 7. View in UI
+### 8. View in UI
 
 ```bash
 npx design-duck ui
@@ -146,10 +197,11 @@ The `ui` command starts a self-contained HTTP server that:
 ```
 requirements/
 ├── vision.yaml                          # Vision, mission, core problem
+├── design.yaml                          # Optional: high-level design decisions (all projects)
 └── projects/
     ├── project-a/
     │   ├── requirements.yaml            # Vision alignment + requirements
-    │   └── design.yaml                  # Optional: design decisions
+    │   └── design.yaml                  # Optional: project design decisions
     └── project-b/
         ├── requirements.yaml
         └── design.yaml
@@ -167,10 +219,11 @@ requirements/
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `id` | Yes | Unique identifier (e.g. `dec-001`) |
+| `id` | Yes | Unique identifier (e.g. `dec-001` or `GD-001`) |
 | `topic` | Yes | What question this decision answers |
 | `context` | Yes | Background / why this matters |
-| `requirementRefs` | Yes | Array of requirement IDs this addresses |
+| `requirementRefs` | Yes | Array of requirement IDs this addresses (can be empty for global decisions) |
+| `globalDecisionRefs` | No | Array of global decision IDs this is based on (project-level only) |
 | `options` | Yes | Design alternatives (at least one) |
 | `chosen` | No | ID of the selected option (null while exploring) |
 | `chosenReason` | No | Why this option was picked |
