@@ -40,6 +40,11 @@ vision: "A world where..."
 mission: "We provide..."
 problem: "Teams currently struggle with..."
 \`\`\`
+
+## Next Step
+
+When you're done, suggest the user continue to the **projects** phase to split
+the vision into deliverable work streams by running: \`dd context projects\`
 `;
 }
 
@@ -95,6 +100,13 @@ requirements: []
 - Aim for 3-7 projects that together cover the full vision.
 - Each project should be independently deliverable.
 - Name projects after the capability they provide, not the technology.
+- **Keep it lean.** Only create projects for work that is essential to the vision. Fewer focused projects are better than many speculative ones.
+
+## Next Step
+
+When you're done, suggest the user continue to the **requirements** phase to
+gather user-value requirements for each project by running:
+\`dd context requirements <project-name>\`
 `;
 }
 
@@ -153,6 +165,13 @@ requirements:
 - Each requirement should deliver independent value.
 - Use clear, testable descriptions.
 - Aim for 3-10 requirements per project.
+- **Focus on what's essential.** Include requirements that directly support the vision. Avoid gold-plating — don't add requirements "just in case" or for hypothetical future needs.
+
+## Next Step
+
+When you're done, suggest the user continue to the **design** phase to brainstorm
+design decisions for the project by running:
+\`dd context design ${projectName}\`
 `;
 }
 
@@ -246,6 +265,15 @@ decisions:
 - Provide at least 2 options per decision.
 - Be specific in pros/cons — avoid generic statements.
 - Include a \`notes\` field with research links, constraints, or team context.
+- **Favour simplicity and elegance.** Always include a simple, straightforward option. The best design is often the least complex one that fully satisfies the requirements.
+- **Avoid over-engineering.** Do not propose options that add unnecessary layers, abstractions, or infrastructure unless a requirement specifically calls for it. If a simpler approach solves the problem, prefer it.
+- Only create decisions for questions that genuinely affect how requirements are met — skip decisions where the answer is obvious or where there is only one sensible approach.
+
+## Next Step
+
+When you're done, suggest the user review the design options in the UI, then
+continue to the **choose** phase to evaluate and pick options by running:
+\`dd context choose ${projectName}\`
 `;
 }
 
@@ -297,6 +325,14 @@ Do NOT modify decisions that already have a \`chosen\` value unless specifically
 - Justify choices in terms of user value, not just technical merit.
 - Consider how choices interact with each other.
 - Keep \`chosenReason\` to 1-2 sentences.
+- **Prefer the simpler option** when two options deliver similar user value. Complexity should only win when it provides a clear, concrete advantage for a real requirement.
+- **Avoid over-engineering.** Don't choose an option just because it's more "scalable" or "future-proof" unless a current requirement demands that scalability.
+
+## Next Step
+
+When you're done, suggest the user continue to the **implementation** phase to
+create a phased plan, todos, and tests by running:
+\`dd context implementation ${projectName}\`
 `;
 }
 
@@ -382,6 +418,14 @@ tests:
 - Validations are runtime/deployment checks, not test assertions.
 - Initial status for all todos should be "pending".
 - Use requirement IDs consistently in \`requirementRefs\`.
+- **Keep the plan lean.** Only include todos that directly serve a requirement. Avoid adding "nice-to-have" tasks, premature optimizations, or speculative infrastructure.
+- **Favour simplicity.** Prefer straightforward implementations over elaborate architectures. Add complexity only when a requirement explicitly demands it.
+
+## Next Step
+
+When you're done, suggest the user optionally define **global validations** that
+apply across all projects by running: \`dd context validations\`.
+Otherwise, the design is complete and the user can start implementing based on the plan.
 `;
 }
 
@@ -443,5 +487,12 @@ validations:
 - Categories help organize validations — use consistent category names.
 - Be specific and actionable — avoid vague rules.
 - Consider: linting, testing, security, performance, accessibility, documentation.
+
+## Next Step
+
+When you're done, let the user know the design process is complete. They can now
+start implementing based on the plans in each project's \`implementation.yaml\`.
+If any projects still need an implementation plan, suggest running:
+\`dd context implementation <project-name>\`
 `;
 }

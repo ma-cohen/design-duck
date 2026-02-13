@@ -51,6 +51,11 @@ Use their message as context for what the vision should be about.
 - YAML is the source of truth — edit the files directly.
 - Keep descriptions concise and user-focused.
 - Every downstream decision traces back to the vision.
+
+## Next Step
+
+When you're done, suggest the user continue to the **projects** phase to split the
+vision into deliverable work streams: \`@dd-projects\`
 `;
 
 const DD_PROJECTS = `# Design Duck — Projects
@@ -91,6 +96,11 @@ The vision must be defined first (\`desgin-duck/requirements/vision.yaml\`).
 
 - Each project must have a \`visionAlignment\` explaining how it supports the vision.
 - Project names should be kebab-case (e.g. \`user-auth\`, \`payment-flow\`).
+
+## Next Step
+
+When you're done, suggest the user continue to the **requirements** phase to
+gather user-value requirements for each project: \`@dd-requirements\`
 `;
 
 const DD_REQUIREMENTS = `# Design Duck — Requirements
@@ -139,6 +149,11 @@ This phase requires a **project name**.
 - Focus on what users need, not technical implementation.
 - IDs must be unique within the project (e.g. \`REQ-001\`, \`REQ-002\`).
 - Each requirement must have a clear \`userValue\`.
+
+## Next Step
+
+When you're done, suggest the user continue to the **design** phase to brainstorm
+design decisions and options for the project: \`@dd-design\`
 `;
 
 const DD_DESIGN = `# Design Duck — Design
@@ -187,6 +202,13 @@ This phase requires a **project name**.
 - Each decision must reference requirements via \`requirementRefs\`.
 - Provide at least two options per decision with clear pros/cons.
 - Do NOT make choices — leave \`chosen: null\` for the user to decide.
+- **Favour simplicity.** Always include a simple, straightforward option. Don't propose over-engineered solutions that go beyond what the requirements need.
+- Only create decisions for questions that genuinely matter — skip obvious or trivial choices.
+
+## Next Step
+
+When you're done, suggest the user review the design options in the UI, then
+continue to the **choose** phase to evaluate and pick options: \`@dd-choose\`
 `;
 
 const DD_CHOOSE = `# Design Duck — Choose
@@ -234,6 +256,12 @@ This phase requires a **project name**.
 - Do NOT override decisions that already have a choice.
 - Provide a clear \`chosenReason\` for each selection.
 - Consider the user's message for any preferences or constraints.
+- **Prefer simpler options** when they deliver similar user value. Choose complexity only when a concrete requirement demands it.
+
+## Next Step
+
+When you're done, suggest the user continue to the **implementation** phase to
+create a phased plan, todos, and tests: \`@dd-implementation\`
 `;
 
 const DD_IMPLEMENTATION = `# Design Duck — Implementation
@@ -282,6 +310,13 @@ for a project. This phase requires a **project name**.
 - Every todo, validation, and test must reference at least one requirement.
 - Keep the plan phased and incremental.
 - Todos track status: \`pending\` | \`in-progress\` | \`done\`.
+- **Keep it lean.** Only include tasks that directly serve a requirement. Avoid speculative infrastructure or premature optimizations.
+
+## Next Step
+
+When you're done, suggest the user optionally define **global validations** that
+apply across all projects: \`@dd-validations\`. Otherwise, the design is complete
+and the user can start implementing based on the plan.
 `;
 
 const DD_VALIDATIONS = `# Design Duck — Validations
@@ -318,6 +353,12 @@ These are checks that apply across all projects (linting, testing, security, CI,
 
 - Each validation needs an \`id\`, \`description\`, and \`category\`.
 - Categories group validations (e.g. \`linting\`, \`testing\`, \`ci\`, \`security\`).
+
+## Next Step
+
+When you're done, let the user know the design process is complete. They can
+now start implementing based on the plans in each project's \`implementation.yaml\`.
+If any projects still need an implementation plan, suggest: \`@dd-implementation\`
 `;
 
 // ---------------------------------------------------------------------------
@@ -409,6 +450,11 @@ The user tagged this file to ask you to **initialize** Design Duck.
 
 - Init only runs once — it will refuse to overwrite an existing setup.
 - After init, all Design Duck state lives in \`desgin-duck/\`.
+
+## Next Step
+
+When you're done, suggest the user start with the **vision** phase to define
+the product direction: \`@dd-vision\`
 `;
 
 const DD_UPGRADE = `# Design Duck — Upgrade

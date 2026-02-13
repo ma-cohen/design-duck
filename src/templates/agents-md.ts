@@ -153,6 +153,21 @@ your instructions — the agent handles the rest.
 **Example:** \`@dd-vision create an app for blogging\` — the agent runs the vision
 context command and fills in vision.yaml based on your description.
 
+## Design Philosophy
+
+- **Solve the requirements, not more.** Every design decision, option, and
+  implementation task should trace back to a real requirement. If it doesn't
+  serve a requirement, question whether it's needed.
+- **Favour simplicity and elegance.** The best design is the simplest one that
+  fully satisfies the requirements. Prefer straightforward approaches over
+  clever or complex ones.
+- **Avoid over-engineering.** Do not introduce abstractions, frameworks, layers,
+  or infrastructure "just in case." Add complexity only when a concrete
+  requirement demands it.
+- **Iterate, don't anticipate.** Design for what's needed now. Future
+  requirements can be handled in future iterations — keep the current design
+  lean and focused.
+
 ## Rules
 
 - **YAML is the source of truth.** Edit the files directly; the UI updates via
