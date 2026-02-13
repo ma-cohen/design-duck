@@ -1,12 +1,14 @@
 # Design Duck
 
-Vision-driven requirements gathering and management tool for human-agent collaboration.
+Vision-driven requirements and design management for human-agent collaboration.
 
-Design Duck uses a file-based architecture: an AI agent edits YAML requirement files while a live UI renders the current state. When the agent (or anyone) modifies a requirement file, the UI updates instantly.
+Design Duck gives your AI coding agent the context it needs at every step — from
+defining a vision, through requirements and design, all the way to implementation
+planning. You stay in control of the decisions; the agent does the heavy lifting.
 
-Requirements are organized around a central **vision document** and split **per project**, with each project declaring how it helps achieve the vision.
+All state lives in plain YAML files. A live UI updates instantly when files change.
 
-## Quick Start
+## Getting Started
 
 ### 1. Install
 
@@ -24,211 +26,220 @@ npm install file:../path/to/desgin-duck
 npx design-duck init
 ```
 
-This creates a `requirements/` directory with:
-- `vision.yaml` -- vision, mission, and core problem statement
-- `design.yaml` -- high-level design decisions that all projects must follow
-- `projects/example-project/requirements.yaml` -- example project requirements
-
-It also runs `git init` if the directory isn't already a git repo.
-
-### 3. Define Your Vision
-
-Edit `requirements/vision.yaml`:
-
-```yaml
-vision: "A world where every team manages requirements efficiently"
-mission: "Provide simple, AI-powered tools for collaborative requirements gathering"
-problem: "Teams struggle to capture, organize, and maintain software requirements"
-```
-
-### 4. Add Project Requirements
-
-Create a project directory and add `requirements.yaml`:
+This creates a `desgin-duck/` directory in your project with:
 
 ```
-requirements/projects/my-project/requirements.yaml
+desgin-duck/
+├── AGENTS.md                        # AI agent instructions & workflow guide
+└── requirements/
+    ├── vision.yaml                  # Vision, mission & core problem
+    ├── design.yaml                  # Global design decisions
+    ├── implementation.yaml          # Global validations (linting, tests, CI)
+    └── projects/
+        └── example-project/
+            ├── requirements.yaml    # User-value requirements
+            ├── design.yaml          # Design decisions & options
+            └── implementation.yaml  # Todos, validations & test specs
 ```
 
-```yaml
-visionAlignment: "This project helps achieve the vision by enabling efficient product search"
+The `AGENTS.md` file is an instruction guide for your AI agent — it explains the
+full workflow and all commands. Point your agent at it to get started.
 
-requirements:
-  - id: req-001
-    description: Users can search products by name
-    userValue: Quickly find desired products
+### 3. Work with Your AI Agent
+
+Design Duck follows a phased workflow. At each step, run a `context` command to
+generate a structured prompt, then feed it to your AI agent. The agent edits the
+YAML files, and the cycle continues.
+
+```
+You                        Design Duck                   Your AI Agent
+───                        ───────────                   ─────────────
+
+Run context command ────▶  Reads YAML state
+                           Generates prompt ───────────▶  Receives context
+                                                          Edits YAML files
+                           File watcher detects change ◀──────────┘
+                           UI updates instantly
+Review in UI ◀─────────────────────┘
 ```
 
-### 5. Add High-Level Design Decisions (Optional)
+#### Phase 1: Define the Vision
 
-Edit `requirements/design.yaml` to record system-wide design decisions that all projects must follow. These are top-down decisions that guide project-level choices:
-
-```yaml
-# requirements/design.yaml
-notes: |
-  Key architectural constraints and research links.
-
-decisions:
-  - id: GD-001
-    topic: Primary database technology
-    context: "All services need a consistent database strategy"
-    requirementRefs: []
-    options:
-      - id: postgres
-        title: PostgreSQL
-        description: Relational database with strong ACID guarantees
-        pros:
-          - Battle-tested and widely supported
-          - Rich SQL feature set
-        cons:
-          - Horizontal scaling requires more effort
-      - id: mongodb
-        title: MongoDB
-        description: Document-oriented NoSQL database
-        pros:
-          - Flexible schema
-          - Easy horizontal scaling
-        cons:
-          - Weaker transactional guarantees
-    chosen: postgres
-    chosenReason: "Our data model is highly relational and ACID compliance is critical"
+```bash
+npx design-duck context vision
 ```
 
-Project-level decisions can reference global decisions they're based on using `globalDecisionRefs`:
+Give the output to your agent. It will fill in `vision.yaml` with a clear
+vision, mission, and problem statement.
 
-```yaml
-# requirements/projects/my-project/design.yaml
-decisions:
-  - id: dec-001
-    topic: ORM choice
-    context: "Need an ORM that works well with our chosen database"
-    requirementRefs:
-      - req-001
-    globalDecisionRefs:
-      - GD-001
-    # ... options, chosen, etc.
+#### Phase 2: Split into Projects
+
+```bash
+npx design-duck context projects
 ```
 
-### 6. Add Project Design Decisions (Optional)
+The agent reads your vision and suggests how to break the work into projects,
+creating directories under `requirements/projects/`.
 
-Create a `design.yaml` alongside the project's `requirements.yaml` to document design alternatives and tradeoffs:
+#### Phase 3: Gather Requirements
 
-```yaml
-# requirements/projects/my-project/design.yaml
-decisions:
-  - id: dec-001
-    topic: Search Technology
-    context: "We need sub-second search across millions of products"
-    requirementRefs:
-      - req-001
-    options:
-      - id: opt-a
-        title: Elasticsearch
-        description: Dedicated search engine
-        pros:
-          - Sub-200ms full-text search
-          - Scales horizontally
-        cons:
-          - Operational overhead
-      - id: opt-b
-        title: PostgreSQL full-text search
-        description: Use existing database
-        pros:
-          - No extra infrastructure
-        cons:
-          - Slower for large datasets
-    chosen: opt-a
-    chosenReason: "Performance is critical for user experience"
+```bash
+npx design-duck context requirements <project>
 ```
 
-Design files are optional -- create them when you're ready to start a design session.
+For each project, the agent gets the vision context and produces user-value
+requirements — focused on what users need, not technical details.
 
-### 7. Validate
+#### Phase 4: Brainstorm Design
+
+```bash
+npx design-duck context design <project>
+```
+
+The agent proposes design decisions with multiple options, pros, and cons.
+It also sees global design decisions and validations as constraints.
+All choices are left as `null` for you to decide.
+
+#### Phase 5: Choose Design
+
+```bash
+npx design-duck context choose <project>
+```
+
+The agent evaluates the options and recommends choices. Review and adjust
+as needed — you have the final say.
+
+#### Phase 6: Plan Implementation
+
+```bash
+npx design-duck context implementation <project>
+```
+
+The agent creates a phased plan with actionable todos, validation rules,
+and test specifications — all linked back to requirements.
+
+#### Global Validations (any time)
+
+```bash
+npx design-duck context validations
+```
+
+Define cross-cutting rules (linting, testing, security, etc.) that every
+project must respect. These are injected into design and implementation
+context automatically.
+
+### 4. Validate
 
 ```bash
 npx design-duck validate
 ```
 
-Checks the vision file, global design, all project requirement files, and any project design files against the schema. Also verifies that `requirementRefs` and `globalDecisionRefs` point to valid IDs.
+Checks all YAML files against the schema and verifies that `requirementRefs`
+and `globalDecisionRefs` point to valid IDs.
 
-### 8. View in UI
+### 5. View in UI
 
 ```bash
 npx design-duck ui
 ```
 
-Opens a browser at `http://localhost:3456` showing your vision and per-project requirements.
+Opens a browser at `http://localhost:3456` showing your vision, projects,
+designs, and implementation plans.
 
-**Live reload**: edit any YAML file and the UI updates automatically -- no refresh needed. This works via a file watcher and Server-Sent Events.
+**Live reload**: edit any YAML file and the UI updates automatically — no
+refresh needed.
 
 ## CLI Commands
 
-| Command    | Description |
-|------------|-------------|
-| `init`     | Scaffold `requirements/` directory with vision and example project |
-| `validate` | Validate vision, requirement, and design files; cross-reference requirement refs |
-| `ui`       | Start the UI server with live reload on port 3456 |
+| Command               | Description                                          |
+| --------------------- | ---------------------------------------------------- |
+| `init`                | Scaffold `desgin-duck/` directory with AGENTS.md and YAML templates |
+| `context <phase> [p]` | Generate AI context prompt for a workflow phase      |
+| `validate`            | Validate all YAML files and cross-references         |
+| `ui`                  | Start the live UI on port 3456                       |
 
-## How It Works
+### Context Phases
 
-```
-You / AI Agent                    Design Duck
-─────────────                    ───────────
-                                 
-Edit requirements.yaml ────────▶  File watcher detects change
-                                       │
-                                       ▼
-                                 Server sends SSE event
-                                       │
-                                       ▼
-                                 Browser reloads YAML
-                                       │
-                                       ▼
-                                 UI re-renders
-```
-
-The `ui` command starts a self-contained HTTP server that:
-- Serves the pre-built React UI (no build tools needed in your project)
-- Serves your `requirements/*.yaml` files (vision + per-project)
-- Provides a `/api/projects` endpoint listing available projects
-- Watches for file changes recursively and pushes live updates via SSE
+| Phase            | Command                            | Needs Project? |
+| ---------------- | ---------------------------------- | -------------- |
+| Vision           | `context vision`                   | No             |
+| Projects         | `context projects`                 | No             |
+| Requirements     | `context requirements <project>`   | Yes            |
+| Design           | `context design <project>`         | Yes            |
+| Choose           | `context choose <project>`         | Yes            |
+| Implementation   | `context implementation <project>` | Yes            |
+| Validations      | `context validations`              | No             |
 
 ## File Structure
 
 ```
-requirements/
-├── vision.yaml                          # Vision, mission, core problem
-├── design.yaml                          # Optional: high-level design decisions (all projects)
-└── projects/
-    ├── project-a/
-    │   ├── requirements.yaml            # Vision alignment + requirements
-    │   └── design.yaml                  # Optional: project design decisions
-    └── project-b/
-        ├── requirements.yaml
-        └── design.yaml
+desgin-duck/
+├── AGENTS.md                            # AI agent instructions
+└── requirements/
+    ├── vision.yaml                      # Vision, mission, core problem
+    ├── design.yaml                      # Global design decisions
+    ├── implementation.yaml              # Global validations
+    └── projects/
+        └── <project-name>/
+            ├── requirements.yaml        # Vision alignment + requirements
+            ├── design.yaml              # Design decisions & options
+            └── implementation.yaml      # Plan, todos, validations, tests
 ```
 
-## Requirement Fields
+## YAML Reference
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier (e.g. `req-001`) |
-| `description` | Yes | What the user needs |
-| `userValue` | Yes | Why this matters to the user |
+### Vision (`vision.yaml`)
 
-## Decision Fields
+| Field     | Required | Description                            |
+| --------- | -------- | -------------------------------------- |
+| `vision`  | Yes      | Future-state you want to create        |
+| `mission` | Yes      | What your product does to get there    |
+| `problem` | Yes      | The problem users face today           |
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier (e.g. `dec-001` or `GD-001`) |
-| `topic` | Yes | What question this decision answers |
-| `context` | Yes | Background / why this matters |
-| `requirementRefs` | Yes | Array of requirement IDs this addresses (can be empty for global decisions) |
-| `globalDecisionRefs` | No | Array of global decision IDs this is based on (project-level only) |
-| `options` | Yes | Design alternatives (at least one) |
-| `chosen` | No | ID of the selected option (null while exploring) |
-| `chosenReason` | No | Why this option was picked |
+### Requirement (`requirements.yaml`)
+
+| Field             | Required | Description                           |
+| ----------------- | -------- | ------------------------------------- |
+| `visionAlignment` | Yes      | How this project serves the vision    |
+| `requirements`    | Yes      | Array of requirements                 |
+| `requirements[].id`          | Yes | Unique ID (e.g. `AUTH-001`)    |
+| `requirements[].description` | Yes | What the user can do           |
+| `requirements[].userValue`   | Yes | Why it matters to the user     |
+
+### Decision (`design.yaml`)
+
+| Field               | Required | Description                                       |
+| ------------------- | -------- | ------------------------------------------------- |
+| `notes`             | No       | Free-text research notes, links, constraints      |
+| `decisions`         | Yes      | Array of decisions                                |
+| `id`                | Yes      | Unique ID (e.g. `DEC-AUTH-001`)                   |
+| `topic`             | Yes      | What question this answers                        |
+| `context`           | Yes      | Background and constraints                        |
+| `requirementRefs`   | Yes      | Requirement IDs this addresses                    |
+| `globalDecisionRefs`| No       | Global decision IDs this builds on                |
+| `options`           | Yes      | Array of alternatives (at least one)              |
+| `chosen`            | No       | ID of the selected option (`null` while exploring)|
+| `chosenReason`      | No       | Why this option was picked                        |
 
 Each option has: `id`, `title`, `description`, `pros` (array), `cons` (array).
+
+### Implementation (`implementation.yaml` per project)
+
+| Field         | Required | Description                                |
+| ------------- | -------- | ------------------------------------------ |
+| `plan`        | No       | Free-text phased implementation plan       |
+| `todos`       | Yes      | Tasks with `id`, `description`, `status` (pending/in-progress/done), `requirementRefs` |
+| `validations` | Yes      | Rules with `id`, `description`, `requirementRefs` |
+| `tests`       | Yes      | Specs with `id`, `description`, `type` (unit/integration/e2e), `requirementRefs` |
+
+### General Validations (`implementation.yaml` at root)
+
+| Field         | Required | Description                                |
+| ------------- | -------- | ------------------------------------------ |
+| `validations` | Yes      | Array of global validation rules           |
+| `id`          | Yes      | Unique ID (e.g. `VAL-GENERAL-001`)         |
+| `description` | Yes      | What must be validated                     |
+| `category`    | Yes      | Grouping (linting, testing, security, etc.)|
 
 ## Development
 
@@ -250,12 +261,13 @@ bun run src/cli.ts ui  # Run CLI from source
 
 ```
 src/
-├── commands/           # CLI command handlers (init, ui, validate)
-├── domain/             # Types and validation (Requirement, Vision, Decision, DesignOption)
-├── infrastructure/     # File I/O, YAML parsing, file watcher, HTTP server
-├── stores/             # Zustand state management
-├── components/         # React UI components (VisionHeader, ProjectSection, DesignSection, etc.)
-└── ui/                 # React entry point
+├── ai/                # AI context generation (prompts, context assembly)
+├── commands/          # CLI command handlers (init, ui, validate, context)
+├── domain/            # Types and validation
+├── infrastructure/    # File I/O, YAML parsing, file watcher, HTTP server
+├── stores/            # Zustand state management
+├── components/        # React UI components
+└── ui/                # React entry point
 ```
 
 ## License

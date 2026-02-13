@@ -24,11 +24,26 @@ describe("init", () => {
     expect(existsSync(join(testDir, "desgin-duck", "requirements"))).toBe(true);
   });
 
-  test("creates vision.yaml and example project requirements.yaml", () => {
+  test("creates AGENTS.md, vision.yaml, and example project requirements.yaml", () => {
     init(testDir);
-    const reqDir = join(testDir, "desgin-duck", "requirements");
+    const duckDir = join(testDir, "desgin-duck");
+    const reqDir = join(duckDir, "requirements");
+    expect(existsSync(join(duckDir, "AGENTS.md"))).toBe(true);
     expect(existsSync(join(reqDir, "vision.yaml"))).toBe(true);
     expect(existsSync(join(reqDir, "projects", "example-project", "requirements.yaml"))).toBe(true);
+  });
+
+  test("AGENTS.md contains workflow instructions and context commands", () => {
+    init(testDir);
+    const content = readFileSync(join(testDir, "desgin-duck", "AGENTS.md"), "utf-8");
+    expect(content).toContain("design-duck context vision");
+    expect(content).toContain("design-duck context projects");
+    expect(content).toContain("design-duck context requirements");
+    expect(content).toContain("design-duck context design");
+    expect(content).toContain("design-duck context choose");
+    expect(content).toContain("design-duck context implementation");
+    expect(content).toContain("design-duck context validations");
+    expect(content).toContain("YAML is the source of truth");
   });
 
   test("vision.yaml contains vision, mission, and problem fields", () => {
