@@ -1,15 +1,17 @@
 #!/usr/bin/env bun
 /**
  * Design Duck CLI – requirements gathering and management.
- * Commands: init | ui | validate | context
+ * Commands: init | ui | validate | context | upgrade
  */
 
 import { init } from "./commands/init";
 import { ui } from "./commands/ui";
 import { validate } from "./commands/validate";
 import { context } from "./commands/context";
+import { upgrade } from "./commands/upgrade";
+import { checkVersionMismatch } from "./infrastructure/version";
 
-export const COMMANDS = ["init", "ui", "validate", "context"] as const;
+export const COMMANDS = ["init", "ui", "validate", "context", "upgrade"] as const;
 type Command = (typeof COMMANDS)[number];
 
 function isCommand(s: string): s is Command {
@@ -18,7 +20,7 @@ function isCommand(s: string): s is Command {
 
 function printUsage(): void {
   console.error("Usage: design-duck <command>");
-  console.error("Commands: init | ui | validate | context");
+  console.error("Commands: init | ui | validate | context | upgrade");
   process.exitCode = 1;
 }
 
@@ -38,6 +40,10 @@ function cmdContext(args: string[]): void {
   context(args);
 }
 
+function cmdUpgrade(): void {
+  upgrade();
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -49,6 +55,11 @@ function main(): void {
 
   if (process.env.DEBUG) {
     console.error("[design-duck] command:", command);
+  }
+
+  // Version-mismatch warning for commands other than init and upgrade
+  if (command !== "init" && command !== "upgrade") {
+    checkVersionMismatch();
   }
 
   switch (command) {
@@ -63,6 +74,9 @@ function main(): void {
       break;
     case "context":
       cmdContext(args.slice(1));
+      break;
+    case "upgrade":
+      cmdUpgrade();
       break;
   }
 }
