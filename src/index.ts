@@ -5,7 +5,13 @@
  * This is the main library entry point for programmatic usage.
  */
 
-export const VERSION = '0.2.0';
+import pkg from '../package.json';
+
+/**
+ * The installed version, derived from package.json (single source of truth).
+ * Bump the version in package.json — it automatically propagates here.
+ */
+export const VERSION: string = pkg.version;
 
 // Domain exports will be added here as they are implemented
 // export * from './domain/requirements';
