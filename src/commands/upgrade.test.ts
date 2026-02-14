@@ -33,12 +33,12 @@ describe("upgrade infrastructure", () => {
     rmSync(testDir, { recursive: true, force: true });
   });
 
-  test("VERSION matches 1.0.0 from package.json", () => {
-    expect(VERSION).toBe("1.0.0");
+  test("VERSION matches 1.1.0 from package.json", () => {
+    expect(VERSION).toBe("1.1.0");
   });
 
-  test("migrations array is empty (no migrations needed for v1.0.0)", () => {
-    expect(migrations).toHaveLength(0);
+  test("migrations array has registered migrations", () => {
+    expect(migrations.length).toBeGreaterThan(0);
   });
 
   test("writeProjectVersion writes the current VERSION", () => {

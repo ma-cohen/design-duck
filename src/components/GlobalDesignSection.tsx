@@ -4,7 +4,8 @@
  */
 
 import { useState } from "react";
-import type { GlobalDesign, Decision, DesignOption } from "../domain/requirements/requirement";
+import type { GlobalDesign, Decision, DecisionCategory, DesignOption } from "../domain/requirements/requirement";
+import { DECISION_CATEGORIES } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { DecisionCard } from "./DecisionCard";
 import { EditModal, type FieldDefinition } from "./EditModal";
@@ -13,9 +14,27 @@ export interface GlobalDesignSectionProps {
   globalDesign: GlobalDesign | null;
 }
 
+/** Human-readable labels for each decision category. */
+const CATEGORY_LABELS: Record<DecisionCategory, string> = {
+  product: "Product",
+  architecture: "Architecture",
+  technology: "Technology",
+  data: "Data",
+  testing: "Testing",
+  infrastructure: "Infrastructure",
+  other: "Other",
+};
+
+const CATEGORY_ORDER: DecisionCategory[] = [
+  "product", "architecture", "technology", "data", "testing", "infrastructure", "other",
+];
+
+const CATEGORY_OPTIONS = CATEGORY_ORDER.map((c) => ({ value: c, label: CATEGORY_LABELS[c] }));
+
 const DECISION_FIELDS: FieldDefinition[] = [
   { key: "id", label: "ID", placeholder: "e.g. GD-001" },
   { key: "topic", label: "Topic", placeholder: "What this decision is about" },
+  { key: "category", label: "Category", type: "select", options: CATEGORY_OPTIONS },
   { key: "context", label: "Context", type: "textarea", placeholder: "Background and reasoning..." },
   { key: "requirementRefs", label: "Requirement References", type: "string-list", required: false, placeholder: "e.g. REQ-001" },
 ];
@@ -36,6 +55,7 @@ export function GlobalDesignSection({ globalDesign }: GlobalDesignSectionProps) 
       id: values.id as string,
       topic: values.topic as string,
       context: values.context as string,
+      category: (values.category as DecisionCategory) || "other",
       requirementRefs: values.requirementRefs as string[],
       options: editingDecision?.options ?? [
         { id: "option-1", title: "Option 1", description: "Describe this option", pros: ["Pro 1"], cons: ["Con 1"] },
@@ -178,6 +198,7 @@ export function GlobalDesignSection({ globalDesign }: GlobalDesignSectionProps) 
         <EditModal
           title="Add Global Decision"
           fields={DECISION_FIELDS}
+          initialValues={{ category: "other" }}
           onSave={handleSaveDecision}
           onClose={() => setAddingDecision(false)}
         />
@@ -191,6 +212,7 @@ export function GlobalDesignSection({ globalDesign }: GlobalDesignSectionProps) 
           initialValues={{
             id: editingDecision.id,
             topic: editingDecision.topic,
+            category: editingDecision.category,
             context: editingDecision.context,
             requirementRefs: editingDecision.requirementRefs,
           }}

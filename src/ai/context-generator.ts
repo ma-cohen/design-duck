@@ -20,6 +20,7 @@ import {
   requirementsPrompt,
   designPrompt,
   choosePrompt,
+  propagatePrompt,
   implementationPrompt,
   validationsPrompt,
   playgroundPrompt,
@@ -214,6 +215,7 @@ export function generateDesignContext(
   const rawGlobalValidations = readRawGlobalValidations(docsDir);
   const rawRootContext = readRawRootContext(docsDir);
   const rawProjectContext = readRawProjectContext(docsDir, projectName);
+  const rawProjectDesign = readRawProjectDesign(docsDir, projectName);
 
   return designPrompt(
     rawVision,
@@ -223,6 +225,7 @@ export function generateDesignContext(
     rawGlobalValidations,
     rawRootContext,
     rawProjectContext,
+    rawProjectDesign,
   );
 }
 
@@ -257,6 +260,49 @@ export function generateChooseContext(
   const rawRootContext = readRawRootContext(docsDir);
   const rawProjectContext = readRawProjectContext(docsDir, projectName);
   return choosePrompt(rawVision, projectName, rawReqs, rawDesign, rawRootContext, rawProjectContext);
+}
+
+/**
+ * Propagation Review — review chosen decisions and suggest which to propagate to global.
+ */
+export function generatePropagateContext(
+  docsDir: string,
+  projectName: string,
+): string {
+  const rawVision = readRawVision(docsDir);
+  if (!rawVision) {
+    throw new Error(
+      "vision.yaml not found. Run 'design-duck context vision' first.",
+    );
+  }
+
+  const rawDesign = readRawProjectDesign(docsDir, projectName);
+  if (!rawDesign) {
+    throw new Error(
+      `design.yaml not found for project "${projectName}". Run 'design-duck context design ${projectName}' first.`,
+    );
+  }
+
+  const rawGlobalDesign = readRawGlobalDesign(docsDir);
+
+  // Gather other project designs for cross-referencing
+  const allProjects = listProjects(docsDir);
+  const otherProjectDesigns: { name: string; yaml: string }[] = [];
+  for (const name of allProjects) {
+    if (name === projectName) continue;
+    const otherDesign = readRawProjectDesign(docsDir, name);
+    if (otherDesign) {
+      otherProjectDesigns.push({ name, yaml: otherDesign });
+    }
+  }
+
+  return propagatePrompt(
+    rawVision,
+    projectName,
+    rawDesign,
+    rawGlobalDesign,
+    otherProjectDesigns,
+  );
 }
 
 /**
@@ -379,7 +425,8 @@ export function generatePlaygroundDesignContext(
   }
 
   const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
-  return playgroundDesignPrompt(playgroundName, rawReqs, rawPlaygroundContext);
+  const rawPlaygroundDesign = readRawPlaygroundDesign(docsDir, playgroundName);
+  return playgroundDesignPrompt(playgroundName, rawReqs, rawPlaygroundContext, rawPlaygroundDesign);
 }
 
 /**

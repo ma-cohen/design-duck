@@ -10,8 +10,10 @@ export interface FieldDefinition {
   key: string;
   /** Human-readable label. */
   label: string;
-  /** Input type: defaults to "text". Use "textarea" for multiline. Use "string-list" for arrays of strings. */
-  type?: "text" | "textarea" | "string-list";
+  /** Input type: defaults to "text". Use "textarea" for multiline. Use "string-list" for arrays of strings. Use "select" for dropdowns. */
+  type?: "text" | "textarea" | "string-list" | "select";
+  /** Options for "select" type. Each option has a value and label. */
+  options?: { value: string; label: string }[];
   /** Whether this field is required. @default true */
   required?: boolean;
   /** Placeholder text. */
@@ -119,6 +121,18 @@ export function EditModal({ title, fields, initialValues = {}, onSave, onClose }
                   onChange={(v) => setField(f.key, v)}
                   placeholder={f.placeholder}
                 />
+              ) : f.type === "select" && f.options ? (
+                <select
+                  className="w-full rounded-md border border-slate-500 bg-slate-600 px-3.5 py-2.5 text-base text-slate-100 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  value={values[f.key] as string}
+                  onChange={(e) => setField(f.key, e.target.value)}
+                >
+                  {f.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <input
                   type="text"

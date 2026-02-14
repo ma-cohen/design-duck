@@ -18,7 +18,7 @@ import {
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, extname, dirname } from "node:path";
 import { execSync } from "node:child_process";
-import { dump as yamlDump } from "js-yaml";
+import { dump as yamlDump, load as yamlLoad } from "js-yaml";
 import { watchDocsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
 import {
@@ -141,7 +141,7 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     if (req.method === "OPTIONS") {
       res.writeHead(204, {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
       });
       res.end();
@@ -202,6 +202,13 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     const designMatch = pathname.match(/^\/api\/projects\/([^/]+)\/design$/);
     if (designMatch && req.method === "PUT") {
       handlePutDesign(req, res, docsDir, decodeURIComponent(designMatch[1]));
+      return;
+    }
+
+    // Write API: POST /api/projects/:name/design/propagate
+    const propagateMatch = pathname.match(/^\/api\/projects\/([^/]+)\/design\/propagate$/);
+    if (propagateMatch && req.method === "POST") {
+      handlePropagateDecision(req, res, docsDir, decodeURIComponent(propagateMatch[1]));
       return;
     }
 
@@ -913,6 +920,120 @@ async function handlePutDesign(
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Propagate Decision API handler
+// ---------------------------------------------------------------------------
+
+async function handlePropagateDecision(
+  req: IncomingMessage,
+  res: ServerResponse,
+  docsDir: string,
+  projectName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (!raw.decisionId || typeof raw.decisionId !== "string") {
+      jsonResponse(res, 400, { error: "decisionId must be a non-empty string" });
+      return;
+    }
+
+    const decisionId: string = raw.decisionId;
+
+    // Read project design
+    const projectDesignPath = join(docsDir, "projects", projectName, "design.yaml");
+    if (!existsSync(projectDesignPath)) {
+      jsonResponse(res, 404, { error: `design.yaml not found for project "${projectName}"` });
+      return;
+    }
+
+    const projectDesignRaw = yamlLoad(readFileSync(projectDesignPath, "utf-8")) as Record<string, unknown>;
+    if (!projectDesignRaw || !Array.isArray(projectDesignRaw.decisions)) {
+      jsonResponse(res, 400, { error: "Project design.yaml is invalid" });
+      return;
+    }
+
+    // Find the decision to propagate
+    const decisionIndex = projectDesignRaw.decisions.findIndex(
+      (d: Record<string, unknown>) => d.id === decisionId,
+    );
+    if (decisionIndex === -1) {
+      jsonResponse(res, 404, { error: `Decision "${decisionId}" not found in project "${projectName}"` });
+      return;
+    }
+
+    const decision = projectDesignRaw.decisions[decisionIndex] as Record<string, unknown>;
+
+    // Ensure the decision has been chosen
+    if (!decision.chosen) {
+      jsonResponse(res, 400, { error: `Decision "${decisionId}" has not been chosen yet. Only chosen decisions can be propagated to global.` });
+      return;
+    }
+
+    // Read existing global design (or create empty)
+    const globalDesignPath = join(docsDir, "design.yaml");
+    let globalDecisions: Record<string, unknown>[] = [];
+    let globalNotes: string | null = null;
+
+    if (existsSync(globalDesignPath)) {
+      const globalDesignRaw = yamlLoad(readFileSync(globalDesignPath, "utf-8")) as Record<string, unknown> | null;
+      if (globalDesignRaw && Array.isArray(globalDesignRaw.decisions)) {
+        globalDecisions = globalDesignRaw.decisions;
+      }
+      if (globalDesignRaw && typeof globalDesignRaw.notes === "string") {
+        globalNotes = globalDesignRaw.notes;
+      }
+    }
+
+    // Check for ID collision in global design
+    if (globalDecisions.some((d) => d.id === decisionId)) {
+      jsonResponse(res, 409, { error: `A global decision with ID "${decisionId}" already exists` });
+      return;
+    }
+
+    // 1. Add decision to global design
+    globalDecisions.push(decision);
+    const globalToWrite: Record<string, unknown> = {};
+    if (globalNotes) {
+      globalToWrite.notes = globalNotes;
+    }
+    globalToWrite.decisions = globalDecisions;
+    writeFileSync(globalDesignPath, yamlDump(globalToWrite, { lineWidth: 120, noRefs: true }), "utf-8");
+
+    // 2. Remove decision from project design + update globalDecisionRefs on related decisions
+    const propagatedReqRefs = new Set(
+      Array.isArray(decision.requirementRefs) ? (decision.requirementRefs as string[]) : [],
+    );
+    const remainingDecisions = projectDesignRaw.decisions
+      .filter((_: unknown, i: number) => i !== decisionIndex)
+      .map((d: Record<string, unknown>) => {
+        // If another decision shares requirementRefs with the propagated one, add a globalDecisionRef
+        const dReqRefs = Array.isArray(d.requirementRefs) ? (d.requirementRefs as string[]) : [];
+        const hasSharedRef = dReqRefs.some((ref: string) => propagatedReqRefs.has(ref));
+        if (hasSharedRef) {
+          const existingGlobalRefs = Array.isArray(d.globalDecisionRefs) ? (d.globalDecisionRefs as string[]) : [];
+          if (!existingGlobalRefs.includes(decisionId)) {
+            return { ...d, globalDecisionRefs: [...existingGlobalRefs, decisionId] };
+          }
+        }
+        return d;
+      });
+
+    const projectToWrite: Record<string, unknown> = {};
+    if (typeof projectDesignRaw.notes === "string" && projectDesignRaw.notes) {
+      projectToWrite.notes = projectDesignRaw.notes;
+    }
+    projectToWrite.decisions = remainingDecisions;
+    writeFileSync(projectDesignPath, yamlDump(projectToWrite, { lineWidth: 120, noRefs: true }), "utf-8");
+
+    console.log(`[design-duck:server] Propagated decision "${decisionId}" from project "${projectName}" to global design`);
+    jsonResponse(res, 200, { ok: true, globalDecisionId: decisionId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     jsonResponse(res, 400, { error: message });

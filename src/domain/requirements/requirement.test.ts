@@ -241,6 +241,7 @@ describe("validateDecision", () => {
     id: "dec-001",
     topic: "Search Technology",
     context: "We need fast search",
+    category: "technology",
     requirementRefs: ["req-001"],
     options: [
       {
@@ -373,6 +374,7 @@ describe("assertDecision", () => {
       id: "dec-001",
       topic: "t",
       context: "c",
+      category: "other",
       requirementRefs: [],
       options: [
         { id: "opt-a", title: "t", description: "d", pros: [], cons: [] },

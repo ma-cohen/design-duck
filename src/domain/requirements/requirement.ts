@@ -201,6 +201,20 @@ export function assertContextItem(raw: unknown): asserts raw is ContextItem {
 // Design session types and validation
 // ---------------------------------------------------------------------------
 
+/** Valid decision categories for grouping and coverage tracking. */
+export const DECISION_CATEGORIES = [
+  "product",        // Form factor, UX patterns, feature scope
+  "architecture",   // System structure, code organization, module boundaries
+  "technology",     // Language, framework, libraries, runtime
+  "data",           // Storage, schema, data flow, caching
+  "testing",        // Test strategy, frameworks, coverage
+  "infrastructure", // Deployment, CI/CD, hosting, monitoring
+  "other",          // Anything that doesn't fit the above
+] as const;
+
+/** Decision domain category for grouping and coverage tracking. */
+export type DecisionCategory = (typeof DECISION_CATEGORIES)[number];
+
 /** A single design option with pros and cons. */
 export interface DesignOption {
   id: string;
@@ -225,6 +239,10 @@ export interface Decision {
   options: DesignOption[];
   chosen: string | null;
   chosenReason: string | null;
+  /** Decision domain category for grouping and coverage tracking. */
+  category: DecisionCategory;
+  /** ID of the parent decision whose choice triggered this one (cascading). */
+  parentDecisionRef?: string | null;
 }
 
 /** A project's design document containing decisions. */
@@ -356,6 +374,16 @@ export function validateDecision(raw: unknown): ValidationResult {
   // notes: optional string or null
   if (o.notes !== null && o.notes !== undefined && typeof o.notes !== "string") {
     errors.push("notes must be a string or null");
+  }
+
+  // category: required, must be a valid DecisionCategory
+  if (typeof o.category !== "string" || !(DECISION_CATEGORIES as readonly string[]).includes(o.category)) {
+    errors.push(`category must be one of: ${DECISION_CATEGORIES.join(", ")}`);
+  }
+
+  // parentDecisionRef: optional string or null
+  if (o.parentDecisionRef !== null && o.parentDecisionRef !== undefined && typeof o.parentDecisionRef !== "string") {
+    errors.push("parentDecisionRef must be a string or null");
   }
 
   if (errors.length > 0) {

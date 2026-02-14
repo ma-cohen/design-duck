@@ -5,9 +5,20 @@
  */
 
 import { useState } from "react";
-import type { Decision, DesignOption } from "../domain/requirements/requirement";
+import type { Decision, DecisionCategory, DesignOption } from "../domain/requirements/requirement";
 import { OptionCard } from "./OptionCard";
 import { EditModal, type FieldDefinition } from "./EditModal";
+
+/** Human-readable labels for each decision category. */
+const CATEGORY_LABELS: Record<DecisionCategory, string> = {
+  product: "Product",
+  architecture: "Architecture",
+  technology: "Technology",
+  data: "Data",
+  testing: "Testing",
+  infrastructure: "Infrastructure",
+  other: "Other",
+};
 
 export interface DecisionCardProps {
   decision: Decision;
@@ -16,6 +27,8 @@ export interface DecisionCardProps {
   onSaveOptions?: (options: DesignOption[]) => void;
   onChooseOption?: (optionId: string | null, reason: string | null) => void;
   onSaveNotes?: (notes: string | null) => void;
+  /** Propagate this decision to the global design level. Only shown when decision has a chosen option. */
+  onPropagate?: (decisionId: string) => void;
 }
 
 const OPTION_FIELDS: FieldDefinition[] = [
@@ -26,8 +39,8 @@ const OPTION_FIELDS: FieldDefinition[] = [
   { key: "cons", label: "Cons", type: "string-list", placeholder: "Add a con..." },
 ];
 
-export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChooseOption, onSaveNotes }: DecisionCardProps) {
-  const { id, topic, context, requirementRefs, contextRefs = [], options, chosen, chosenReason, notes } = decision;
+export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChooseOption, onSaveNotes, onPropagate }: DecisionCardProps) {
+  const { id, topic, context, category, requirementRefs, contextRefs = [], parentDecisionRef, options, chosen, chosenReason, notes } = decision;
 
   const [expanded, setExpanded] = useState(false);
   const [editingOption, setEditingOption] = useState<DesignOption | null>(null);
@@ -120,10 +133,33 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
                 Pending
               </span>
             )}
+            {parentDecisionRef && (
+              <span
+                className="shrink-0 rounded-full bg-indigo-900/40 border border-indigo-500/30 px-2.5 py-0.5 text-xs font-medium text-indigo-300"
+                title={`Triggered by ${parentDecisionRef}`}
+              >
+                &#8618; {parentDecisionRef}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0 ml-3">
-            {(onEdit || onDelete) && (
+            {(onEdit || onDelete || onPropagate) && (
               <div className="flex items-center gap-1">
+                {onPropagate && hasChosen && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.stopPropagation(); onPropagate(id); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onPropagate(id); } }}
+                    className="rounded p-1 text-slate-400 hover:bg-indigo-900/30 hover:text-indigo-400 transition-colors cursor-pointer"
+                    title="Propagate to global"
+                    data-testid={`propagate-decision-${id}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </span>
+                )}
                 {onEdit && (
                   <span
                     role="button"

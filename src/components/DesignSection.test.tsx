@@ -14,6 +14,7 @@ const DESIGN: ProjectDesign = {
       id: "dec-001",
       topic: "Search Technology",
       context: "We need fast search",
+      category: "technology",
       requirementRefs: ["req-001"],
       options: [
         {
@@ -31,6 +32,7 @@ const DESIGN: ProjectDesign = {
       id: "dec-002",
       topic: "Storage Backend",
       context: "Need reliable data storage",
+      category: "data",
       requirementRefs: ["req-002"],
       options: [
         {

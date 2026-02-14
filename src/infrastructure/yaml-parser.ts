@@ -18,6 +18,7 @@ import type {
   ContextItem,
   ContextDocument,
   Decision,
+  DecisionCategory,
   ProjectDesign,
   GeneralValidation,
   GeneralValidations,
@@ -197,7 +198,11 @@ export function parseProjectDesignYaml(content: string): ProjectDesign {
   const decisions: Decision[] = [];
 
   for (let i = 0; i < file.decisions.length; i++) {
-    const raw = file.decisions[i];
+    const raw = file.decisions[i] as Record<string, unknown> | null;
+    // Default category to "other" when missing (robustness for pre-migration or hand-edited YAML)
+    if (raw && typeof raw === "object" && !raw.category) {
+      raw.category = "other" satisfies DecisionCategory;
+    }
     try {
       assertDecision(raw);
       decisions.push(raw);

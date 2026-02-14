@@ -12,10 +12,13 @@
  */
 
 import type { Migration } from "./types";
+import { migration as v1_1_0 } from "./1.1.0";
 
 /**
  * All registered migrations, sorted by target version (oldest first).
  * The upgrade command filters this list to only run migrations between
  * the user's current version and the installed version.
  */
-export const migrations: Migration[] = [];
+export const migrations: Migration[] = [
+  v1_1_0,
+];

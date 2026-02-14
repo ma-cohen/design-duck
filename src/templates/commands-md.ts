@@ -168,7 +168,8 @@ Brainstorm design decisions and options for a specific project.
 ## How to Use
 
 The user tagged this file to ask you to work on the **design** phase for a project.
-This phase requires a **project name**.
+This phase requires a **project name**. Design is **iterative** — you may run
+this multiple times as cascading decisions emerge from previous choices.
 
 ### Determining the Project Name
 
@@ -189,19 +190,24 @@ This phase requires a **project name**.
    \`\`\`
 
 2. Read the output carefully — it contains current requirements, existing
-   design decisions, context items, and detailed instructions.
+   design decisions (including chosen ones), context items, and detailed
+   instructions.
 
-3. **Ask the user about their current system and technical situation** —
-   existing tech stack, infrastructure, deployment environment, etc. Capture
-   these as context items in
+3. **On first run**, ask the user about their current system and technical
+   situation — existing tech stack, infrastructure, deployment environment,
+   etc. Capture these as context items in
    \`desgin-duck/docs/projects/<project-name>/context.yaml\`.
-   Do not make design decisions without understanding the current landscape.
+   **On subsequent runs** (iteration), build on existing context and focus
+   on cascading decisions triggered by previous choices.
 
 4. Follow the instructions from the context output. Create or edit
    \`desgin-duck/docs/projects/<project-name>/design.yaml\`
-   with design decisions. Each decision should have multiple options with
-   pros/cons. Use \`contextRefs\` to link decisions to relevant context items.
-   Leave \`chosen\` and \`chosenReason\` as \`null\` — the human picks.
+   with design decisions. Each decision needs:
+   - A \`category\`: product, architecture, technology, data, testing,
+     infrastructure, or other
+   - Multiple options with pros/cons
+   - \`parentDecisionRef\` if triggered by a previous choice
+   - \`chosen: null\` and \`chosenReason: null\` — the human picks
 
 5. Run validation to check your work:
 
@@ -211,10 +217,12 @@ This phase requires a **project name**.
 
 ## Rules
 
-- Each decision must reference requirements via \`requirementRefs\`.
+- Each decision must have a \`category\` and reference requirements via \`requirementRefs\`.
 - Use \`contextRefs\` to link decisions to relevant context items.
 - Provide at least two options per decision with clear pros/cons.
 - Do NOT make choices — leave \`chosen: null\` for the user to decide.
+- Set \`parentDecisionRef\` on decisions triggered by a previous choice.
+- Ensure coverage across categories: product, architecture, technology, data, testing, infrastructure.
 - **Favour simplicity.** Always include a simple, straightforward option. Don't propose over-engineered solutions that go beyond what the requirements need.
 - Only create decisions for questions that genuinely matter — skip obvious or trivial choices.
 
@@ -222,6 +230,8 @@ This phase requires a **project name**.
 
 When you're done, suggest the user review the design options in the UI, then
 continue to the **choose** phase to evaluate and pick options: \`@dd-choose\`
+
+After choosing, if cascading decisions emerge, come back here: \`@dd-design\`
 `;
 
 const DD_CHOOSE = `# Design Duck — Choose
@@ -258,7 +268,11 @@ This phase requires a **project name**.
    decision, evaluate options and set \`chosen\` + \`chosenReason\` in
    \`desgin-duck/docs/projects/<project-name>/design.yaml\`.
 
-4. Run validation to check your work:
+4. **Perform a cascading analysis**: after choosing, review your choices and
+   identify any new decisions that are now needed as a consequence. List them
+   so the user knows whether to loop back to \`@dd-design\`.
+
+5. Run validation to check your work:
 
    \`\`\`bash
    dd validate
@@ -270,11 +284,68 @@ This phase requires a **project name**.
 - Provide a clear \`chosenReason\` for each selection.
 - Consider the user's message for any preferences or constraints.
 - **Prefer simpler options** when they deliver similar user value. Choose complexity only when a concrete requirement demands it.
+- Consider how choices interact — one choice may constrain or enable options in another decision.
 
 ## Next Step
 
-When you're done, suggest the user continue to the **implementation** phase to
-create a phased plan, todos, and tests: \`@dd-implementation\`
+**If cascading decisions were identified**, suggest the user loop back to the
+design phase: \`@dd-design\`
+
+**If the design is complete** across all categories, suggest continuing to:
+- **Propagation review**: \`@dd-propagate\`
+- **Implementation plan**: \`@dd-implementation\`
+`;
+
+const DD_PROPAGATE = `# Design Duck — Propagate
+
+Review chosen design decisions and identify candidates for propagation to global.
+
+## How to Use
+
+The user tagged this file to ask you to review a project's decisions and recommend
+which ones should be **propagated to global** (system-wide) design decisions.
+This phase requires a **project name**.
+
+### Determining the Project Name
+
+1. If the user mentioned a project name in their message, use it.
+2. Otherwise, list the available projects:
+   \`\`\`bash
+   ls desgin-duck/docs/projects/
+   \`\`\`
+3. If there is exactly one project (besides \`example-project\`), use it.
+4. If there are multiple projects, ask the user which one to work on.
+
+## Steps
+
+1. Run the context command with the project name:
+
+   \`\`\`bash
+   dd context propagate <project-name>
+   \`\`\`
+
+2. Read the output carefully — it contains the project's design decisions,
+   existing global decisions, other project designs for cross-referencing,
+   and detailed criteria for propagation.
+
+3. Follow the instructions from the context output. For each chosen decision,
+   recommend whether it should be propagated to global or kept local, with
+   clear reasoning.
+
+4. **Do NOT edit any files.** Your job is to recommend. The user will use the
+   "Propagate to Global" button in the UI to move decisions they agree with.
+
+## Rules
+
+- Only chosen decisions can be propagated — unchosen decisions stay local.
+- A decision should be global only if it is cross-cutting, establishes a system-wide
+  standard, or involves shared infrastructure.
+- Do not over-propagate — most decisions should stay project-specific.
+
+## Next Step
+
+After the user acts on your recommendations in the UI, suggest continuing to the
+**implementation** phase: \`@dd-implementation\`
 `;
 
 const DD_IMPLEMENTATION = `# Design Duck — Implementation
@@ -575,6 +646,7 @@ export const COMMAND_FILES: Record<string, string> = {
   "dd-requirements.md": DD_REQUIREMENTS,
   "dd-design.md": DD_DESIGN,
   "dd-choose.md": DD_CHOOSE,
+  "dd-propagate.md": DD_PROPAGATE,
   "dd-implementation.md": DD_IMPLEMENTATION,
   "dd-validations.md": DD_VALIDATIONS,
   "dd-playground.md": DD_PLAYGROUND,

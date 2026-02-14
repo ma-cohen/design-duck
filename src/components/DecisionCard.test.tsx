@@ -11,6 +11,7 @@ const DECISION: Decision = {
   id: "dec-001",
   topic: "Search Technology",
   context: "We need sub-second search across millions of products",
+  category: "technology",
   requirementRefs: ["req-001", "req-002"],
   options: [
     {

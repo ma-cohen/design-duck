@@ -231,6 +231,7 @@ export function designPrompt(
   globalValidationsYaml: string | null,
   rootContextYaml: string | null,
   projectContextYaml: string | null,
+  projectDesignYaml: string | null,
 ): string {
   const globalDesignBlock = globalDesignYaml
     ? `## Global Design Decisions\n\nThe following system-wide decisions have been made and must be respected:\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
@@ -248,6 +249,57 @@ export function designPrompt(
     ? `## Project Context\n\nTechnical and system facts for this project:\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
     : `## Project Context\n\nNo project-level context has been captured yet.\n`;
 
+  const isIteration = projectDesignYaml !== null;
+
+  const existingDesignBlock = projectDesignYaml
+    ? `## Existing Design Decisions
+
+The following decisions already exist for this project:
+
+\`\`\`yaml
+${projectDesignYaml}\`\`\`
+
+**Do NOT recreate or duplicate these decisions.** Instead:
+- If a decision has been chosen, analyze whether the choice opens up NEW
+  questions that need their own decisions. These are **cascading decisions**.
+- Set \`parentDecisionRef\` on cascading decisions to the ID of the parent
+  decision that triggered them.
+- Focus on gaps: which categories are missing? Which choices need follow-up?
+- You may refine existing unchosen decisions (add options, improve descriptions).
+`
+    : "";
+
+  const cascadingBlock = isIteration
+    ? `## Cascading Decisions
+
+Review each **chosen** decision above. Ask: "Does this choice open up new
+questions?" For example:
+- Choosing "TypeScript" -> may need decisions about build tool, type strictness
+- Choosing "Browser Extension" -> may need decisions about manifest version,
+  content script architecture
+- Choosing "PostgreSQL" -> may need decisions about ORM, migration strategy
+
+For each cascading decision, set \`parentDecisionRef\` to the ID of the
+decision whose choice triggered it.
+`
+    : "";
+
+  const firstRunQuestions = !isIteration
+    ? `**Before brainstorming decisions, ask the user about their current system and technical situation.** Understanding the existing landscape is critical for making good design decisions. Ask about:
+- Existing technology stack and infrastructure
+- Current system architecture
+- Deployment environment (cloud provider, on-prem, etc.)
+- Performance or scale requirements
+- Integration points with other systems
+
+Capture the answers as context items in: desgin-duck/docs/projects/${projectName}/context.yaml
+`
+    : `Since this is a design iteration, you already have context from previous rounds.
+If the user's answers from before are captured in context.yaml, build on them.
+Only ask follow-up questions if a chosen decision opens up a new area that
+needs more context.
+`;
+
   return `# Design Brainstorm: ${projectName}
 
 ## Your Role
@@ -256,15 +308,7 @@ You are helping brainstorm design decisions for the "${projectName}" project.
 For each key decision, propose multiple options with pros and cons.
 Do NOT choose yet — present options for human review.
 
-**Before brainstorming decisions, ask the user about their current system and technical situation.** Understanding the existing landscape is critical for making good design decisions. Ask about:
-- Existing technology stack and infrastructure
-- Current system architecture
-- Deployment environment (cloud provider, on-prem, etc.)
-- Performance or scale requirements
-- Integration points with other systems
-
-Capture the answers as context items in: desgin-duck/docs/projects/${projectName}/context.yaml
-
+${firstRunQuestions}
 ## Vision Context
 
 \`\`\`yaml
@@ -276,8 +320,23 @@ ${rootContextBlock}${projectContextBlock}
 \`\`\`yaml
 ${requirementsYaml}\`\`\`
 
-${globalDesignBlock}${validationsBlock}
+${globalDesignBlock}${validationsBlock}${existingDesignBlock}
+## Decision Categories
 
+Every decision must have a \`category\`. Assign one of the following:
+- **product**: Form factor, UX patterns, feature scope
+- **architecture**: System structure, code organization, module boundaries
+- **technology**: Language, framework, libraries, runtime
+- **data**: Storage, schema, data flow, caching
+- **testing**: Test strategy, test frameworks, coverage targets, test environments
+- **infrastructure**: Deployment, CI/CD, hosting, monitoring
+- **other**: Anything that doesn't fit the above
+
+Ensure you consider all relevant categories. At minimum, think about whether
+the project needs decisions for: **technology choice**, **testing approach**,
+and **code organization**. Only skip a category if it genuinely doesn't apply.
+
+${cascadingBlock}
 ## Instructions
 
 1. First, update project context items in desgin-duck/docs/projects/${projectName}/context.yaml based on the user's answers.
@@ -285,10 +344,12 @@ ${globalDesignBlock}${validationsBlock}
 
 For each significant architectural or design decision:
 1. Identify the topic and provide context.
-2. Reference which requirements drive this decision.
-3. Reference which context items are relevant via \`contextRefs\`.
-4. Propose 2-3 options with pros and cons.
-5. Leave \`chosen\` and \`chosenReason\` as null — the human decides.
+2. Assign a \`category\` from the list above.
+3. Reference which requirements drive this decision.
+4. Reference which context items are relevant via \`contextRefs\`.
+5. Propose 2-3 options with pros and cons.
+6. Leave \`chosen\` and \`chosenReason\` as null — the human decides.
+7. If this decision was triggered by a previous choice, set \`parentDecisionRef\`.
 
 If relevant global decisions exist, reference them via \`globalDecisionRefs\`.
 
@@ -311,6 +372,7 @@ decisions:
   - id: DEC-<PREFIX>-001
     topic: "What to decide"
     context: "Why this decision matters and what constraints exist"
+    category: technology
     requirementRefs:
       - PREFIX-001
     contextRefs:
@@ -335,6 +397,28 @@ decisions:
           - "Disadvantage 2"
     chosen: null
     chosenReason: null
+  - id: DEC-<PREFIX>-002
+    topic: "Cascading decision triggered by choosing Option A above"
+    context: "Now that we chose Option A, we need to decide..."
+    category: architecture
+    parentDecisionRef: DEC-<PREFIX>-001
+    requirementRefs:
+      - PREFIX-001
+    contextRefs: []
+    globalDecisionRefs: []
+    options:
+      - id: option-a
+        title: "Sub-option A"
+        description: "..."
+        pros: ["..."]
+        cons: ["..."]
+      - id: option-b
+        title: "Sub-option B"
+        description: "..."
+        pros: ["..."]
+        cons: ["..."]
+    chosen: null
+    chosenReason: null
 \`\`\`
 
 ## Guidelines
@@ -353,6 +437,10 @@ decisions:
 When you're done, suggest the user review the design options in the UI, then
 continue to the **choose** phase to evaluate and pick options by running:
 \`dd context choose ${projectName}\`
+
+**Design is iterative.** After choosing, if new cascading decisions emerge,
+re-run: \`dd context design ${projectName}\` to add them. Repeat until the
+design feels complete across all categories.
 `;
 }
 
@@ -411,19 +499,35 @@ For each decision where \`chosen\` is null:
 
 Do NOT modify decisions that already have a \`chosen\` value unless specifically asked.
 
+## Cascading Analysis
+
+After choosing all unchosen decisions, review your choices and identify any
+**new decisions** that are now needed as a direct consequence. For each:
+- What is the new decision topic?
+- Which choice triggered it? (this becomes the \`parentDecisionRef\`)
+- What \`category\` does it fall into?
+
+List these cascading decisions at the end of your response so the user knows
+whether another design iteration is needed.
+
 ## Guidelines
 
 - Justify choices in terms of user value, not just technical merit.
-- Consider how choices interact with each other.
+- Consider how choices interact with each other — one choice may constrain or
+  enable options in another decision.
 - Keep \`chosenReason\` to 1-2 sentences.
 - **Prefer the simpler option** when two options deliver similar user value. Complexity should only win when it provides a clear, concrete advantage for a real requirement.
 - **Avoid over-engineering.** Don't choose an option just because it's more "scalable" or "future-proof" unless a current requirement demands that scalability.
 
 ## Next Step
 
-When you're done, suggest the user continue to the **implementation** phase to
-create a phased plan, todos, and tests by running:
-\`dd context implementation ${projectName}\`
+**If cascading decisions were identified above**, the user should run the design
+phase again to add them:
+\`dd context design ${projectName}\`
+
+**If the design feels complete** across all categories, continue to:
+- **Propagation review**: \`dd context propagate ${projectName}\`
+- **Implementation plan**: \`dd context implementation ${projectName}\`
 `;
 }
 
@@ -528,6 +632,92 @@ tests:
 When you're done, suggest the user optionally define **global validations** that
 apply across all projects by running: \`dd context validations\`.
 Otherwise, the design is complete and the user can start implementing based on the plan.
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Propagate Review
+// ---------------------------------------------------------------------------
+
+export function propagatePrompt(
+  visionYaml: string,
+  projectName: string,
+  projectDesignYaml: string,
+  globalDesignYaml: string | null,
+  otherProjectDesigns: { name: string; yaml: string }[],
+): string {
+  const globalDesignBlock = globalDesignYaml
+    ? `## Current Global Design Decisions\n\nThese decisions already apply system-wide:\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
+    : `## Current Global Design Decisions\n\nNo global design decisions have been defined yet.\n`;
+
+  const otherProjectsBlock =
+    otherProjectDesigns.length > 0
+      ? `## Other Project Designs\n\n${otherProjectDesigns.map((p) => `### ${p.name}\n\n\`\`\`yaml\n${p.yaml}\`\`\`\n`).join("\n")}`
+      : `## Other Project Designs\n\nNo other projects have design decisions yet.\n`;
+
+  return `# Propagation Review: ${projectName}
+
+## Your Role
+
+You are helping review chosen design decisions in the "${projectName}" project to identify
+which ones should be **propagated to global** (system-wide) design decisions.
+
+Global decisions apply to ALL projects and represent cross-cutting architectural constraints.
+Not every decision should be global — only those that genuinely affect multiple projects or
+represent system-wide standards.
+
+**Important:** You should NOT make any file changes. Your job is to analyze and recommend.
+The user will use the "Propagate to Global" button in the UI to act on your recommendations.
+
+## Vision Context
+
+\`\`\`yaml
+${visionYaml}\`\`\`
+
+## ${projectName} Design Decisions
+
+\`\`\`yaml
+${projectDesignYaml}\`\`\`
+
+${globalDesignBlock}
+${otherProjectsBlock}
+
+## Instructions
+
+Review each **chosen** decision in the "${projectName}" project and determine whether it
+should be propagated to the global design level. For each decision, provide one of:
+
+- **PROPAGATE** — This decision should become a global design decision.
+- **KEEP LOCAL** — This decision should remain project-specific.
+
+## Criteria for Propagation
+
+A decision should be propagated to global if it meets one or more of these criteria:
+
+1. **Cross-cutting concern**: The decision affects multiple projects (e.g., "use PostgreSQL for all data storage", "all APIs must use REST").
+2. **System-wide standard**: The decision establishes a pattern or standard that other projects should follow for consistency (e.g., "authentication uses JWT tokens").
+3. **Shared infrastructure**: The decision involves shared infrastructure or tooling (e.g., "deploy via Docker containers on AWS ECS").
+4. **Duplicate pattern**: The same or very similar decision appears (or would logically appear) in other projects.
+
+A decision should remain local if:
+
+1. It only affects the implementation of this specific project.
+2. It is tightly coupled to project-specific requirements.
+3. Making it global would over-constrain other projects unnecessarily.
+
+## Expected Output Format
+
+For each chosen decision, output:
+
+**[DECISION-ID] — [TOPIC]**
+- Recommendation: PROPAGATE / KEEP LOCAL
+- Reasoning: 1-2 sentences explaining why.
+
+## Summary
+
+After reviewing all decisions, provide a final summary listing only the decisions
+recommended for propagation, so the user can quickly act on them in the UI using
+the "Propagate to Global" button on each decision card.
 `;
 }
 
@@ -722,10 +912,47 @@ export function playgroundDesignPrompt(
   playgroundName: string,
   requirementsYaml: string,
   playgroundContextYaml: string | null,
+  playgroundDesignYaml: string | null,
 ): string {
   const contextBlock = playgroundContextYaml
     ? `## Playground Context\n\nTechnical and system facts for this playground:\n\n\`\`\`yaml\n${playgroundContextYaml}\`\`\`\n`
     : `## Playground Context\n\nNo context has been captured yet.\n`;
+
+  const isIteration = playgroundDesignYaml !== null;
+
+  const existingDesignBlock = playgroundDesignYaml
+    ? `## Existing Design Decisions
+
+The following decisions already exist for this playground:
+
+\`\`\`yaml
+${playgroundDesignYaml}\`\`\`
+
+**Do NOT recreate or duplicate these decisions.** Instead:
+- If a decision has been chosen, analyze whether the choice opens up NEW
+  questions that need their own decisions (cascading decisions).
+- Set \`parentDecisionRef\` on cascading decisions to the parent decision ID.
+- Focus on gaps: which categories are missing? Which choices need follow-up?
+`
+    : "";
+
+  const cascadingBlock = isIteration
+    ? `## Cascading Decisions
+
+Review each **chosen** decision above. Ask: "Does this choice open up new
+questions?" For each cascading decision, set \`parentDecisionRef\` to the ID
+of the decision whose choice triggered it.
+`
+    : "";
+
+  const firstRunQuestions = !isIteration
+    ? `**Before brainstorming decisions, ask about the current system and technical situation.**
+Capture the answers as context items in:
+desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
+`
+    : `Since this is a design iteration, build on existing context. Only ask
+follow-up questions if a chosen decision opens up a new area.
+`;
 
   return `# Playground Design Brainstorm: ${playgroundName}
 
@@ -735,16 +962,26 @@ You are helping brainstorm design decisions for the "${playgroundName}" playgrou
 For each key decision, propose multiple options with pros and cons.
 Do NOT choose yet — present options for review.
 
-**Before brainstorming decisions, ask about the current system and technical situation.**
-Capture the answers as context items in:
-desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
-
+${firstRunQuestions}
 ${contextBlock}
 ## Playground Requirements
 
 \`\`\`yaml
 ${requirementsYaml}\`\`\`
 
+${existingDesignBlock}
+## Decision Categories
+
+Every decision must have a \`category\`. Assign one of the following:
+- **product**: Form factor, UX patterns, feature scope
+- **architecture**: System structure, code organization, module boundaries
+- **technology**: Language, framework, libraries, runtime
+- **data**: Storage, schema, data flow, caching
+- **testing**: Test strategy, test frameworks, coverage targets
+- **infrastructure**: Deployment, CI/CD, hosting, monitoring
+- **other**: Anything that doesn't fit the above
+
+${cascadingBlock}
 ## Instructions
 
 1. First, update context items in desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
@@ -752,10 +989,12 @@ ${requirementsYaml}\`\`\`
 
 For each significant decision:
 1. Identify the topic and provide context.
-2. Reference which requirements drive this decision.
-3. Reference which context items are relevant via \`contextRefs\`.
-4. Propose 2-3 options with pros and cons.
-5. Leave \`chosen\` and \`chosenReason\` as null.
+2. Assign a \`category\` from the list above.
+3. Reference which requirements drive this decision.
+4. Reference which context items are relevant via \`contextRefs\`.
+5. Propose 2-3 options with pros and cons.
+6. Leave \`chosen\` and \`chosenReason\` as null.
+7. If triggered by a previous choice, set \`parentDecisionRef\`.
 
 ## Expected YAML Format
 
@@ -774,6 +1013,7 @@ decisions:
   - id: DEC-PG-001
     topic: "What to decide"
     context: "Why this decision matters"
+    category: technology
     requirementRefs:
       - PG-001
     contextRefs:
@@ -805,6 +1045,9 @@ decisions:
 
 When you're done, suggest continuing to the **playground-choose** phase:
 \`dd context playground-choose ${playgroundName}\`
+
+**Design is iterative.** After choosing, if cascading decisions emerge,
+re-run: \`dd context playground-design ${playgroundName}\`
 `;
 }
 
@@ -847,16 +1090,32 @@ For each decision where \`chosen\` is null:
 
 Do NOT modify decisions that already have a \`chosen\` value unless specifically asked.
 
+## Cascading Analysis
+
+After choosing all unchosen decisions, review your choices and identify any
+**new decisions** that are now needed as a direct consequence. For each:
+- What is the new decision topic?
+- Which choice triggered it? (this becomes the \`parentDecisionRef\`)
+- What \`category\` does it fall into?
+
+List these cascading decisions at the end of your response so the user knows
+whether another design iteration is needed.
+
 ## Guidelines
 
 - Justify choices in terms of user value, not just technical merit.
-- Consider how choices interact with each other.
+- Consider how choices interact with each other — one choice may constrain or
+  enable options in another decision.
 - Keep \`chosenReason\` to 1-2 sentences.
 - **Prefer the simpler option** when two options deliver similar value.
 
 ## Next Step
 
-When you're done, suggest continuing to the **playground-implementation** phase:
+**If cascading decisions were identified above**, the user should run the design
+phase again to add them:
+\`dd context playground-design ${playgroundName}\`
+
+**If the design feels complete**, continue to the **playground-implementation** phase:
 \`dd context playground-implementation ${playgroundName}\`
 `;
 }

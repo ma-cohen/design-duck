@@ -147,6 +147,9 @@ export interface RequirementsState {
 
   /** Deletes a playground from the server (DELETE /api/playgrounds/:name). */
   deletePlayground: (playgroundName: string) => Promise<void>;
+
+  /** Propagates a project design decision to global design (POST /api/projects/:name/design/propagate). */
+  propagateToGlobal: (projectName: string, decisionId: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -658,6 +661,21 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     const { [playgroundName]: _d, ...remainingDesigns } = get().playgroundDesigns;
     const { [playgroundName]: _i, ...remainingImpls } = get().playgroundImplementations;
     set({ playgrounds: remainingPlaygrounds, playgroundContexts: remainingContexts, playgroundDesigns: remainingDesigns, playgroundImplementations: remainingImpls });
+  },
+
+  propagateToGlobal: async (projectName: string, decisionId: string) => {
+    console.log(`[design-duck:store] Propagating decision "${decisionId}" from ${projectName} to global...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/design/propagate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decisionId }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to propagate decision to global");
+    }
+    // SSE will trigger a reload automatically; also reload immediately for responsiveness
+    await get().loadFromFiles();
   },
 
   stopWatching: () => {

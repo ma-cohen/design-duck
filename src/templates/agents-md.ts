@@ -53,24 +53,40 @@ design-duck context requirements <project>
 Fill in user-value requirements. Each requirement has an **id**, **description**,
 and **userValue**. Focus on what users need, not technical implementation.
 
-### 4. Design Brainstorm (per project)
+### 4-5. Design and Choose (iterative, per project)
+
+Design is **iterative**. After choosing options, new cascading decisions may
+emerge. Loop between design and choose until the design is complete:
+
+1. Brainstorm decisions:
+   \`\`\`bash
+   design-duck context design <project>
+   \`\`\`
+
+2. Evaluate and choose options:
+   \`\`\`bash
+   design-duck context choose <project>
+   \`\`\`
+
+3. If cascading decisions are needed (the choose phase will identify them),
+   go back to step 1.
+
+4. When the design feels complete across all categories, proceed.
+
+Each decision has a **category** (product, architecture, technology, data,
+testing, infrastructure) and optionally a **parentDecisionRef** linking it
+to the decision whose choice triggered it.
+
+### 5b. Propagation Review (per project, optional)
 
 \`\`\`bash
-design-duck context design <project>
+design-duck context propagate <project>
 \`\`\`
 
-Create \`design.yaml\` for the project with design decisions. Each decision has
-multiple options with pros/cons. Leave \`chosen\` and \`chosenReason\` as \`null\` —
-the human picks.
-
-### 5. Choose Design (per project)
-
-\`\`\`bash
-design-duck context choose <project>
-\`\`\`
-
-For each unchosen decision, evaluate options and set \`chosen\` + \`chosenReason\`.
-Do not override decisions that already have a choice.
+After the design is complete, review whether any decisions should be **propagated
+to global** — making them system-wide decisions that all projects must follow.
+The AI recommends candidates; the user uses the "Propagate to Global" button in
+the UI to move decisions. Only chosen decisions can be propagated.
 
 ### 6. Implementation Plan (per project)
 
@@ -144,6 +160,7 @@ your instructions — the agent handles the rest.
 | \`@dd-requirements\`    | Gather requirements for a project           |
 | \`@dd-design\`          | Brainstorm design decisions for a project   |
 | \`@dd-choose\`          | Evaluate and choose design options          |
+| \`@dd-propagate\`       | Review decisions for propagation to global  |
 | \`@dd-implementation\`  | Create an implementation plan for a project |
 | \`@dd-validations\`     | Define global cross-cutting validations     |
 | \`@dd-validate\`        | Validate all YAML files                     |
@@ -168,6 +185,12 @@ context command and fills in vision.yaml based on your description.
 - **Iterate, don't anticipate.** Design for what's needed now. Future
   requirements can be handled in future iterations — keep the current design
   lean and focused.
+- **Design cascades.** Choosing one option often opens up new questions. After
+  choosing, identify cascading decisions and loop back to design. Use
+  \`parentDecisionRef\` to link child decisions to the choice that triggered them.
+- **Cover all categories.** Ensure decisions span product, architecture,
+  technology, data, testing, and infrastructure. The UI shows a coverage bar
+  so you can spot gaps.
 
 ## Rules
 
@@ -179,5 +202,9 @@ context command and fills in vision.yaml based on your description.
   \`design-duck validate\` to check cross-references.
 - **Global design decisions** can be referenced by project decisions via
   \`globalDecisionRefs\`.
+- **Every decision must have a \`category\`**: product, architecture, technology,
+  data, testing, infrastructure, or other.
+- **Cascading decisions** should set \`parentDecisionRef\` to the ID of the
+  decision whose choice triggered them.
 - Keep descriptions concise and user-focused.
 `;

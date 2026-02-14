@@ -50,13 +50,14 @@ describe("context command", () => {
     );
   }
 
-  test("PHASES exports all 12 phases", () => {
-    expect(PHASES).toHaveLength(12);
+  test("PHASES exports all 13 phases", () => {
+    expect(PHASES).toHaveLength(13);
     expect(PHASES).toContain("vision");
     expect(PHASES).toContain("projects");
     expect(PHASES).toContain("requirements");
     expect(PHASES).toContain("design");
     expect(PHASES).toContain("choose");
+    expect(PHASES).toContain("propagate");
     expect(PHASES).toContain("implementation");
     expect(PHASES).toContain("validations");
     expect(PHASES).toContain("playground");

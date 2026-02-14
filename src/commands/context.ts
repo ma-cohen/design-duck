@@ -13,6 +13,7 @@ import {
   generateRequirementsContext,
   generateDesignContext,
   generateChooseContext,
+  generatePropagateContext,
   generateImplementationContext,
   generateValidationsContext,
   generatePlaygroundContext,
@@ -28,6 +29,7 @@ export const PHASES = [
   "requirements",
   "design",
   "choose",
+  "propagate",
   "implementation",
   "validations",
   "playground",
@@ -44,6 +46,7 @@ const PROJECT_PHASES = new Set<Phase>([
   "requirements",
   "design",
   "choose",
+  "propagate",
   "implementation",
 ]);
 
@@ -68,6 +71,7 @@ function printContextUsage(): void {
   console.error("  requirements <p>              Gather requirements for a project");
   console.error("  design <p>                    Brainstorm design decisions for a project");
   console.error("  choose <p>                    Evaluate and choose design options");
+  console.error("  propagate <p>                 Review decisions for propagation to global");
   console.error("  implementation <p>            Create implementation plan for a project");
   console.error("  validations                   Define global cross-cutting validations");
   console.error("");
@@ -157,6 +161,9 @@ export function context(
         break;
       case "choose":
         output = generateChooseContext(docsDir!, projectName!);
+        break;
+      case "propagate":
+        output = generatePropagateContext(docsDir!, projectName!);
         break;
       case "implementation":
         output = generateImplementationContext(docsDir!, projectName!);
