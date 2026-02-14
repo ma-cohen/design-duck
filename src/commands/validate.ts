@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation, readRootContext, readProjectContext } from "../infrastructure/file-store";
+import { readVision, listProjects, listPlaygrounds, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation, readRootContext, readProjectContext, readPlaygroundRequirements, readPlaygroundContext, readPlaygroundDesign, readPlaygroundImplementation } from "../infrastructure/file-store";
 import { validateVision } from "../domain/requirements/requirement";
 
 /**
@@ -318,6 +318,158 @@ export function validate(targetDir: string = process.cwd()): void {
     }
   }
 
+  // Validate all playground requirements
+  const playgrounds = listPlaygrounds(reqDir);
+  let totalPlaygroundRequirements = 0;
+  let totalPlaygroundDecisions = 0;
+
+  if (playgrounds.length > 0) {
+    console.log("");
+    console.log("--- Playgrounds ---");
+  }
+
+  for (const playgroundName of playgrounds) {
+    console.log(`Validating playground "${playgroundName}"...`);
+
+    // Validate requirements.yaml (required)
+    let playgroundRequirementIds: string[] = [];
+    try {
+      const playgroundReqs = readPlaygroundRequirements(reqDir, playgroundName);
+      // Check problemStatement
+      if (!playgroundReqs.problemStatement || playgroundReqs.problemStatement.trim() === "") {
+        hasErrors = true;
+        console.error(`✗ ${playgroundName}/requirements.yaml: problemStatement must be a non-empty string`);
+      }
+      totalPlaygroundRequirements += playgroundReqs.requirements.length;
+      playgroundRequirementIds = playgroundReqs.requirements.map((r) => r.id);
+      console.log(
+        `✓ ${playgroundName}/requirements.yaml is valid (${playgroundReqs.requirements.length} requirements)`,
+      );
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${playgroundName}/requirements.yaml validation failed:`);
+      console.error(`  ${msg}`);
+    }
+
+    // Validate playground context.yaml (optional)
+    let playgroundContextIds: Set<string> = new Set();
+    try {
+      const pgContext = readPlaygroundContext(reqDir, playgroundName);
+      if (pgContext) {
+        playgroundContextIds = new Set(pgContext.contexts.map((c) => c.id));
+        console.log(
+          `✓ ${playgroundName}/context.yaml is valid (${pgContext.contexts.length} context items)`,
+        );
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${playgroundName}/context.yaml validation failed:`);
+      console.error(`  ${msg}`);
+    }
+
+    // Validate design.yaml (optional)
+    try {
+      const pgDesign = readPlaygroundDesign(reqDir, playgroundName);
+      if (pgDesign) {
+        totalPlaygroundDecisions += pgDesign.decisions.length;
+        console.log(
+          `✓ ${playgroundName}/design.yaml is valid (${pgDesign.decisions.length} decisions)`,
+        );
+
+        // Cross-reference: check that requirementRefs point to actual requirement IDs
+        if (playgroundRequirementIds.length > 0) {
+          const reqIdSet = new Set(playgroundRequirementIds);
+          for (const dec of pgDesign.decisions) {
+            for (const ref of dec.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${playgroundName}/design.yaml: decision "${dec.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+        }
+
+        // Cross-reference: check that contextRefs point to actual context item IDs
+        if (playgroundContextIds.size > 0) {
+          for (const dec of pgDesign.decisions) {
+            if (dec.contextRefs) {
+              for (const ref of dec.contextRefs) {
+                if (!playgroundContextIds.has(ref)) {
+                  hasErrors = true;
+                  console.error(
+                    `✗ ${playgroundName}/design.yaml: decision "${dec.id}" references unknown context item "${ref}"`,
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${playgroundName}/design.yaml validation failed:`);
+      console.error(`  ${msg}`);
+    }
+
+    // Validate implementation.yaml (optional)
+    try {
+      const pgImpl = readPlaygroundImplementation(reqDir, playgroundName);
+      if (pgImpl) {
+        console.log(
+          `✓ ${playgroundName}/implementation.yaml is valid (${pgImpl.todos.length} todos, ${pgImpl.validations.length} validations, ${pgImpl.tests.length} tests)`,
+        );
+
+        // Cross-reference: check that requirementRefs point to actual requirement IDs
+        if (playgroundRequirementIds.length > 0) {
+          const reqIdSet = new Set(playgroundRequirementIds);
+
+          for (const todo of pgImpl.todos) {
+            for (const ref of todo.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${playgroundName}/implementation.yaml: todo "${todo.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+
+          for (const val of pgImpl.validations) {
+            for (const ref of val.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${playgroundName}/implementation.yaml: validation "${val.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+
+          for (const test of pgImpl.tests) {
+            for (const ref of test.requirementRefs) {
+              if (!reqIdSet.has(ref)) {
+                hasErrors = true;
+                console.error(
+                  `✗ ${playgroundName}/implementation.yaml: test "${test.id}" references unknown requirement "${ref}"`,
+                );
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${playgroundName}/implementation.yaml validation failed:`);
+      console.error(`  ${msg}`);
+    }
+  }
+
   // Summary
   console.log("");
   if (hasErrors) {
@@ -326,8 +478,9 @@ export function validate(targetDir: string = process.cwd()): void {
   } else {
     const globalDesignSummary = totalGlobalDecisions > 0 ? `, ${totalGlobalDecisions} global design decisions` : "";
     const designSummary = totalDecisions > 0 ? `, ${totalDecisions} project design decisions` : "";
+    const playgroundSummary = playgrounds.length > 0 ? `, ${playgrounds.length} playground(s) with ${totalPlaygroundRequirements} requirements and ${totalPlaygroundDecisions} decisions` : "";
     console.log(
-      `All files are valid! (${projects.length} project(s), ${totalRequirements} total requirements${globalDesignSummary}${designSummary})`,
+      `All files are valid! (${projects.length} project(s), ${totalRequirements} total requirements${globalDesignSummary}${designSummary}${playgroundSummary})`,
     );
     process.exitCode = 0;
   }

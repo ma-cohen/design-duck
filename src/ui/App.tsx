@@ -17,6 +17,10 @@ export function App() {
     designs,
     generalValidations,
     implementations,
+    playgrounds,
+    playgroundContexts,
+    playgroundDesigns,
+    playgroundImplementations,
     loading,
     error,
     loadFromFiles,
@@ -25,6 +29,7 @@ export function App() {
   } = useRequirementsStore();
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [selectedPlayground, setSelectedPlayground] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("[design-duck:ui] App mounted, loading requirements");
@@ -40,10 +45,10 @@ export function App() {
     <div className="min-h-screen bg-slate-800 text-slate-100">
       <header className="border-b border-slate-600 bg-slate-700 px-8 py-5 shadow-sm">
         <div className="mx-auto max-w-6xl flex items-center gap-4">
-          {selectedProject && (
+          {(selectedProject || selectedPlayground) && (
             <button
               type="button"
-              onClick={() => setSelectedProject(null)}
+              onClick={() => { setSelectedProject(null); setSelectedPlayground(null); }}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-500 bg-slate-600 px-3 py-2 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-slate-800 transition-colors cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -54,12 +59,14 @@ export function App() {
           )}
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
-              {selectedProject ? selectedProject : "Design Duck"}
+              {selectedProject ? selectedProject : selectedPlayground ? selectedPlayground : "Design Duck"}
             </h1>
             <p className="mt-1 text-base text-slate-300">
               {selectedProject
                 ? "Project requirements & design"
-                : "Vision-driven requirements management"}
+                : selectedPlayground
+                  ? "Playground — isolated problem exploration"
+                  : "Vision-driven requirements management"}
             </p>
           </div>
         </div>
@@ -75,10 +82,16 @@ export function App() {
           designs={designs}
           generalValidations={generalValidations}
           implementations={implementations}
+          playgrounds={playgrounds}
+          playgroundContexts={playgroundContexts}
+          playgroundDesigns={playgroundDesigns}
+          playgroundImplementations={playgroundImplementations}
           loading={loading}
           error={error}
           selectedProject={selectedProject}
-          onSelectProject={setSelectedProject}
+          onSelectProject={(name) => { setSelectedProject(name); setSelectedPlayground(null); }}
+          selectedPlayground={selectedPlayground}
+          onSelectPlayground={(name) => { setSelectedPlayground(name); setSelectedProject(null); }}
         />
       </main>
     </div>

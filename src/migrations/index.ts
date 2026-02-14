@@ -11,6 +11,7 @@ import type { Migration } from "./types";
 import { migration as m020 } from "./0.2.0";
 import { migration as m030 } from "./0.3.0";
 import { migration as m040 } from "./0.4.0";
+import { migration as m050 } from "./0.5.0";
 
 /**
  * All registered migrations, sorted by target version (oldest first).
@@ -21,4 +22,5 @@ export const migrations: Migration[] = [
   m020,
   m030,
   m040,
+  m050,
 ];

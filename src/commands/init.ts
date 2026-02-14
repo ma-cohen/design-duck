@@ -170,6 +170,8 @@ export function init(targetDir: string = process.cwd()): void {
 
   const exampleProjectDir = join(reqDir, "projects", "example-project");
   mkdirSync(exampleProjectDir, { recursive: true });
+  const playgroundsDir = join(reqDir, "playgrounds");
+  mkdirSync(playgroundsDir, { recursive: true });
   console.log("Created desgin-duck/requirements/");
 
   // Write AGENTS.md (AI agent instructions)
@@ -281,6 +283,7 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-choose.md
   │   ├── dd-implementation.md
   │   ├── dd-validations.md
+  │   ├── dd-playground.md
   │   ├── dd-validate.md
   │   ├── dd-ui.md
   │   ├── dd-init.md
@@ -290,12 +293,13 @@ Design Duck initialized! Your folder structure:
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions
       ├── implementation.yaml          # General validations (linting, tests, CI)
-      └── projects/
-          └── example-project/
-              ├── context.yaml         # Project-specific context (system, tech)
-              ├── requirements.yaml    # User-value requirements
-              ├── design.yaml          # Design decisions & options
-              └── implementation.yaml  # Todos, validations & test specs
+      ├── projects/
+      │   └── example-project/
+      │       ├── context.yaml         # Project-specific context (system, tech)
+      │       ├── requirements.yaml    # User-value requirements
+      │       ├── design.yaml          # Design decisions & options
+      │       └── implementation.yaml  # Todos, validations & test specs
+      └── playgrounds/                 # Isolated problem explorations (empty)
 
 Next steps:
   1. cd desgin-duck && npm install     # one-time setup

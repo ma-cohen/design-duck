@@ -10,6 +10,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   listProjects,
+  listPlaygrounds,
   readProjectRequirements,
   readProjectDesign,
 } from "../infrastructure/file-store";
@@ -21,6 +22,11 @@ import {
   choosePrompt,
   implementationPrompt,
   validationsPrompt,
+  playgroundPrompt,
+  playgroundRequirementsPrompt,
+  playgroundDesignPrompt,
+  playgroundChoosePrompt,
+  playgroundImplementationPrompt,
 } from "./prompts";
 
 // ---------------------------------------------------------------------------
@@ -97,6 +103,42 @@ function readRawGlobalDesign(reqDir: string): string | null {
  */
 function readRawGlobalValidations(reqDir: string): string | null {
   return readRawOrNull(join(reqDir, "implementation.yaml"));
+}
+
+/**
+ * Reads a playground's requirements.yaml as raw text. Returns null if missing.
+ */
+function readRawPlaygroundRequirements(
+  reqDir: string,
+  playgroundName: string,
+): string | null {
+  return readRawOrNull(
+    join(reqDir, "playgrounds", playgroundName, "requirements.yaml"),
+  );
+}
+
+/**
+ * Reads a playground's context.yaml as raw text. Returns null if missing.
+ */
+function readRawPlaygroundContext(
+  reqDir: string,
+  playgroundName: string,
+): string | null {
+  return readRawOrNull(
+    join(reqDir, "playgrounds", playgroundName, "context.yaml"),
+  );
+}
+
+/**
+ * Reads a playground's design.yaml as raw text. Returns null if missing.
+ */
+function readRawPlaygroundDesign(
+  reqDir: string,
+  playgroundName: string,
+): string | null {
+  return readRawOrNull(
+    join(reqDir, "playgrounds", playgroundName, "design.yaml"),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -297,4 +339,89 @@ export function generateValidationsContext(reqDir: string): string {
   const rawValidations = readRawGlobalValidations(reqDir);
   const rawRootContext = readRawRootContext(reqDir);
   return validationsPrompt(rawVision, projectSummaries, rawValidations, rawRootContext);
+}
+
+// ---------------------------------------------------------------------------
+// Playground context generators
+// ---------------------------------------------------------------------------
+
+/**
+ * Playground phase: create/list playgrounds.
+ */
+export function generatePlaygroundContext(reqDir: string): string {
+  const existing = listPlaygrounds(reqDir);
+  return playgroundPrompt(existing);
+}
+
+/**
+ * Playground Requirements: gather requirements for a playground.
+ */
+export function generatePlaygroundRequirementsContext(
+  reqDir: string,
+  playgroundName: string,
+): string {
+  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  return playgroundRequirementsPrompt(playgroundName, rawReqs);
+}
+
+/**
+ * Playground Design: brainstorm design decisions for a playground.
+ */
+export function generatePlaygroundDesignContext(
+  reqDir: string,
+  playgroundName: string,
+): string {
+  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  if (!rawReqs) {
+    throw new Error(
+      `requirements.yaml not found for playground "${playgroundName}". Run 'dd context playground-requirements ${playgroundName}' first.`,
+    );
+  }
+
+  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  return playgroundDesignPrompt(playgroundName, rawReqs, rawPlaygroundContext);
+}
+
+/**
+ * Playground Choose: evaluate and pick design options for a playground.
+ */
+export function generatePlaygroundChooseContext(
+  reqDir: string,
+  playgroundName: string,
+): string {
+  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  if (!rawReqs) {
+    throw new Error(
+      `requirements.yaml not found for playground "${playgroundName}".`,
+    );
+  }
+
+  const rawDesign = readRawPlaygroundDesign(reqDir, playgroundName);
+  if (!rawDesign) {
+    throw new Error(
+      `design.yaml not found for playground "${playgroundName}". Run 'dd context playground-design ${playgroundName}' first.`,
+    );
+  }
+
+  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  return playgroundChoosePrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
+}
+
+/**
+ * Playground Implementation: create implementation plan for a playground.
+ */
+export function generatePlaygroundImplementationContext(
+  reqDir: string,
+  playgroundName: string,
+): string {
+  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  if (!rawReqs) {
+    throw new Error(
+      `requirements.yaml not found for playground "${playgroundName}".`,
+    );
+  }
+
+  const rawDesign = readRawPlaygroundDesign(reqDir, playgroundName);
+  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  return playgroundImplementationPrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
 }

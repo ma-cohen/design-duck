@@ -12,15 +12,16 @@ import { join } from "node:path";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
+  parsePlaygroundRequirementsYaml,
   parseContextYaml,
   parseProjectDesignYaml,
   parseGeneralValidationsYaml,
   parseProjectImplementationYaml,
 } from "./yaml-parser";
-import type { Vision, ProjectRequirements, ContextDocument, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, PlaygroundRequirements, ContextDocument, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 
 // Re-export pure parsers for backward compatibility
-export { parseVisionYaml, parseProjectRequirementsYaml, parseContextYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
+export { parseVisionYaml, parseProjectRequirementsYaml, parsePlaygroundRequirementsYaml, parseContextYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
 
 // ---------------------------------------------------------------------------
 // Filesystem readers (Node/Bun only)
@@ -383,6 +384,184 @@ export function readProjectImplementation(
   if (process.env.DEBUG) {
     console.error(
       `[file-store] Successfully parsed implementation for project ${projectName}: ${implementation.todos.length} todos, ${implementation.validations.length} validations, ${implementation.tests.length} tests`,
+    );
+  }
+
+  return implementation;
+}
+
+// ---------------------------------------------------------------------------
+// Playground readers (Node/Bun only)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lists playground names by scanning the requirements/playgrounds/ directory.
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @returns Array of playground directory names
+ */
+export function listPlaygrounds(requirementsDir: string): string[] {
+  const playgroundsDir = join(requirementsDir, "playgrounds");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Listing playgrounds in: ${playgroundsDir}`);
+  }
+
+  try {
+    const entries = readdirSync(playgroundsDir);
+    const playgrounds = entries.filter((entry) => {
+      const entryPath = join(playgroundsDir, entry);
+      return statSync(entryPath).isDirectory();
+    });
+
+    if (process.env.DEBUG) {
+      console.error(`[file-store] Found ${playgrounds.length} playgrounds: ${playgrounds.join(", ")}`);
+    }
+
+    return playgrounds;
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      return [];
+    }
+    throw err;
+  }
+}
+
+/**
+ * Reads and parses a playground's requirements.yaml into validated PlaygroundRequirements.
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @param playgroundName - Name of the playground subdirectory
+ * @returns Validated playground requirements
+ * @throws Error if file not found, malformed YAML, or validation fails
+ */
+export function readPlaygroundRequirements(
+  requirementsDir: string,
+  playgroundName: string,
+): PlaygroundRequirements {
+  const filePath = join(requirementsDir, "playgrounds", playgroundName, "requirements.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading playground requirements from: ${filePath}`);
+  }
+
+  try {
+    const content = readFileSync(filePath, "utf-8");
+
+    if (process.env.DEBUG) {
+      console.error(`[file-store] Read ${content.length} bytes from ${playgroundName}/requirements.yaml`);
+    }
+
+    const playgroundReqs = parsePlaygroundRequirementsYaml(content);
+
+    if (process.env.DEBUG) {
+      console.error(
+        `[file-store] Successfully parsed ${playgroundReqs.requirements.length} requirements for playground ${playgroundName}`,
+      );
+    }
+
+    return playgroundReqs;
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      throw new Error(`requirements.yaml not found for playground "${playgroundName}" at ${filePath}`);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Reads and parses a playground's context.yaml into a validated ContextDocument.
+ * Returns null if the file does not exist (context is optional).
+ */
+export function readPlaygroundContext(
+  requirementsDir: string,
+  playgroundName: string,
+): ContextDocument | null {
+  const filePath = join(requirementsDir, "playgrounds", playgroundName, "context.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading playground context from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No context.yaml found for playground "${playgroundName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+  const ctx = parseContextYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${ctx.contexts.length} context items for playground ${playgroundName}`,
+    );
+  }
+
+  return ctx;
+}
+
+/**
+ * Reads and parses a playground's design.yaml into validated ProjectDesign.
+ * Returns null if the file does not exist (design is optional).
+ */
+export function readPlaygroundDesign(
+  requirementsDir: string,
+  playgroundName: string,
+): ProjectDesign | null {
+  const filePath = join(requirementsDir, "playgrounds", playgroundName, "design.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading playground design from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No design.yaml found for playground "${playgroundName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+  const design = parseProjectDesignYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${design.decisions.length} decisions for playground ${playgroundName}`,
+    );
+  }
+
+  return design;
+}
+
+/**
+ * Reads and parses a playground's implementation.yaml into validated ProjectImplementation.
+ * Returns null if the file does not exist (implementation is optional).
+ */
+export function readPlaygroundImplementation(
+  requirementsDir: string,
+  playgroundName: string,
+): ProjectImplementation | null {
+  const filePath = join(requirementsDir, "playgrounds", playgroundName, "implementation.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading playground implementation from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No implementation.yaml found for playground "${playgroundName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+  const implementation = parseProjectImplementationYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed implementation for playground ${playgroundName}: ${implementation.todos.length} todos, ${implementation.validations.length} validations, ${implementation.tests.length} tests`,
     );
   }
 

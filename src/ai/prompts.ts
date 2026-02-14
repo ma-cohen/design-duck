@@ -602,3 +602,335 @@ If any projects still need an implementation plan, suggest running:
 \`dd context implementation <project-name>\`
 `;
 }
+
+// ---------------------------------------------------------------------------
+// Playground prompts — isolated problem-solving, no vision dependency
+// ---------------------------------------------------------------------------
+
+export function playgroundPrompt(
+  existingPlaygrounds: string[],
+): string {
+  const existingBlock =
+    existingPlaygrounds.length > 0
+      ? `## Existing Playgrounds\n\nThese playgrounds already exist:\n${existingPlaygrounds.map((p) => `- ${p}`).join("\n")}\n\nYou may suggest additional playgrounds or work on existing ones.`
+      : `## Existing Playgrounds\n\nNo playgrounds exist yet.`;
+
+  return `# Playground Setup
+
+## Your Role
+
+You are helping create an isolated playground for exploring a specific design problem.
+Playgrounds are independent of the main product vision — they let you focus on one
+problem at a time. Think of them as throwaway sandboxes for design exploration that
+can optionally be promoted into real projects later.
+
+${existingBlock}
+
+## Instructions
+
+For each new playground, create a directory and requirements.yaml file:
+  desgin-duck/requirements/playgrounds/<playground-name>/requirements.yaml
+
+Use kebab-case for playground directory names (e.g., \`caching-strategy\`, \`auth-spike\`).
+
+Each requirements.yaml should contain:
+- **problemStatement**: What specific problem this playground is exploring (1-2 sentences).
+- **requirements**: An empty array (requirements will be gathered in the next step).
+
+## Expected YAML Format
+
+For each playground file at \`desgin-duck/requirements/playgrounds/<name>/requirements.yaml\`:
+
+\`\`\`yaml
+problemStatement: "We need to figure out the best approach to..."
+requirements: []
+\`\`\`
+
+## Guidelines
+
+- Each playground should focus on a **single, specific problem**.
+- Name playgrounds after the problem they explore, not a solution.
+- Keep it focused — playgrounds are meant to be lean and disposable.
+- A playground has no connection to the product vision or other projects.
+
+## Next Step
+
+When you're done, suggest the user continue to the **playground-requirements** phase to
+gather requirements for the playground by running:
+\`dd context playground-requirements <playground-name>\`
+`;
+}
+
+export function playgroundRequirementsPrompt(
+  playgroundName: string,
+  currentRequirementsYaml: string | null,
+): string {
+  const stateBlock = currentRequirementsYaml
+    ? `## Current Requirements\n\n\`\`\`yaml\n${currentRequirementsYaml}\`\`\`\n\nBuild on these or refine them.`
+    : `## Current Requirements\n\nNo requirements defined yet for this playground.`;
+
+  return `# Playground Requirements: ${playgroundName}
+
+## Your Role
+
+You are helping define requirements for the "${playgroundName}" playground.
+This is an isolated exploration — focus on the specific problem being solved,
+not on any broader product vision.
+
+${stateBlock}
+
+## Instructions
+
+Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/requirements.yaml
+
+Each requirement needs:
+- **id**: A unique identifier with a playground-specific prefix (e.g., PG-001, SPIKE-001).
+- **description**: What the user can do (user story style).
+- **userValue**: Why this matters to the user (the benefit).
+
+## Expected YAML Format
+
+\`\`\`yaml
+problemStatement: "The specific problem being explored..."
+requirements:
+  - id: PG-001
+    description: "Users can..."
+    userValue: "This allows users to..."
+  - id: PG-002
+    description: "Users can..."
+    userValue: "This helps users..."
+\`\`\`
+
+## Guidelines
+
+- Write requirements from the user's perspective, not the developer's.
+- Each requirement should deliver independent value.
+- Use clear, testable descriptions.
+- Stay focused on the playground's problem statement — don't scope-creep.
+
+## Next Step
+
+When you're done, suggest the user continue to the **playground-design** phase to brainstorm
+design decisions for the playground by running:
+\`dd context playground-design ${playgroundName}\`
+`;
+}
+
+export function playgroundDesignPrompt(
+  playgroundName: string,
+  requirementsYaml: string,
+  playgroundContextYaml: string | null,
+): string {
+  const contextBlock = playgroundContextYaml
+    ? `## Playground Context\n\nTechnical and system facts for this playground:\n\n\`\`\`yaml\n${playgroundContextYaml}\`\`\`\n`
+    : `## Playground Context\n\nNo context has been captured yet.\n`;
+
+  return `# Playground Design Brainstorm: ${playgroundName}
+
+## Your Role
+
+You are helping brainstorm design decisions for the "${playgroundName}" playground.
+For each key decision, propose multiple options with pros and cons.
+Do NOT choose yet — present options for review.
+
+**Before brainstorming decisions, ask about the current system and technical situation.**
+Capture the answers as context items in:
+desgin-duck/requirements/playgrounds/${playgroundName}/context.yaml
+
+${contextBlock}
+## Playground Requirements
+
+\`\`\`yaml
+${requirementsYaml}\`\`\`
+
+## Instructions
+
+1. First, update context items in desgin-duck/requirements/playgrounds/${playgroundName}/context.yaml
+2. Then, edit desgin-duck/requirements/playgrounds/${playgroundName}/design.yaml
+
+For each significant decision:
+1. Identify the topic and provide context.
+2. Reference which requirements drive this decision.
+3. Reference which context items are relevant via \`contextRefs\`.
+4. Propose 2-3 options with pros and cons.
+5. Leave \`chosen\` and \`chosenReason\` as null.
+
+## Expected YAML Format
+
+context.yaml:
+\`\`\`yaml
+contexts:
+  - id: CTX-PG-001
+    description: "Some relevant technical fact"
+\`\`\`
+
+design.yaml:
+\`\`\`yaml
+notes: |
+  Research links and analysis notes here...
+decisions:
+  - id: DEC-PG-001
+    topic: "What to decide"
+    context: "Why this decision matters"
+    requirementRefs:
+      - PG-001
+    contextRefs:
+      - CTX-PG-001
+    options:
+      - id: option-a
+        title: "Option A"
+        description: "Description"
+        pros: ["Advantage 1"]
+        cons: ["Disadvantage 1"]
+      - id: option-b
+        title: "Option B"
+        description: "Description"
+        pros: ["Advantage 1"]
+        cons: ["Disadvantage 1"]
+    chosen: null
+    chosenReason: null
+\`\`\`
+
+## Guidelines
+
+- Each decision should map to one or more requirements.
+- Provide at least 2 options per decision.
+- Be specific in pros/cons — avoid generic statements.
+- **Favour simplicity and elegance.** The best design is often the least complex one.
+- Only create decisions for questions that genuinely matter.
+
+## Next Step
+
+When you're done, suggest continuing to the **playground-choose** phase:
+\`dd context playground-choose ${playgroundName}\`
+`;
+}
+
+export function playgroundChoosePrompt(
+  playgroundName: string,
+  requirementsYaml: string,
+  designYaml: string,
+  playgroundContextYaml: string | null,
+): string {
+  const contextBlock = playgroundContextYaml
+    ? `## Playground Context\n\n\`\`\`yaml\n${playgroundContextYaml}\`\`\`\n`
+    : "";
+
+  return `# Playground Design Decision Review: ${playgroundName}
+
+## Your Role
+
+You are helping evaluate design options and recommend choices for the "${playgroundName}" playground.
+For each unchosen decision, analyze the options and suggest which to pick and why.
+
+${contextBlock}
+## Playground Requirements
+
+\`\`\`yaml
+${requirementsYaml}\`\`\`
+
+## Current Design Decisions
+
+\`\`\`yaml
+${designYaml}\`\`\`
+
+## Instructions
+
+Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/design.yaml
+
+For each decision where \`chosen\` is null:
+1. Analyze all options against the requirements.
+2. Set \`chosen\` to the id of the recommended option.
+3. Set \`chosenReason\` explaining why this option best serves the requirements.
+
+Do NOT modify decisions that already have a \`chosen\` value unless specifically asked.
+
+## Guidelines
+
+- Justify choices in terms of user value, not just technical merit.
+- Consider how choices interact with each other.
+- Keep \`chosenReason\` to 1-2 sentences.
+- **Prefer the simpler option** when two options deliver similar value.
+
+## Next Step
+
+When you're done, suggest continuing to the **playground-implementation** phase:
+\`dd context playground-implementation ${playgroundName}\`
+`;
+}
+
+export function playgroundImplementationPrompt(
+  playgroundName: string,
+  requirementsYaml: string,
+  designYaml: string | null,
+  playgroundContextYaml: string | null,
+): string {
+  const designBlock = designYaml
+    ? `## Chosen Design Decisions\n\n\`\`\`yaml\n${designYaml}\`\`\`\n`
+    : `## Design Decisions\n\nNo design decisions have been made yet for this playground.\n`;
+
+  const contextBlock = playgroundContextYaml
+    ? `## Playground Context\n\n\`\`\`yaml\n${playgroundContextYaml}\`\`\`\n`
+    : "";
+
+  return `# Playground Implementation Plan: ${playgroundName}
+
+## Your Role
+
+You are helping create an implementation plan for the "${playgroundName}" playground.
+Produce a phased plan, actionable todos, validations, and test specifications.
+
+${contextBlock}
+## Playground Requirements
+
+\`\`\`yaml
+${requirementsYaml}\`\`\`
+
+${designBlock}
+
+## Instructions
+
+Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/implementation.yaml
+
+Create:
+1. **plan**: A phased implementation plan (text).
+2. **todos**: Actionable implementation tasks, each linked to requirements.
+3. **validations**: Playground-specific validation rules linked to requirements.
+4. **tests**: Test specifications (unit, integration, e2e) linked to requirements.
+
+## Expected YAML Format
+
+\`\`\`yaml
+plan: |
+  Phase 1: ...
+  Phase 2: ...
+todos:
+  - id: TODO-PG-001
+    description: "Implement..."
+    status: pending
+    requirementRefs: [PG-001]
+validations:
+  - id: VAL-PG-001
+    description: "Must ensure..."
+    requirementRefs: [PG-001]
+tests:
+  - id: TEST-PG-001
+    description: "Verify that..."
+    requirementRefs: [PG-001]
+    type: unit
+\`\`\`
+
+## Guidelines
+
+- Every requirement should be covered by at least one todo and one test.
+- Order todos by dependency / implementation phase.
+- Initial status for all todos should be "pending".
+- **Keep it lean.** Only include tasks that directly serve a requirement.
+
+## Next Step
+
+When you're done, the playground design process is complete. The user can now
+start implementing based on the plan, or throw it away, or promote the playground
+into a real project if the exploration was successful.
+`;
+}

@@ -160,6 +160,12 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       return;
     }
 
+    // API: list playground directories
+    if (pathname === "/api/playgrounds" && req.method === "GET") {
+      handlePlaygroundsList(requirementsDir, res);
+      return;
+    }
+
     // Write API: PUT /api/vision
     if (pathname === "/api/vision" && req.method === "PUT") {
       handlePutVision(req, res, requirementsDir);
@@ -216,6 +222,41 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     const deleteMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (deleteMatch && req.method === "DELETE") {
       handleDeleteProject(res, requirementsDir, decodeURIComponent(deleteMatch[1]));
+      return;
+    }
+
+    // Write API: PUT /api/playgrounds/:name/requirements
+    const pgReqMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/requirements$/);
+    if (pgReqMatch && req.method === "PUT") {
+      handlePutPlaygroundRequirements(req, res, requirementsDir, decodeURIComponent(pgReqMatch[1]));
+      return;
+    }
+
+    // Write API: PUT /api/playgrounds/:name/context
+    const pgCtxMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/context$/);
+    if (pgCtxMatch && req.method === "PUT") {
+      handlePutPlaygroundContext(req, res, requirementsDir, decodeURIComponent(pgCtxMatch[1]));
+      return;
+    }
+
+    // Write API: PUT /api/playgrounds/:name/design
+    const pgDesignMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/design$/);
+    if (pgDesignMatch && req.method === "PUT") {
+      handlePutPlaygroundDesign(req, res, requirementsDir, decodeURIComponent(pgDesignMatch[1]));
+      return;
+    }
+
+    // Write API: PUT /api/playgrounds/:name/implementation
+    const pgImplMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/implementation$/);
+    if (pgImplMatch && req.method === "PUT") {
+      handlePutPlaygroundImplementation(req, res, requirementsDir, decodeURIComponent(pgImplMatch[1]));
+      return;
+    }
+
+    // Delete API: DELETE /api/playgrounds/:name
+    const pgDeleteMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)$/);
+    if (pgDeleteMatch && req.method === "DELETE") {
+      handleDeletePlayground(res, requirementsDir, decodeURIComponent(pgDeleteMatch[1]));
       return;
     }
 
@@ -348,6 +389,249 @@ function handleProjectsList(
   } catch {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Failed to list projects" }));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Playgrounds API
+// ---------------------------------------------------------------------------
+
+function handlePlaygroundsList(
+  requirementsDir: string,
+  res: ServerResponse,
+): void {
+  try {
+    const playgroundsDir = join(requirementsDir, "playgrounds");
+    let playgrounds: string[] = [];
+
+    if (existsSync(playgroundsDir)) {
+      const entries = readdirSync(playgroundsDir);
+      playgrounds = entries.filter((entry) => {
+        try {
+          return statSync(join(playgroundsDir, entry)).isDirectory();
+        } catch {
+          return false;
+        }
+      });
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+    });
+    res.end(JSON.stringify(playgrounds));
+  } catch {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Failed to list playgrounds" }));
+  }
+}
+
+async function handlePutPlaygroundRequirements(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  playgroundName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (typeof raw.problemStatement !== "string") {
+      jsonResponse(res, 400, { error: "problemStatement must be a string" });
+      return;
+    }
+    if (!Array.isArray(raw.requirements)) {
+      jsonResponse(res, 400, { error: "requirements must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.requirements.length; i++) {
+      const result = validateRequirement(raw.requirements[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Requirement at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "requirements.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutPlaygroundContext(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  playgroundName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (!Array.isArray(raw.contexts)) {
+      jsonResponse(res, 400, { error: "contexts must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.contexts.length; i++) {
+      const result = validateContextItem(raw.contexts[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Context item at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "context.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutPlaygroundDesign(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  playgroundName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (raw.notes !== undefined && raw.notes !== null && typeof raw.notes !== "string") {
+      jsonResponse(res, 400, { error: "notes must be a string or null" });
+      return;
+    }
+
+    if (!Array.isArray(raw.decisions)) {
+      jsonResponse(res, 400, { error: "decisions must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.decisions.length; i++) {
+      const result = validateDecision(raw.decisions[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Decision at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const toWrite: Record<string, unknown> = {};
+    if (raw.notes) {
+      toWrite.notes = raw.notes;
+    }
+    toWrite.decisions = raw.decisions;
+
+    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutPlaygroundImplementation(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  playgroundName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (raw.plan !== undefined && raw.plan !== null && typeof raw.plan !== "string") {
+      jsonResponse(res, 400, { error: "plan must be a string or null" });
+      return;
+    }
+
+    if (!Array.isArray(raw.todos)) {
+      jsonResponse(res, 400, { error: "todos must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.todos.length; i++) {
+      const result = validateImplementationTodo(raw.todos[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, { error: `Todo at index ${i} is invalid`, details: result.errors });
+        return;
+      }
+    }
+
+    if (!Array.isArray(raw.validations)) {
+      jsonResponse(res, 400, { error: "validations must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.validations.length; i++) {
+      const result = validateImplementationValidation(raw.validations[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, { error: `Validation at index ${i} is invalid`, details: result.errors });
+        return;
+      }
+    }
+
+    if (!Array.isArray(raw.tests)) {
+      jsonResponse(res, 400, { error: "tests must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.tests.length; i++) {
+      const result = validateTestSpec(raw.tests[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, { error: `Test at index ${i} is invalid`, details: result.errors });
+        return;
+      }
+    }
+
+    const toWrite: Record<string, unknown> = {};
+    if (raw.plan) {
+      toWrite.plan = raw.plan;
+    }
+    toWrite.todos = raw.todos;
+    toWrite.validations = raw.validations;
+    toWrite.tests = raw.tests;
+
+    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "implementation.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+function handleDeletePlayground(
+  res: ServerResponse,
+  requirementsDir: string,
+  playgroundName: string,
+): void {
+  try {
+    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    if (!existsSync(dirPath)) {
+      jsonResponse(res, 404, { error: `Playground "${playgroundName}" not found` });
+      return;
+    }
+    rmSync(dirPath, { recursive: true, force: true });
+    console.log(`[design-duck:server] Deleted playground directory: ${dirPath}`);
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 500, { error: message });
   }
 }
 

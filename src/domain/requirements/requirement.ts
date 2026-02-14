@@ -27,6 +27,12 @@ export interface ProjectRequirements {
   requirements: Requirement[];
 }
 
+/** A playground's requirements file with a problem statement (no vision alignment). */
+export interface PlaygroundRequirements {
+  problemStatement: string;
+  requirements: Requirement[];
+}
+
 // ---------------------------------------------------------------------------
 // Context types
 // ---------------------------------------------------------------------------
@@ -108,6 +114,39 @@ export function assertVision(raw: unknown): asserts raw is Vision {
   const result = validateVision(raw);
   if (!result.valid) {
     throw new Error(`Invalid vision: ${result.errors.join("; ")}`);
+  }
+}
+
+/**
+ * Validates a playground requirements document (problemStatement + requirements[]).
+ */
+export function validatePlaygroundRequirements(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["PlaygroundRequirements must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const psErr = nonEmptyString(o.problemStatement, "problemStatement");
+  if (psErr) errors.push(psErr);
+
+  if (o.requirements !== undefined && !Array.isArray(o.requirements)) {
+    errors.push("requirements must be an array");
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Asserts that a value is valid PlaygroundRequirements; throws with errors if not.
+ */
+export function assertPlaygroundRequirements(raw: unknown): asserts raw is PlaygroundRequirements {
+  const result = validatePlaygroundRequirements(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid playground requirements: ${result.errors.join("; ")}`);
   }
 }
 

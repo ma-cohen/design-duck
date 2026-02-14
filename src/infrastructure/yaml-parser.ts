@@ -14,6 +14,7 @@ import type {
   Vision,
   Requirement,
   ProjectRequirements,
+  PlaygroundRequirements,
   ContextItem,
   ContextDocument,
   Decision,
@@ -93,6 +94,45 @@ export function parseProjectRequirementsYaml(content: string): ProjectRequiremen
 
   return {
     visionAlignment,
+    requirements,
+  };
+}
+
+/**
+ * Parses a YAML string into validated PlaygroundRequirements (problemStatement + requirements).
+ *
+ * @param content - Raw YAML string from a playground's requirements.yaml
+ * @returns Validated playground requirements object
+ * @throws Error if malformed YAML or validation fails
+ */
+export function parsePlaygroundRequirementsYaml(content: string): PlaygroundRequirements {
+  const parsed = parseYaml(content) as unknown;
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("requirements.yaml must contain a YAML object");
+  }
+
+  const file = parsed as Record<string, unknown>;
+
+  const problemStatement = typeof file.problemStatement === "string" ? file.problemStatement : "";
+
+  const requirements: Requirement[] = [];
+
+  if (Array.isArray(file.requirements)) {
+    for (let i = 0; i < file.requirements.length; i++) {
+      const raw = file.requirements[i];
+      try {
+        assertRequirement(raw);
+        requirements.push(raw);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`requirements.yaml requirement at index ${i}: ${msg}`);
+      }
+    }
+  }
+
+  return {
+    problemStatement,
     requirements,
   };
 }
