@@ -58,6 +58,7 @@ export function GeneralValidationsSection({ generalValidations }: GeneralValidat
     linting: "bg-blue-900/60 text-blue-300",
     testing: "bg-green-900/60 text-green-300",
     ci: "bg-purple-900/60 text-purple-300",
+    security: "bg-red-900/60 text-red-300",
   };
 
   return (

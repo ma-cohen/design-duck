@@ -1,0 +1,10 @@
+# Situational context — business, organizational, and environmental facts
+# that inform vision and all project decisions.
+
+contexts:
+  - id: CTX-001
+    description: "We are a 4-person bootstrapped startup with limited runway (12 months)"
+  - id: CTX-002
+    description: "Our target users are small development teams (2-15 people)"
+  - id: CTX-003
+    description: "Competitors include Trello, Linear, and Jira — we differentiate on simplicity and speed"

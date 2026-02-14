@@ -1,0 +1,12 @@
+# General validations that apply to ALL projects.
+
+validations:
+  - id: VAL-GENERAL-001
+    description: "All code must pass ESLint with zero errors before merge"
+    category: linting
+  - id: VAL-GENERAL-002
+    description: "All tests must pass in CI before merge to main"
+    category: testing
+  - id: VAL-GENERAL-003
+    description: "No secrets or API keys may be committed to the repository"
+    category: security
