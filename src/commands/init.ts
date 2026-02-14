@@ -156,23 +156,23 @@ tests: []
 
 export function init(targetDir: string = process.cwd()): void {
   const duckDir = join(targetDir, "desgin-duck");
-  const reqDir = join(duckDir, "requirements");
+  const docsDir = join(duckDir, "docs");
 
   if (process.env.DEBUG) {
     console.error("[design-duck:init] targetDir:", targetDir);
   }
 
-  if (existsSync(reqDir)) {
-    console.error("desgin-duck/requirements/ already exists. Aborting init.");
+  if (existsSync(docsDir)) {
+    console.error("desgin-duck/docs/ already exists. Aborting init.");
     process.exitCode = 1;
     return;
   }
 
-  const exampleProjectDir = join(reqDir, "projects", "example-project");
+  const exampleProjectDir = join(docsDir, "projects", "example-project");
   mkdirSync(exampleProjectDir, { recursive: true });
-  const playgroundsDir = join(reqDir, "playgrounds");
+  const playgroundsDir = join(docsDir, "playgrounds");
   mkdirSync(playgroundsDir, { recursive: true });
-  console.log("Created desgin-duck/requirements/");
+  console.log("Created desgin-duck/docs/");
 
   // Write AGENTS.md (AI agent instructions)
   const agentMdPath = join(duckDir, "AGENTS.md");
@@ -180,22 +180,22 @@ export function init(targetDir: string = process.cwd()): void {
   console.log("  Created AGENTS.md (AI agent instructions)");
 
   // Write vision.yaml
-  const visionPath = join(reqDir, "vision.yaml");
+  const visionPath = join(docsDir, "vision.yaml");
   writeFileSync(visionPath, VISION_YAML, "utf-8");
   console.log("  Created vision.yaml");
 
   // Write root context.yaml
-  const contextPath = join(reqDir, "context.yaml");
+  const contextPath = join(docsDir, "context.yaml");
   writeFileSync(contextPath, ROOT_CONTEXT_YAML, "utf-8");
   console.log("  Created context.yaml (situational context)");
 
   // Write global design.yaml
-  const designPath = join(reqDir, "design.yaml");
+  const designPath = join(docsDir, "design.yaml");
   writeFileSync(designPath, GLOBAL_DESIGN_YAML, "utf-8");
   console.log("  Created design.yaml");
 
   // Write root-level implementation.yaml (general validations)
-  const implPath = join(reqDir, "implementation.yaml");
+  const implPath = join(docsDir, "implementation.yaml");
   writeFileSync(implPath, GENERAL_IMPLEMENTATION_YAML, "utf-8");
   console.log("  Created implementation.yaml (general validations)");
 
@@ -288,7 +288,7 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-ui.md
   │   ├── dd-init.md
   │   └── dd-upgrade.md
-  └── requirements/
+  └── docs/
       ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions

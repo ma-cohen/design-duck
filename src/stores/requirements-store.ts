@@ -41,9 +41,9 @@ export interface WatchOptions {
   intervalMs?: number;
   /**
    * URL path prefix where YAML files are served.
-   * @default "/requirements"
+   * @default "/docs"
    */
-  requirementsPath?: string;
+  docsPath?: string;
   /**
    * SSE endpoint URL for real-time file change notifications.
    * @default "/events"
@@ -92,7 +92,7 @@ export interface RequirementsState {
    * Fetches vision.yaml and all project requirements from the server,
    * parses them, and replaces the current store state with the result.
    */
-  loadFromFiles: (requirementsPath?: string, projectsApiUrl?: string) => Promise<void>;
+  loadFromFiles: (docsPath?: string, projectsApiUrl?: string) => Promise<void>;
 
   /**
    * Starts watching for requirement file changes.
@@ -182,13 +182,13 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   error: null,
   watching: false,
 
-  loadFromFiles: async (requirementsPath = "/requirements", projectsApiUrl = "/api/projects") => {
+  loadFromFiles: async (docsPath = "/docs", projectsApiUrl = "/api/projects") => {
     console.log("[design-duck:store] Loading requirements...");
     set({ loading: true, error: null });
 
     try {
       // Fetch vision
-      const visionRes = await fetch(`${requirementsPath}/vision.yaml`);
+      const visionRes = await fetch(`${docsPath}/vision.yaml`);
       if (!visionRes.ok) {
         throw new Error(
           `Failed to fetch vision.yaml: ${visionRes.status} ${visionRes.statusText}`,
@@ -200,7 +200,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       // Fetch root-level context (optional — 404 is fine)
       let rootContext: ContextDocument | null = null;
       try {
-        const rootCtxRes = await fetch(`${requirementsPath}/context.yaml`);
+        const rootCtxRes = await fetch(`${docsPath}/context.yaml`);
         if (rootCtxRes.ok) {
           const rootCtxContent = await rootCtxRes.text();
           rootContext = parseContextYaml(rootCtxContent);
@@ -212,7 +212,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       // Fetch root-level global design (optional — 404 is fine)
       let globalDesign: GlobalDesign | null = null;
       try {
-        const globalDesignRes = await fetch(`${requirementsPath}/design.yaml`);
+        const globalDesignRes = await fetch(`${docsPath}/design.yaml`);
         if (globalDesignRes.ok) {
           const globalDesignContent = await globalDesignRes.text();
           globalDesign = parseProjectDesignYaml(globalDesignContent);
@@ -224,7 +224,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       // Fetch root-level general validations (optional — 404 is fine)
       let generalValidations: GeneralValidations | null = null;
       try {
-        const implRes = await fetch(`${requirementsPath}/implementation.yaml`);
+        const implRes = await fetch(`${docsPath}/implementation.yaml`);
         if (implRes.ok) {
           const implContent = await implRes.text();
           generalValidations = parseGeneralValidationsYaml(implContent);
@@ -249,7 +249,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const implementations: Record<string, ProjectImplementation> = {};
       const projectFetches = projectNames.map(async (name) => {
         // Fetch requirements (required)
-        const res = await fetch(`${requirementsPath}/projects/${name}/requirements.yaml`);
+        const res = await fetch(`${docsPath}/projects/${name}/requirements.yaml`);
         if (!res.ok) {
           throw new Error(
             `Failed to fetch ${name}/requirements.yaml: ${res.status} ${res.statusText}`,
@@ -260,7 +260,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
         // Fetch project context (optional — 404 is fine)
         try {
-          const ctxRes = await fetch(`${requirementsPath}/projects/${name}/context.yaml`);
+          const ctxRes = await fetch(`${docsPath}/projects/${name}/context.yaml`);
           if (ctxRes.ok) {
             const ctxContent = await ctxRes.text();
             projectContexts[name] = parseContextYaml(ctxContent);
@@ -271,7 +271,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
         // Fetch design (optional — 404 is fine)
         try {
-          const designRes = await fetch(`${requirementsPath}/projects/${name}/design.yaml`);
+          const designRes = await fetch(`${docsPath}/projects/${name}/design.yaml`);
           if (designRes.ok) {
             const designContent = await designRes.text();
             designs[name] = parseProjectDesignYaml(designContent);
@@ -282,7 +282,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
         // Fetch implementation (optional — 404 is fine)
         try {
-          const implRes = await fetch(`${requirementsPath}/projects/${name}/implementation.yaml`);
+          const implRes = await fetch(`${docsPath}/projects/${name}/implementation.yaml`);
           if (implRes.ok) {
             const implContent = await implRes.text();
             implementations[name] = parseProjectImplementationYaml(implContent);
@@ -306,14 +306,14 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
           const playgroundFetches = playgroundNames.map(async (name) => {
             // Fetch requirements (required)
-            const res = await fetch(`${requirementsPath}/playgrounds/${name}/requirements.yaml`);
+            const res = await fetch(`${docsPath}/playgrounds/${name}/requirements.yaml`);
             if (!res.ok) return; // skip if missing
             const content = await res.text();
             playgrounds[name] = parsePlaygroundRequirementsYaml(content);
 
             // Fetch playground context (optional)
             try {
-              const ctxRes = await fetch(`${requirementsPath}/playgrounds/${name}/context.yaml`);
+              const ctxRes = await fetch(`${docsPath}/playgrounds/${name}/context.yaml`);
               if (ctxRes.ok) {
                 const ctxContent = await ctxRes.text();
                 playgroundContexts[name] = parseContextYaml(ctxContent);
@@ -324,7 +324,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
             // Fetch design (optional)
             try {
-              const designRes = await fetch(`${requirementsPath}/playgrounds/${name}/design.yaml`);
+              const designRes = await fetch(`${docsPath}/playgrounds/${name}/design.yaml`);
               if (designRes.ok) {
                 const designContent = await designRes.text();
                 playgroundDesigns[name] = parseProjectDesignYaml(designContent);
@@ -335,7 +335,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
             // Fetch implementation (optional)
             try {
-              const implRes = await fetch(`${requirementsPath}/playgrounds/${name}/implementation.yaml`);
+              const implRes = await fetch(`${docsPath}/playgrounds/${name}/implementation.yaml`);
               if (implRes.ok) {
                 const implContent = await implRes.text();
                 playgroundImplementations[name] = parseProjectImplementationYaml(implContent);
@@ -400,7 +400,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
     const {
       intervalMs = 2000,
-      requirementsPath = "/requirements",
+      docsPath = "/docs",
       eventsUrl = "/events",
       projectsApiUrl = "/api/projects",
     } = options ?? {};
@@ -416,11 +416,11 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
         const es = new EventSource(eventsUrl);
 
-        es.addEventListener("requirements-changed", () => {
+        es.addEventListener("docs-changed", () => {
           console.log(
-            "[design-duck:store] SSE event received, reloading requirements",
+            "[design-duck:store] SSE event received, reloading docs",
           );
-          get().loadFromFiles(requirementsPath, projectsApiUrl);
+          get().loadFromFiles(docsPath, projectsApiUrl);
         });
 
         es.addEventListener("connected", () => {
@@ -451,8 +451,8 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     );
 
     pollingTimer = setInterval(() => {
-      console.log("[design-duck:store] Polling for requirement changes");
-      get().loadFromFiles(requirementsPath, projectsApiUrl);
+      console.log("[design-duck:store] Polling for docs changes");
+      get().loadFromFiles(docsPath, projectsApiUrl);
     }, intervalMs);
 
     set({ watching: true });

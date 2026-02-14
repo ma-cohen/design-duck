@@ -44,26 +44,26 @@ function readRawOrNull(filePath: string): string | null {
 /**
  * Reads vision.yaml as raw text. Returns null if missing.
  */
-function readRawVision(reqDir: string): string | null {
-  return readRawOrNull(join(reqDir, "vision.yaml"));
+function readRawVision(docsDir: string): string | null {
+  return readRawOrNull(join(docsDir, "vision.yaml"));
 }
 
 /**
  * Reads the root context.yaml as raw text. Returns null if missing.
  */
-function readRawRootContext(reqDir: string): string | null {
-  return readRawOrNull(join(reqDir, "context.yaml"));
+function readRawRootContext(docsDir: string): string | null {
+  return readRawOrNull(join(docsDir, "context.yaml"));
 }
 
 /**
  * Reads a project's context.yaml as raw text. Returns null if missing.
  */
 function readRawProjectContext(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "projects", projectName, "context.yaml"),
+    join(docsDir, "projects", projectName, "context.yaml"),
   );
 }
 
@@ -71,11 +71,11 @@ function readRawProjectContext(
  * Reads a project's requirements.yaml as raw text. Returns null if missing.
  */
 function readRawProjectRequirements(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "projects", projectName, "requirements.yaml"),
+    join(docsDir, "projects", projectName, "requirements.yaml"),
   );
 }
 
@@ -83,37 +83,37 @@ function readRawProjectRequirements(
  * Reads a project's design.yaml as raw text. Returns null if missing.
  */
 function readRawProjectDesign(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "projects", projectName, "design.yaml"),
+    join(docsDir, "projects", projectName, "design.yaml"),
   );
 }
 
 /**
  * Reads the root design.yaml (global design) as raw text. Returns null if missing.
  */
-function readRawGlobalDesign(reqDir: string): string | null {
-  return readRawOrNull(join(reqDir, "design.yaml"));
+function readRawGlobalDesign(docsDir: string): string | null {
+  return readRawOrNull(join(docsDir, "design.yaml"));
 }
 
 /**
  * Reads the root implementation.yaml (global validations) as raw text. Returns null if missing.
  */
-function readRawGlobalValidations(reqDir: string): string | null {
-  return readRawOrNull(join(reqDir, "implementation.yaml"));
+function readRawGlobalValidations(docsDir: string): string | null {
+  return readRawOrNull(join(docsDir, "implementation.yaml"));
 }
 
 /**
  * Reads a playground's requirements.yaml as raw text. Returns null if missing.
  */
 function readRawPlaygroundRequirements(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "playgrounds", playgroundName, "requirements.yaml"),
+    join(docsDir, "playgrounds", playgroundName, "requirements.yaml"),
   );
 }
 
@@ -121,11 +121,11 @@ function readRawPlaygroundRequirements(
  * Reads a playground's context.yaml as raw text. Returns null if missing.
  */
 function readRawPlaygroundContext(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "playgrounds", playgroundName, "context.yaml"),
+    join(docsDir, "playgrounds", playgroundName, "context.yaml"),
   );
 }
 
@@ -133,11 +133,11 @@ function readRawPlaygroundContext(
  * Reads a playground's design.yaml as raw text. Returns null if missing.
  */
 function readRawPlaygroundDesign(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string | null {
   return readRawOrNull(
-    join(reqDir, "playgrounds", playgroundName, "design.yaml"),
+    join(docsDir, "playgrounds", playgroundName, "design.yaml"),
   );
 }
 
@@ -148,25 +148,25 @@ function readRawPlaygroundDesign(
 /**
  * Phase 1: Vision — help define or refine the product vision.
  */
-export function generateVisionContext(reqDir: string): string {
-  const rawVision = readRawVision(reqDir);
-  const rawRootContext = readRawRootContext(reqDir);
+export function generateVisionContext(docsDir: string): string {
+  const rawVision = readRawVision(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
   return visionPrompt(rawVision, rawRootContext);
 }
 
 /**
  * Phase 2: Projects — suggest how to split the vision into projects.
  */
-export function generateProjectsContext(reqDir: string): string {
-  const rawVision = readRawVision(reqDir);
+export function generateProjectsContext(docsDir: string): string {
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first to define your vision.",
     );
   }
 
-  const existing = listProjects(reqDir);
-  const rawRootContext = readRawRootContext(reqDir);
+  const existing = listProjects(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
   return projectsPrompt(rawVision, existing, rawRootContext);
 }
 
@@ -174,18 +174,18 @@ export function generateProjectsContext(reqDir: string): string {
  * Phase 3: Requirements — gather user-value requirements for a project.
  */
 export function generateRequirementsContext(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(reqDir);
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first.",
     );
   }
 
-  const rawReqs = readRawProjectRequirements(reqDir, projectName);
-  const rawRootContext = readRawRootContext(reqDir);
+  const rawReqs = readRawProjectRequirements(docsDir, projectName);
+  const rawRootContext = readRawRootContext(docsDir);
   return requirementsPrompt(rawVision, projectName, rawReqs, rawRootContext);
 }
 
@@ -193,27 +193,27 @@ export function generateRequirementsContext(
  * Phase 4: Design Brainstorm — propose design decisions with options.
  */
 export function generateDesignContext(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(reqDir);
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first.",
     );
   }
 
-  const rawReqs = readRawProjectRequirements(reqDir, projectName);
+  const rawReqs = readRawProjectRequirements(docsDir, projectName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for project "${projectName}". Run 'design-duck context requirements ${projectName}' first.`,
     );
   }
 
-  const rawGlobalDesign = readRawGlobalDesign(reqDir);
-  const rawGlobalValidations = readRawGlobalValidations(reqDir);
-  const rawRootContext = readRawRootContext(reqDir);
-  const rawProjectContext = readRawProjectContext(reqDir, projectName);
+  const rawGlobalDesign = readRawGlobalDesign(docsDir);
+  const rawGlobalValidations = readRawGlobalValidations(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
+  const rawProjectContext = readRawProjectContext(docsDir, projectName);
 
   return designPrompt(
     rawVision,
@@ -230,32 +230,32 @@ export function generateDesignContext(
  * Phase 5: Choose Design — evaluate options and recommend choices.
  */
 export function generateChooseContext(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(reqDir);
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first.",
     );
   }
 
-  const rawReqs = readRawProjectRequirements(reqDir, projectName);
+  const rawReqs = readRawProjectRequirements(docsDir, projectName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for project "${projectName}".`,
     );
   }
 
-  const rawDesign = readRawProjectDesign(reqDir, projectName);
+  const rawDesign = readRawProjectDesign(docsDir, projectName);
   if (!rawDesign) {
     throw new Error(
       `design.yaml not found for project "${projectName}". Run 'design-duck context design ${projectName}' first.`,
     );
   }
 
-  const rawRootContext = readRawRootContext(reqDir);
-  const rawProjectContext = readRawProjectContext(reqDir, projectName);
+  const rawRootContext = readRawRootContext(docsDir);
+  const rawProjectContext = readRawProjectContext(docsDir, projectName);
   return choosePrompt(rawVision, projectName, rawReqs, rawDesign, rawRootContext, rawProjectContext);
 }
 
@@ -263,28 +263,28 @@ export function generateChooseContext(
  * Phase 6: Implementation Plan — create todos, validations, and tests.
  */
 export function generateImplementationContext(
-  reqDir: string,
+  docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(reqDir);
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first.",
     );
   }
 
-  const rawReqs = readRawProjectRequirements(reqDir, projectName);
+  const rawReqs = readRawProjectRequirements(docsDir, projectName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for project "${projectName}".`,
     );
   }
 
-  const rawDesign = readRawProjectDesign(reqDir, projectName);
-  const rawGlobalDesign = readRawGlobalDesign(reqDir);
-  const rawGlobalValidations = readRawGlobalValidations(reqDir);
-  const rawRootContext = readRawRootContext(reqDir);
-  const rawProjectContext = readRawProjectContext(reqDir, projectName);
+  const rawDesign = readRawProjectDesign(docsDir, projectName);
+  const rawGlobalDesign = readRawGlobalDesign(docsDir);
+  const rawGlobalValidations = readRawGlobalValidations(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
+  const rawProjectContext = readRawProjectContext(docsDir, projectName);
 
   return implementationPrompt(
     rawVision,
@@ -301,8 +301,8 @@ export function generateImplementationContext(
 /**
  * Global Validations — define cross-cutting validation rules.
  */
-export function generateValidationsContext(reqDir: string): string {
-  const rawVision = readRawVision(reqDir);
+export function generateValidationsContext(docsDir: string): string {
+  const rawVision = readRawVision(docsDir);
   if (!rawVision) {
     throw new Error(
       "vision.yaml not found. Run 'design-duck context vision' first.",
@@ -310,15 +310,15 @@ export function generateValidationsContext(reqDir: string): string {
   }
 
   // Build a summary of all projects
-  const projects = listProjects(reqDir);
+  const projects = listProjects(docsDir);
   let projectSummaries: string;
 
   if (projects.length === 0) {
     projectSummaries = "No projects defined yet.";
   } else {
     const summaryLines = projects.map((name) => {
-      const reqs = readRawProjectRequirements(reqDir, name);
-      const design = readRawProjectDesign(reqDir, name);
+      const reqs = readRawProjectRequirements(docsDir, name);
+      const design = readRawProjectDesign(docsDir, name);
       const parts = [`- **${name}**`];
       if (reqs) {
         // Count requirements by looking for "- id:" lines
@@ -336,8 +336,8 @@ export function generateValidationsContext(reqDir: string): string {
     projectSummaries = summaryLines.join("\n");
   }
 
-  const rawValidations = readRawGlobalValidations(reqDir);
-  const rawRootContext = readRawRootContext(reqDir);
+  const rawValidations = readRawGlobalValidations(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
   return validationsPrompt(rawVision, projectSummaries, rawValidations, rawRootContext);
 }
 
@@ -348,8 +348,8 @@ export function generateValidationsContext(reqDir: string): string {
 /**
  * Playground phase: create/list playgrounds.
  */
-export function generatePlaygroundContext(reqDir: string): string {
-  const existing = listPlaygrounds(reqDir);
+export function generatePlaygroundContext(docsDir: string): string {
+  const existing = listPlaygrounds(docsDir);
   return playgroundPrompt(existing);
 }
 
@@ -357,10 +357,10 @@ export function generatePlaygroundContext(reqDir: string): string {
  * Playground Requirements: gather requirements for a playground.
  */
 export function generatePlaygroundRequirementsContext(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string {
-  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
   return playgroundRequirementsPrompt(playgroundName, rawReqs);
 }
 
@@ -368,17 +368,17 @@ export function generatePlaygroundRequirementsContext(
  * Playground Design: brainstorm design decisions for a playground.
  */
 export function generatePlaygroundDesignContext(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string {
-  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for playground "${playgroundName}". Run 'dd context playground-requirements ${playgroundName}' first.`,
     );
   }
 
-  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
   return playgroundDesignPrompt(playgroundName, rawReqs, rawPlaygroundContext);
 }
 
@@ -386,24 +386,24 @@ export function generatePlaygroundDesignContext(
  * Playground Choose: evaluate and pick design options for a playground.
  */
 export function generatePlaygroundChooseContext(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string {
-  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for playground "${playgroundName}".`,
     );
   }
 
-  const rawDesign = readRawPlaygroundDesign(reqDir, playgroundName);
+  const rawDesign = readRawPlaygroundDesign(docsDir, playgroundName);
   if (!rawDesign) {
     throw new Error(
       `design.yaml not found for playground "${playgroundName}". Run 'dd context playground-design ${playgroundName}' first.`,
     );
   }
 
-  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
   return playgroundChoosePrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
 }
 
@@ -411,17 +411,17 @@ export function generatePlaygroundChooseContext(
  * Playground Implementation: create implementation plan for a playground.
  */
 export function generatePlaygroundImplementationContext(
-  reqDir: string,
+  docsDir: string,
   playgroundName: string,
 ): string {
-  const rawReqs = readRawPlaygroundRequirements(reqDir, playgroundName);
+  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
   if (!rawReqs) {
     throw new Error(
       `requirements.yaml not found for playground "${playgroundName}".`,
     );
   }
 
-  const rawDesign = readRawPlaygroundDesign(reqDir, playgroundName);
-  const rawPlaygroundContext = readRawPlaygroundContext(reqDir, playgroundName);
+  const rawDesign = readRawPlaygroundDesign(docsDir, playgroundName);
+  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
   return playgroundImplementationPrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
 }

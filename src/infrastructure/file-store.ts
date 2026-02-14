@@ -30,12 +30,12 @@ export { parseVisionYaml, parseProjectRequirementsYaml, parsePlaygroundRequireme
 /**
  * Reads and parses vision.yaml into a validated Vision object.
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Validated vision object
  * @throws Error if file not found, malformed YAML, or validation fails
  */
-export function readVision(requirementsDir: string): Vision {
-  const filePath = join(requirementsDir, "vision.yaml");
+export function readVision(docsDir: string): Vision {
+  const filePath = join(docsDir, "vision.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading vision from: ${filePath}`);
@@ -67,14 +67,14 @@ export function readVision(requirementsDir: string): Vision {
  * Reads and parses the root-level context.yaml into a validated ContextDocument.
  * Returns null if the file does not exist (context is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Validated context document, or null if context.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readRootContext(
-  requirementsDir: string,
+  docsDir: string,
 ): ContextDocument | null {
-  const filePath = join(requirementsDir, "context.yaml");
+  const filePath = join(docsDir, "context.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading root context from: ${filePath}`);
@@ -108,16 +108,16 @@ export function readRootContext(
  * Reads and parses a project's context.yaml into a validated ContextDocument.
  * Returns null if the file does not exist (project context is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @param projectName - Name of the project subdirectory
  * @returns Validated context document, or null if context.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readProjectContext(
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): ContextDocument | null {
-  const filePath = join(requirementsDir, "projects", projectName, "context.yaml");
+  const filePath = join(docsDir, "projects", projectName, "context.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading project context from: ${filePath}`);
@@ -151,14 +151,14 @@ export function readProjectContext(
  * Reads and parses the root-level design.yaml into a validated GlobalDesign object.
  * Returns null if the file does not exist (global design is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Validated global design, or null if design.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readGlobalDesign(
-  requirementsDir: string,
+  docsDir: string,
 ): GlobalDesign | null {
-  const filePath = join(requirementsDir, "design.yaml");
+  const filePath = join(docsDir, "design.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading global design from: ${filePath}`);
@@ -189,13 +189,13 @@ export function readGlobalDesign(
 }
 
 /**
- * Lists project names by scanning the requirements/projects/ directory.
+ * Lists project names by scanning the docs/projects/ directory.
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Array of project directory names
  */
-export function listProjects(requirementsDir: string): string[] {
-  const projectsDir = join(requirementsDir, "projects");
+export function listProjects(docsDir: string): string[] {
+  const projectsDir = join(docsDir, "projects");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Listing projects in: ${projectsDir}`);
@@ -224,16 +224,16 @@ export function listProjects(requirementsDir: string): string[] {
 /**
  * Reads and parses a project's requirements.yaml into validated ProjectRequirements.
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @param projectName - Name of the project subdirectory
  * @returns Validated project requirements
  * @throws Error if file not found, malformed YAML, or validation fails
  */
 export function readProjectRequirements(
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): ProjectRequirements {
-  const filePath = join(requirementsDir, "projects", projectName, "requirements.yaml");
+  const filePath = join(docsDir, "projects", projectName, "requirements.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading project requirements from: ${filePath}`);
@@ -267,16 +267,16 @@ export function readProjectRequirements(
  * Reads and parses a project's design.yaml into validated ProjectDesign.
  * Returns null if the file does not exist (design is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @param projectName - Name of the project subdirectory
  * @returns Validated project design, or null if design.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readProjectDesign(
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): ProjectDesign | null {
-  const filePath = join(requirementsDir, "projects", projectName, "design.yaml");
+  const filePath = join(docsDir, "projects", projectName, "design.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading project design from: ${filePath}`);
@@ -310,14 +310,14 @@ export function readProjectDesign(
  * Reads and parses the root-level implementation.yaml into validated GeneralValidations.
  * Returns null if the file does not exist (implementation is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Validated general validations, or null if implementation.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readGeneralValidations(
-  requirementsDir: string,
+  docsDir: string,
 ): GeneralValidations | null {
-  const filePath = join(requirementsDir, "implementation.yaml");
+  const filePath = join(docsDir, "implementation.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading general validations from: ${filePath}`);
@@ -351,16 +351,16 @@ export function readGeneralValidations(
  * Reads and parses a project's implementation.yaml into validated ProjectImplementation.
  * Returns null if the file does not exist (implementation is optional).
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @param projectName - Name of the project subdirectory
  * @returns Validated project implementation, or null if implementation.yaml doesn't exist
  * @throws Error if malformed YAML or validation fails (but NOT for missing file)
  */
 export function readProjectImplementation(
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): ProjectImplementation | null {
-  const filePath = join(requirementsDir, "projects", projectName, "implementation.yaml");
+  const filePath = join(docsDir, "projects", projectName, "implementation.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading project implementation from: ${filePath}`);
@@ -395,13 +395,13 @@ export function readProjectImplementation(
 // ---------------------------------------------------------------------------
 
 /**
- * Lists playground names by scanning the requirements/playgrounds/ directory.
+ * Lists playground names by scanning the docs/playgrounds/ directory.
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @returns Array of playground directory names
  */
-export function listPlaygrounds(requirementsDir: string): string[] {
-  const playgroundsDir = join(requirementsDir, "playgrounds");
+export function listPlaygrounds(docsDir: string): string[] {
+  const playgroundsDir = join(docsDir, "playgrounds");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Listing playgrounds in: ${playgroundsDir}`);
@@ -430,16 +430,16 @@ export function listPlaygrounds(requirementsDir: string): string[] {
 /**
  * Reads and parses a playground's requirements.yaml into validated PlaygroundRequirements.
  *
- * @param requirementsDir - Path to the requirements/ directory
+ * @param docsDir - Path to the docs/ directory
  * @param playgroundName - Name of the playground subdirectory
  * @returns Validated playground requirements
  * @throws Error if file not found, malformed YAML, or validation fails
  */
 export function readPlaygroundRequirements(
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): PlaygroundRequirements {
-  const filePath = join(requirementsDir, "playgrounds", playgroundName, "requirements.yaml");
+  const filePath = join(docsDir, "playgrounds", playgroundName, "requirements.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading playground requirements from: ${filePath}`);
@@ -474,10 +474,10 @@ export function readPlaygroundRequirements(
  * Returns null if the file does not exist (context is optional).
  */
 export function readPlaygroundContext(
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): ContextDocument | null {
-  const filePath = join(requirementsDir, "playgrounds", playgroundName, "context.yaml");
+  const filePath = join(docsDir, "playgrounds", playgroundName, "context.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading playground context from: ${filePath}`);
@@ -507,10 +507,10 @@ export function readPlaygroundContext(
  * Returns null if the file does not exist (design is optional).
  */
 export function readPlaygroundDesign(
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): ProjectDesign | null {
-  const filePath = join(requirementsDir, "playgrounds", playgroundName, "design.yaml");
+  const filePath = join(docsDir, "playgrounds", playgroundName, "design.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading playground design from: ${filePath}`);
@@ -540,10 +540,10 @@ export function readPlaygroundDesign(
  * Returns null if the file does not exist (implementation is optional).
  */
 export function readPlaygroundImplementation(
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): ProjectImplementation | null {
-  const filePath = join(requirementsDir, "playgrounds", playgroundName, "implementation.yaml");
+  const filePath = join(docsDir, "playgrounds", playgroundName, "implementation.yaml");
 
   if (process.env.DEBUG) {
     console.error(`[file-store] Reading playground implementation from: ${filePath}`);

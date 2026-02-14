@@ -3,10 +3,10 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { watchRequirementsDir } from "./file-watcher";
+import { watchDocsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
 
-describe("watchRequirementsDir", () => {
+describe("watchDocsDir", () => {
   let testDir: string;
   let handle: FileWatcherHandle | null;
 
@@ -25,19 +25,19 @@ describe("watchRequirementsDir", () => {
     const missingDir = join(testDir, "nonexistent");
 
     expect(() =>
-      watchRequirementsDir(missingDir, () => {}),
+      watchDocsDir(missingDir, () => {}),
     ).toThrow(/does not exist/);
   });
 
   test("returns a handle with a close method", () => {
-    handle = watchRequirementsDir(testDir, () => {});
+    handle = watchDocsDir(testDir, () => {});
 
     expect(handle).toBeDefined();
     expect(typeof handle.close).toBe("function");
   });
 
   test("close can be called multiple times without error", () => {
-    handle = watchRequirementsDir(testDir, () => {});
+    handle = watchDocsDir(testDir, () => {});
 
     handle.close();
     handle.close();
@@ -49,7 +49,7 @@ describe("watchRequirementsDir", () => {
   test("invokes callback when a YAML file is created", async () => {
     const onChange = mock(() => {});
 
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 50 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 50 });
 
     // Small delay to let fs.watch fully initialize
     await sleep(50);
@@ -68,7 +68,7 @@ describe("watchRequirementsDir", () => {
     writeFileSync(join(testDir, "main.yaml"), "requirements: []\n", "utf-8");
 
     const onChange = mock(() => {});
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 50 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 50 });
 
     // Modify the file
     writeFileSync(
@@ -84,7 +84,7 @@ describe("watchRequirementsDir", () => {
 
   test("does not invoke callback for non-YAML files", async () => {
     const onChange = mock(() => {});
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 50 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 50 });
 
     // Create a non-YAML file
     writeFileSync(join(testDir, "readme.md"), "# Hello\n", "utf-8");
@@ -96,7 +96,7 @@ describe("watchRequirementsDir", () => {
 
   test("invokes callback for .yml extension", async () => {
     const onChange = mock(() => {});
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 50 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 50 });
 
     writeFileSync(join(testDir, "extra.yml"), "data: true\n", "utf-8");
 
@@ -107,7 +107,7 @@ describe("watchRequirementsDir", () => {
 
   test("debounces rapid changes into a single callback", async () => {
     const onChange = mock(() => {});
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 100 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 100 });
 
     // Rapid successive writes
     writeFileSync(join(testDir, "main.yaml"), "requirements: []\n", "utf-8");
@@ -127,7 +127,7 @@ describe("watchRequirementsDir", () => {
 
   test("does not invoke callback after close", async () => {
     const onChange = mock(() => {});
-    handle = watchRequirementsDir(testDir, onChange, { debounceMs: 50 });
+    handle = watchDocsDir(testDir, onChange, { debounceMs: 50 });
 
     handle.close();
     handle = null;
@@ -142,7 +142,7 @@ describe("watchRequirementsDir", () => {
 
   test("uses default debounce when not specified", () => {
     // Should not throw — just verifying the default works
-    handle = watchRequirementsDir(testDir, () => {});
+    handle = watchDocsDir(testDir, () => {});
 
     expect(handle).toBeDefined();
   });

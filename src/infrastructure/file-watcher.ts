@@ -1,5 +1,5 @@
 /**
- * File watcher for the requirements/ directory.
+ * File watcher for the docs/ directory.
  *
  * Watches for YAML file changes (create, modify, delete) and invokes a
  * callback after a debounce period. This enables real-time UI updates when
@@ -23,17 +23,17 @@ export interface FileWatcherOptions {
   debounceMs?: number;
 }
 
-/** Handle returned by `watchRequirementsDir` to control the watcher lifecycle. */
+/** Handle returned by `watchDocsDir` to control the watcher lifecycle. */
 export interface FileWatcherHandle {
   /** Stops watching and releases all resources. Safe to call multiple times. */
   close: () => void;
 }
 
 /**
- * Watches a requirements directory for YAML file changes and invokes
+ * Watches a docs directory for YAML file changes and invokes
  * `onChange` after a debounce period.
  *
- * @param requirementsDir - Absolute or relative path to the requirements/ directory
+ * @param docsDir - Absolute or relative path to the docs/ directory
  * @param onChange - Callback invoked when YAML files change (after debounce)
  * @param options - Optional configuration (debounce timing)
  * @returns A handle with a `close()` method to stop watching
@@ -41,8 +41,8 @@ export interface FileWatcherHandle {
  *
  * @example
  * ```ts
- * const handle = watchRequirementsDir("./requirements", () => {
- *   console.log("Requirements changed, reloading...");
+ * const handle = watchDocsDir("./docs", () => {
+ *   console.log("Docs changed, reloading...");
  *   store.loadFromFiles();
  * });
  *
@@ -50,22 +50,22 @@ export interface FileWatcherHandle {
  * handle.close();
  * ```
  */
-export function watchRequirementsDir(
-  requirementsDir: string,
+export function watchDocsDir(
+  docsDir: string,
   onChange: () => void,
   options: FileWatcherOptions = {},
 ): FileWatcherHandle {
   const { debounceMs = 100 } = options;
 
-  if (!existsSync(requirementsDir)) {
+  if (!existsSync(docsDir)) {
     throw new Error(
-      `Cannot watch requirements directory: ${requirementsDir} does not exist`,
+      `Cannot watch docs directory: ${docsDir} does not exist`,
     );
   }
 
   if (process.env.DEBUG) {
     console.error(
-      `[file-watcher] Starting watcher on: ${requirementsDir} (debounce: ${debounceMs}ms)`,
+      `[file-watcher] Starting watcher on: ${docsDir} (debounce: ${debounceMs}ms)`,
     );
   }
 
@@ -93,7 +93,7 @@ export function watchRequirementsDir(
   let watcher: FSWatcher;
 
   try {
-    watcher = watch(requirementsDir, { recursive: true }, (eventType, filename) => {
+    watcher = watch(docsDir, { recursive: true }, (eventType, filename) => {
       if (closed) return;
 
       // On some platforms (macOS) filename can be null.
@@ -102,7 +102,7 @@ export function watchRequirementsDir(
       if (filename === null || isYamlFile(filename)) {
         if (process.env.DEBUG) {
           const target = filename
-            ? join(requirementsDir, filename)
+            ? join(docsDir, filename)
             : "(unknown file)";
           console.error(
             `[file-watcher] Detected ${eventType} on: ${target}`,
@@ -113,7 +113,7 @@ export function watchRequirementsDir(
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Failed to start file watcher on ${requirementsDir}: ${msg}`);
+    throw new Error(`Failed to start file watcher on docs directory ${docsDir}: ${msg}`);
   }
 
   watcher.on("error", (err) => {

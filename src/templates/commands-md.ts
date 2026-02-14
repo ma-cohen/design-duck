@@ -38,10 +38,10 @@ Use their message as context for what the vision should be about.
 
 4. **Ask the user about their situation first** — company stage, team size,
    budget, constraints, target users, etc. Capture these as context items in
-   \`desgin-duck/requirements/context.yaml\`. Do not define the vision in a vacuum.
+   \`desgin-duck/docs/context.yaml\`. Do not define the vision in a vacuum.
 
 5. Follow the instructions from the context output. Edit
-   \`desgin-duck/requirements/vision.yaml\` with a clear **vision**, **mission**,
+   \`desgin-duck/docs/vision.yaml\` with a clear **vision**, **mission**,
    and **problem** statement, informed by the context and the user's request.
 
 6. Run validation to check your work:
@@ -74,7 +74,7 @@ Use their message as context for how to split the vision into projects.
 
 ## Prerequisites
 
-The vision must be defined first (\`desgin-duck/requirements/vision.yaml\`).
+The vision must be defined first (\`desgin-duck/docs/vision.yaml\`).
 
 ## Steps
 
@@ -88,7 +88,7 @@ The vision must be defined first (\`desgin-duck/requirements/vision.yaml\`).
    projects (if any), and detailed instructions.
 
 3. Follow the instructions from the context output. Create project directories
-   under \`desgin-duck/requirements/projects/<name>/\` with a
+   under \`desgin-duck/docs/projects/<name>/\` with a
    \`requirements.yaml\` containing a \`visionAlignment\` field.
 
 4. Run validation to check your work:
@@ -122,7 +122,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/requirements/projects/
+   ls desgin-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -139,7 +139,7 @@ This phase requires a **project name**.
    detailed instructions.
 
 3. Follow the instructions from the context output. Edit
-   \`desgin-duck/requirements/projects/<project-name>/requirements.yaml\`
+   \`desgin-duck/docs/projects/<project-name>/requirements.yaml\`
    with user-value requirements. Each requirement needs an **id**,
    **description**, and **userValue**.
 
@@ -175,7 +175,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/requirements/projects/
+   ls desgin-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -194,11 +194,11 @@ This phase requires a **project name**.
 3. **Ask the user about their current system and technical situation** —
    existing tech stack, infrastructure, deployment environment, etc. Capture
    these as context items in
-   \`desgin-duck/requirements/projects/<project-name>/context.yaml\`.
+   \`desgin-duck/docs/projects/<project-name>/context.yaml\`.
    Do not make design decisions without understanding the current landscape.
 
 4. Follow the instructions from the context output. Create or edit
-   \`desgin-duck/requirements/projects/<project-name>/design.yaml\`
+   \`desgin-duck/docs/projects/<project-name>/design.yaml\`
    with design decisions. Each decision should have multiple options with
    pros/cons. Use \`contextRefs\` to link decisions to relevant context items.
    Leave \`chosen\` and \`chosenReason\` as \`null\` — the human picks.
@@ -238,7 +238,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/requirements/projects/
+   ls desgin-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -256,7 +256,7 @@ This phase requires a **project name**.
 
 3. Follow the instructions from the context output. For each unchosen
    decision, evaluate options and set \`chosen\` + \`chosenReason\` in
-   \`desgin-duck/requirements/projects/<project-name>/design.yaml\`.
+   \`desgin-duck/docs/projects/<project-name>/design.yaml\`.
 
 4. Run validation to check your work:
 
@@ -291,7 +291,7 @@ for a project. This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/requirements/projects/
+   ls desgin-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -308,7 +308,7 @@ for a project. This phase requires a **project name**.
    and detailed instructions for creating the implementation plan.
 
 3. Follow the instructions from the context output. Create or edit
-   \`desgin-duck/requirements/projects/<project-name>/implementation.yaml\`
+   \`desgin-duck/docs/projects/<project-name>/implementation.yaml\`
    with a phased **plan**, **todos**, **validations**, and **tests**.
    Every item must link back to requirements via \`requirementRefs\`.
 
@@ -353,7 +353,7 @@ These are checks that apply across all projects (linting, testing, security, CI,
    detailed instructions.
 
 3. Follow the instructions from the context output. Edit
-   \`desgin-duck/requirements/implementation.yaml\` to add or update
+   \`desgin-duck/docs/implementation.yaml\` to add or update
    cross-cutting validation rules.
 
 4. Run validation to check your work:
@@ -410,7 +410,7 @@ on one focused thing.
    should focus on one specific problem or question.
 
 5. Create a playground directory at
-   \`desgin-duck/requirements/playgrounds/<playground-name>/requirements.yaml\`
+   \`desgin-duck/docs/playgrounds/<playground-name>/requirements.yaml\`
    with a clear \`problemStatement\`.
 
 6. Run validation to check your work:

@@ -2,18 +2,18 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { requirementsWatcherPlugin } from "./vite-requirements-plugin";
+import { docsWatcherPlugin } from "./vite-requirements-plugin";
 
-describe("requirementsWatcherPlugin", () => {
+describe("docsWatcherPlugin", () => {
   test("returns a Vite plugin with correct name", () => {
-    const plugin = requirementsWatcherPlugin();
+    const plugin = docsWatcherPlugin();
 
-    expect(plugin.name).toBe("design-duck-requirements-watcher");
+    expect(plugin.name).toBe("design-duck-docs-watcher");
     expect(typeof plugin.configureServer).toBe("function");
   });
 
-  test("configureServer warns when desgin-duck/requirements/ dir does not exist", () => {
-    const plugin = requirementsWatcherPlugin();
+  test("configureServer warns when desgin-duck/docs/ dir does not exist", () => {
+    const plugin = docsWatcherPlugin();
     const warnSpy = mock(() => {});
     const originalWarn = console.warn;
     console.warn = warnSpy;
@@ -29,18 +29,18 @@ describe("requirementsWatcherPlugin", () => {
 
     expect(warnSpy).toHaveBeenCalled();
     const warnMsg = (warnSpy.mock.calls as unknown[][])[0][0] as string;
-    expect(warnMsg).toContain("desgin-duck/requirements/ directory not found");
+    expect(warnMsg).toContain("desgin-duck/docs/ directory not found");
 
     console.warn = originalWarn;
   });
 
-  test("configureServer sets up watcher when desgin-duck/requirements/ dir exists", () => {
+  test("configureServer sets up watcher when desgin-duck/docs/ dir exists", () => {
     const testDir = join(tmpdir(), `vite-plugin-test-${Date.now()}`);
-    const reqDir = join(testDir, "desgin-duck", "requirements");
-    mkdirSync(reqDir, { recursive: true });
+    const docsDir = join(testDir, "desgin-duck", "docs");
+    mkdirSync(docsDir, { recursive: true });
 
     try {
-      const plugin = requirementsWatcherPlugin();
+      const plugin = docsWatcherPlugin();
       const sendMock = mock(() => {});
       const onMock = mock(() => {});
 
@@ -62,11 +62,11 @@ describe("requirementsWatcherPlugin", () => {
 
   test("sends HMR event when a YAML file changes", async () => {
     const testDir = join(tmpdir(), `vite-plugin-hmr-test-${Date.now()}`);
-    const reqDir = join(testDir, "desgin-duck", "requirements");
-    mkdirSync(reqDir, { recursive: true });
+    const docsDir = join(testDir, "desgin-duck", "docs");
+    mkdirSync(docsDir, { recursive: true });
 
     try {
-      const plugin = requirementsWatcherPlugin();
+      const plugin = docsWatcherPlugin();
       const sendMock = mock(() => {});
       const onMock = mock(() => {});
 
@@ -82,7 +82,7 @@ describe("requirementsWatcherPlugin", () => {
       await sleep(50);
 
       // Create a YAML file to trigger the watcher
-      writeFileSync(join(reqDir, "main.yaml"), "requirements: []\n", "utf-8");
+      writeFileSync(join(docsDir, "main.yaml"), "requirements: []\n", "utf-8");
 
       // Wait for debounce + fs.watch propagation
       await sleep(300);
@@ -91,7 +91,7 @@ describe("requirementsWatcherPlugin", () => {
       const calls = sendMock.mock.calls as unknown[][];
       const payload = calls[0][0] as Record<string, unknown>;
       expect(payload.type).toBe("custom");
-      expect(payload.event).toBe("design-duck:requirements-changed");
+      expect(payload.event).toBe("design-duck:docs-changed");
 
       // Trigger cleanup
       const onCalls = onMock.mock.calls as unknown[][];

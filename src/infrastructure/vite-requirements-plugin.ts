@@ -1,19 +1,19 @@
 /**
- * Vite plugin that watches the desgin-duck/requirements/ directory for YAML changes
+ * Vite plugin that watches the desgin-duck/docs/ directory for YAML changes
  * and notifies the browser via HMR custom events.
  *
  * Uses the existing file-watcher infrastructure to detect filesystem changes
- * and sends a "design-duck:requirements-changed" HMR event so the Zustand
- * store can auto-reload requirements without polling.
+ * and sends a "design-duck:docs-changed" HMR event so the Zustand
+ * store can auto-reload docs without polling.
  */
 
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { watchRequirementsDir } from "./file-watcher";
+import { watchDocsDir } from "./file-watcher";
 import type { Plugin } from "vite";
 
 /**
- * Creates a Vite plugin that watches the desgin-duck/requirements/ directory
+ * Creates a Vite plugin that watches the desgin-duck/docs/ directory
  * and sends HMR events when YAML files change.
  *
  * @returns Vite plugin instance
@@ -21,38 +21,38 @@ import type { Plugin } from "vite";
  * @example
  * ```ts
  * // vite.config.ts
- * import { requirementsWatcherPlugin } from "./src/infrastructure/vite-requirements-plugin";
+ * import { docsWatcherPlugin } from "./src/infrastructure/vite-requirements-plugin";
  *
  * export default defineConfig({
- *   plugins: [requirementsWatcherPlugin()],
+ *   plugins: [docsWatcherPlugin()],
  * });
  * ```
  */
-export function requirementsWatcherPlugin(): Plugin {
+export function docsWatcherPlugin(): Plugin {
   return {
-    name: "design-duck-requirements-watcher",
+    name: "design-duck-docs-watcher",
 
     configureServer(server) {
-      const requirementsDir = join(server.config.root, "desgin-duck", "requirements");
+      const docsDir = join(server.config.root, "desgin-duck", "docs");
 
-      if (!existsSync(requirementsDir)) {
+      if (!existsSync(docsDir)) {
         console.warn(
-          "[design-duck:vite] desgin-duck/requirements/ directory not found, skipping file watcher",
+          "[design-duck:vite] desgin-duck/docs/ directory not found, skipping file watcher",
         );
         return;
       }
 
       console.log(
-        `[design-duck:vite] Watching ${requirementsDir} for YAML changes`,
+        `[design-duck:vite] Watching ${docsDir} for YAML changes`,
       );
 
-      const handle = watchRequirementsDir(requirementsDir, () => {
+      const handle = watchDocsDir(docsDir, () => {
         console.log(
-          "[design-duck:vite] Requirements changed, notifying browser",
+          "[design-duck:vite] Docs changed, notifying browser",
         );
         server.ws.send({
           type: "custom",
-          event: "design-duck:requirements-changed",
+          event: "design-duck:docs-changed",
           data: {},
         });
       });

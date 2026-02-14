@@ -3,7 +3,7 @@
  *
  * Serves four things:
  * 1. Pre-built static UI files from dist-ui/ (shipped with the package)
- * 2. Requirements YAML files from the consumer's project (process.cwd())
+ * 2. Docs YAML files from the consumer's project (process.cwd())
  * 3. An SSE endpoint (/events) for real-time file change notifications
  * 4. A /api/projects endpoint listing available project directories
  *
@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync
 import { join, extname, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { dump as yamlDump } from "js-yaml";
-import { watchRequirementsDir } from "./file-watcher";
+import { watchDocsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
 import {
   validateRequirement,
@@ -37,8 +37,8 @@ export interface UiServerOptions {
   port?: number;
   /** Absolute path to the dist-ui/ directory with pre-built UI files. */
   distUiDir: string;
-  /** Absolute path to the desgin-duck/requirements/ directory to serve YAML files from. */
-  requirementsDir: string;
+  /** Absolute path to the desgin-duck/docs/ directory to serve YAML files from. */
+  docsDir: string;
   /** Whether to open the browser automatically. @default true */
   open?: boolean;
 }
@@ -81,10 +81,10 @@ const MIME_TYPES: Record<string, string> = {
  *
  * @param options - Server configuration
  * @returns A handle with a `close()` method and the actual port
- * @throws Error if dist-ui/ or desgin-duck/requirements/ directories are missing
+ * @throws Error if dist-ui/ or desgin-duck/docs/ directories are missing
  */
 export function startUiServer(options: UiServerOptions): UiServerHandle {
-  const { port = 3456, distUiDir, requirementsDir, open = true } = options;
+  const { port = 3456, distUiDir, docsDir, open = true } = options;
   const maxPort = port + 100;
   let currentPort = port;
 
@@ -94,9 +94,9 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     );
   }
 
-  if (!existsSync(requirementsDir)) {
+  if (!existsSync(docsDir)) {
     throw new Error(
-      `desgin-duck/requirements/ not found at ${requirementsDir}. Run 'design-duck init' first.`,
+      `desgin-duck/docs/ not found at ${docsDir}. Run 'design-duck init' first.`,
     );
   }
 
@@ -104,7 +104,7 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     `[design-duck:server] Serving UI from: ${distUiDir}`,
   );
   console.log(
-    `[design-duck:server] Serving requirements from: ${requirementsDir}`,
+    `[design-duck:server] Serving docs from: ${docsDir}`,
   );
 
   // Track connected SSE clients (scoped to this server instance)
@@ -113,15 +113,15 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
   // Set up file watcher to push SSE events on YAML changes
   let watcherHandle: FileWatcherHandle | null = null;
   try {
-    watcherHandle = watchRequirementsDir(requirementsDir, () => {
+    watcherHandle = watchDocsDir(docsDir, () => {
       console.log(
-        `[design-duck:server] Requirements changed, notifying ${sseClients.size} client(s)`,
+        `[design-duck:server] Docs changed, notifying ${sseClients.size} client(s)`,
       );
       for (const client of sseClients) {
-        client.write("event: requirements-changed\ndata: {}\n\n");
+        client.write("event: docs-changed\ndata: {}\n\n");
       }
     });
-    console.log("[design-duck:server] File watcher active on requirements/");
+    console.log("[design-duck:server] File watcher active on docs/");
   } catch (err) {
     console.warn(
       `[design-duck:server] Could not start file watcher: ${err instanceof Error ? err.message : err}`,
@@ -156,114 +156,114 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
 
     // API: list project directories
     if (pathname === "/api/projects" && req.method === "GET") {
-      handleProjectsList(requirementsDir, res);
+      handleProjectsList(docsDir, res);
       return;
     }
 
     // API: list playground directories
     if (pathname === "/api/playgrounds" && req.method === "GET") {
-      handlePlaygroundsList(requirementsDir, res);
+      handlePlaygroundsList(docsDir, res);
       return;
     }
 
     // Write API: PUT /api/vision
     if (pathname === "/api/vision" && req.method === "PUT") {
-      handlePutVision(req, res, requirementsDir);
+      handlePutVision(req, res, docsDir);
       return;
     }
 
     // Write API: PUT /api/design (root-level global design)
     if (pathname === "/api/design" && req.method === "PUT") {
-      handlePutGlobalDesign(req, res, requirementsDir);
+      handlePutGlobalDesign(req, res, docsDir);
       return;
     }
 
     // Write API: PUT /api/context (root-level context)
     if (pathname === "/api/context" && req.method === "PUT") {
-      handlePutContext(req, res, requirementsDir);
+      handlePutContext(req, res, docsDir);
       return;
     }
 
     // Write API: PUT /api/projects/:name/context
     const ctxMatch = pathname.match(/^\/api\/projects\/([^/]+)\/context$/);
     if (ctxMatch && req.method === "PUT") {
-      handlePutProjectContext(req, res, requirementsDir, decodeURIComponent(ctxMatch[1]));
+      handlePutProjectContext(req, res, docsDir, decodeURIComponent(ctxMatch[1]));
       return;
     }
 
     // Write API: PUT /api/projects/:name/requirements
     const reqMatch = pathname.match(/^\/api\/projects\/([^/]+)\/requirements$/);
     if (reqMatch && req.method === "PUT") {
-      handlePutRequirements(req, res, requirementsDir, decodeURIComponent(reqMatch[1]));
+      handlePutRequirements(req, res, docsDir, decodeURIComponent(reqMatch[1]));
       return;
     }
 
     // Write API: PUT /api/projects/:name/design
     const designMatch = pathname.match(/^\/api\/projects\/([^/]+)\/design$/);
     if (designMatch && req.method === "PUT") {
-      handlePutDesign(req, res, requirementsDir, decodeURIComponent(designMatch[1]));
+      handlePutDesign(req, res, docsDir, decodeURIComponent(designMatch[1]));
       return;
     }
 
     // Write API: PUT /api/implementation (root-level general validations)
     if (pathname === "/api/implementation" && req.method === "PUT") {
-      handlePutGeneralValidations(req, res, requirementsDir);
+      handlePutGeneralValidations(req, res, docsDir);
       return;
     }
 
     // Write API: PUT /api/projects/:name/implementation
     const implMatch = pathname.match(/^\/api\/projects\/([^/]+)\/implementation$/);
     if (implMatch && req.method === "PUT") {
-      handlePutImplementation(req, res, requirementsDir, decodeURIComponent(implMatch[1]));
+      handlePutImplementation(req, res, docsDir, decodeURIComponent(implMatch[1]));
       return;
     }
 
     // Delete API: DELETE /api/projects/:name
     const deleteMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (deleteMatch && req.method === "DELETE") {
-      handleDeleteProject(res, requirementsDir, decodeURIComponent(deleteMatch[1]));
+      handleDeleteProject(res, docsDir, decodeURIComponent(deleteMatch[1]));
       return;
     }
 
     // Write API: PUT /api/playgrounds/:name/requirements
     const pgReqMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/requirements$/);
     if (pgReqMatch && req.method === "PUT") {
-      handlePutPlaygroundRequirements(req, res, requirementsDir, decodeURIComponent(pgReqMatch[1]));
+      handlePutPlaygroundRequirements(req, res, docsDir, decodeURIComponent(pgReqMatch[1]));
       return;
     }
 
     // Write API: PUT /api/playgrounds/:name/context
     const pgCtxMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/context$/);
     if (pgCtxMatch && req.method === "PUT") {
-      handlePutPlaygroundContext(req, res, requirementsDir, decodeURIComponent(pgCtxMatch[1]));
+      handlePutPlaygroundContext(req, res, docsDir, decodeURIComponent(pgCtxMatch[1]));
       return;
     }
 
     // Write API: PUT /api/playgrounds/:name/design
     const pgDesignMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/design$/);
     if (pgDesignMatch && req.method === "PUT") {
-      handlePutPlaygroundDesign(req, res, requirementsDir, decodeURIComponent(pgDesignMatch[1]));
+      handlePutPlaygroundDesign(req, res, docsDir, decodeURIComponent(pgDesignMatch[1]));
       return;
     }
 
     // Write API: PUT /api/playgrounds/:name/implementation
     const pgImplMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/implementation$/);
     if (pgImplMatch && req.method === "PUT") {
-      handlePutPlaygroundImplementation(req, res, requirementsDir, decodeURIComponent(pgImplMatch[1]));
+      handlePutPlaygroundImplementation(req, res, docsDir, decodeURIComponent(pgImplMatch[1]));
       return;
     }
 
     // Delete API: DELETE /api/playgrounds/:name
     const pgDeleteMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)$/);
     if (pgDeleteMatch && req.method === "DELETE") {
-      handleDeletePlayground(res, requirementsDir, decodeURIComponent(pgDeleteMatch[1]));
+      handleDeletePlayground(res, docsDir, decodeURIComponent(pgDeleteMatch[1]));
       return;
     }
 
-    // Serve requirements YAML files from the consumer's project
-    if (pathname.startsWith("/requirements/")) {
-      const filename = pathname.slice("/requirements/".length);
-      const filePath = join(requirementsDir, filename);
+    // Serve docs YAML files from the consumer's project
+    if (pathname.startsWith("/docs/")) {
+      const filename = pathname.slice("/docs/".length);
+      const filePath = join(docsDir, filename);
       serveFile(filePath, res);
       return;
     }
@@ -363,11 +363,11 @@ function handleSSE(
 // ---------------------------------------------------------------------------
 
 function handleProjectsList(
-  requirementsDir: string,
+  docsDir: string,
   res: ServerResponse,
 ): void {
   try {
-    const projectsDir = join(requirementsDir, "projects");
+    const projectsDir = join(docsDir, "projects");
     let projects: string[] = [];
 
     if (existsSync(projectsDir)) {
@@ -397,11 +397,11 @@ function handleProjectsList(
 // ---------------------------------------------------------------------------
 
 function handlePlaygroundsList(
-  requirementsDir: string,
+  docsDir: string,
   res: ServerResponse,
 ): void {
   try {
-    const playgroundsDir = join(requirementsDir, "playgrounds");
+    const playgroundsDir = join(docsDir, "playgrounds");
     let playgrounds: string[] = [];
 
     if (existsSync(playgroundsDir)) {
@@ -429,7 +429,7 @@ function handlePlaygroundsList(
 async function handlePutPlaygroundRequirements(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): Promise<void> {
   try {
@@ -455,7 +455,7 @@ async function handlePutPlaygroundRequirements(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    const dirPath = join(docsDir, "playgrounds", playgroundName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "requirements.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -468,7 +468,7 @@ async function handlePutPlaygroundRequirements(
 async function handlePutPlaygroundContext(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): Promise<void> {
   try {
@@ -490,7 +490,7 @@ async function handlePutPlaygroundContext(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    const dirPath = join(docsDir, "playgrounds", playgroundName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "context.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -503,7 +503,7 @@ async function handlePutPlaygroundContext(
 async function handlePutPlaygroundDesign(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): Promise<void> {
   try {
@@ -536,7 +536,7 @@ async function handlePutPlaygroundDesign(
     toWrite.decisions = raw.decisions;
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    const dirPath = join(docsDir, "playgrounds", playgroundName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -549,7 +549,7 @@ async function handlePutPlaygroundDesign(
 async function handlePutPlaygroundImplementation(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): Promise<void> {
   try {
@@ -605,7 +605,7 @@ async function handlePutPlaygroundImplementation(
     toWrite.tests = raw.tests;
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    const dirPath = join(docsDir, "playgrounds", playgroundName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "implementation.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -617,11 +617,11 @@ async function handlePutPlaygroundImplementation(
 
 function handleDeletePlayground(
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   playgroundName: string,
 ): void {
   try {
-    const dirPath = join(requirementsDir, "playgrounds", playgroundName);
+    const dirPath = join(docsDir, "playgrounds", playgroundName);
     if (!existsSync(dirPath)) {
       jsonResponse(res, 404, { error: `Playground "${playgroundName}" not found` });
       return;
@@ -684,7 +684,7 @@ function jsonResponse(
 async function handlePutVision(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
 ): Promise<void> {
   try {
     const raw = JSON.parse(await readBody(req));
@@ -699,7 +699,7 @@ async function handlePutVision(
       return;
     }
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    const filePath = join(requirementsDir, "vision.yaml");
+    const filePath = join(docsDir, "vision.yaml");
     writeFileSync(filePath, yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
@@ -711,7 +711,7 @@ async function handlePutVision(
 async function handlePutGlobalDesign(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
 ): Promise<void> {
   try {
     const raw = JSON.parse(await readBody(req));
@@ -745,7 +745,7 @@ async function handlePutGlobalDesign(
     toWrite.decisions = raw.decisions;
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    writeFileSync(join(requirementsDir, "design.yaml"), yamlContent, "utf-8");
+    writeFileSync(join(docsDir, "design.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -756,7 +756,7 @@ async function handlePutGlobalDesign(
 async function handlePutContext(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
 ): Promise<void> {
   try {
     const raw = JSON.parse(await readBody(req));
@@ -777,7 +777,7 @@ async function handlePutContext(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    writeFileSync(join(requirementsDir, "context.yaml"), yamlContent, "utf-8");
+    writeFileSync(join(docsDir, "context.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -788,7 +788,7 @@ async function handlePutContext(
 async function handlePutProjectContext(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): Promise<void> {
   try {
@@ -810,7 +810,7 @@ async function handlePutProjectContext(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "projects", projectName);
+    const dirPath = join(docsDir, "projects", projectName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "context.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -823,7 +823,7 @@ async function handlePutProjectContext(
 async function handlePutRequirements(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): Promise<void> {
   try {
@@ -850,7 +850,7 @@ async function handlePutRequirements(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "projects", projectName);
+    const dirPath = join(docsDir, "projects", projectName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "requirements.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -863,7 +863,7 @@ async function handlePutRequirements(
 async function handlePutDesign(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): Promise<void> {
   try {
@@ -898,7 +898,7 @@ async function handlePutDesign(
     toWrite.decisions = raw.decisions;
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "projects", projectName);
+    const dirPath = join(docsDir, "projects", projectName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -915,7 +915,7 @@ async function handlePutDesign(
 async function handlePutGeneralValidations(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
 ): Promise<void> {
   try {
     const raw = JSON.parse(await readBody(req));
@@ -936,7 +936,7 @@ async function handlePutGeneralValidations(
     }
 
     const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    writeFileSync(join(requirementsDir, "implementation.yaml"), yamlContent, "utf-8");
+    writeFileSync(join(docsDir, "implementation.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -947,7 +947,7 @@ async function handlePutGeneralValidations(
 async function handlePutImplementation(
   req: IncomingMessage,
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): Promise<void> {
   try {
@@ -1017,7 +1017,7 @@ async function handlePutImplementation(
     toWrite.tests = raw.tests;
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(requirementsDir, "projects", projectName);
+    const dirPath = join(docsDir, "projects", projectName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "implementation.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
@@ -1033,11 +1033,11 @@ async function handlePutImplementation(
 
 function handleDeleteProject(
   res: ServerResponse,
-  requirementsDir: string,
+  docsDir: string,
   projectName: string,
 ): void {
   try {
-    const dirPath = join(requirementsDir, "projects", projectName);
+    const dirPath = join(docsDir, "projects", projectName);
     if (!existsSync(dirPath)) {
       jsonResponse(res, 404, { error: `Project "${projectName}" not found` });
       return;

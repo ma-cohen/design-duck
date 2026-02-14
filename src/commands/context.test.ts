@@ -7,14 +7,14 @@ import { context, PHASES } from "./context";
 
 describe("context command", () => {
   let testDir: string;
-  let reqDir: string;
+  let docsDir: string;
   let originalStdoutWrite: typeof process.stdout.write;
   let capturedOutput: string;
 
   beforeEach(() => {
     testDir = join(tmpdir(), `design-duck-ctx-cmd-test-${Date.now()}`);
-    reqDir = join(testDir, "desgin-duck", "requirements");
-    mkdirSync(join(reqDir, "projects"), { recursive: true });
+    docsDir = join(testDir, "desgin-duck", "docs");
+    mkdirSync(join(docsDir, "projects"), { recursive: true });
     process.exitCode = 0;
 
     // Capture stdout
@@ -34,14 +34,14 @@ describe("context command", () => {
 
   function writeVision(): void {
     writeFileSync(
-      join(reqDir, "vision.yaml"),
+      join(docsDir, "vision.yaml"),
       'vision: "Test vision"\nmission: "Test mission"\nproblem: "Test problem"\n',
       "utf-8",
     );
   }
 
   function writeProject(name: string): void {
-    const projDir = join(reqDir, "projects", name);
+    const projDir = join(docsDir, "projects", name);
     mkdirSync(projDir, { recursive: true });
     writeFileSync(
       join(projDir, "requirements.yaml"),

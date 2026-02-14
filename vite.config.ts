@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { requirementsWatcherPlugin } from "./src/infrastructure/vite-requirements-plugin";
+import { docsWatcherPlugin } from "./src/infrastructure/vite-requirements-plugin";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), requirementsWatcherPlugin()],
+  plugins: [react(), tailwindcss(), docsWatcherPlugin()],
   root: ".",
   build: {
     outDir: "dist-ui",

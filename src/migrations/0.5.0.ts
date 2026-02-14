@@ -14,12 +14,12 @@ export const migration: Migration = {
   description:
     "Add playgrounds/ directory for isolated problem explorations",
   migrate: (duckDir: string) => {
-    const reqDir = join(duckDir, "requirements");
-    const playgroundsDir = join(reqDir, "playgrounds");
+    const docsDir = join(duckDir, "docs");
+    const playgroundsDir = join(docsDir, "playgrounds");
 
     if (!existsSync(playgroundsDir)) {
       mkdirSync(playgroundsDir, { recursive: true });
-      console.log("  Created requirements/playgrounds/");
+      console.log("  Created docs/playgrounds/");
     }
   },
 };

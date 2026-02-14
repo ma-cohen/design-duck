@@ -7,7 +7,7 @@ export const AGENT_MD = `# Design Duck — Agent Instructions
 
 You are working inside a project that uses **Design Duck** for vision-driven
 requirements and design management. All project state lives in YAML files under
-\`desgin-duck/requirements/\`. A live UI (\`design-duck ui\`) shows the current
+\`desgin-duck/docs/\`. A live UI (\`design-duck ui\`) shows the current
 state and updates automatically when files change.
 
 ## Workflow
@@ -30,7 +30,7 @@ a context prompt — run it, read the output, then perform the work described.
 design-duck context vision
 \`\`\`
 
-Edit \`desgin-duck/requirements/vision.yaml\` with a clear **vision**, **mission**,
+Edit \`desgin-duck/docs/vision.yaml\` with a clear **vision**, **mission**,
 and **problem** statement. Every downstream decision traces back here.
 
 ### 2. Split into Projects
@@ -39,7 +39,7 @@ and **problem** statement. Every downstream decision traces back here.
 design-duck context projects
 \`\`\`
 
-Create project directories under \`desgin-duck/requirements/projects/<name>/\`.
+Create project directories under \`desgin-duck/docs/projects/<name>/\`.
 Each project gets its own \`requirements.yaml\` with a \`visionAlignment\` field
 and an empty \`requirements\` array.
 
@@ -87,13 +87,13 @@ Create \`implementation.yaml\` for the project with a phased **plan**, **todos**
 design-duck context validations
 \`\`\`
 
-Edit \`desgin-duck/requirements/implementation.yaml\` to add cross-cutting
+Edit \`desgin-duck/docs/implementation.yaml\` to add cross-cutting
 validation rules (linting, testing, security, etc.) that all projects must respect.
 
 ## File Structure
 
 \`\`\`
-desgin-duck/requirements/
+desgin-duck/docs/
 ├── vision.yaml                  # Vision, mission & problem
 ├── design.yaml                  # Global design decisions
 ├── implementation.yaml          # Global validations

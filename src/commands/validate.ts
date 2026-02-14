@@ -4,24 +4,24 @@ import { readVision, listProjects, listPlaygrounds, readProjectRequirements, rea
 import { validateVision } from "../domain/requirements/requirement";
 
 /**
- * Validates all requirement files in the desgin-duck/requirements/ directory.
+ * Validates all requirement files in the desgin-duck/docs/ directory.
  * Reports validation errors to stdout.
  * 
- * @param targetDir - Directory containing desgin-duck/requirements/ folder (defaults to cwd)
+ * @param targetDir - Directory containing desgin-duck/docs/ folder (defaults to cwd)
  * @returns void - exits with code 1 if validation fails, 0 if successful
  */
 export function validate(targetDir: string = process.cwd()): void {
-  const reqDir = join(targetDir, "desgin-duck", "requirements");
+  const docsDir = join(targetDir, "desgin-duck", "docs");
 
   if (process.env.DEBUG) {
     console.error("[design-duck:validate] targetDir:", targetDir);
-    console.error("[design-duck:validate] reqDir:", reqDir);
+    console.error("[design-duck:validate] docsDir:", docsDir);
   }
 
   // Check if requirements directory exists
-  if (!existsSync(reqDir)) {
-    console.error("Error: desgin-duck/requirements/ directory not found.");
-    console.error("Run 'design-duck init' first to create the requirements structure.");
+  if (!existsSync(docsDir)) {
+    console.error("Error: desgin-duck/docs/ directory not found.");
+    console.error("Run 'design-duck init' first to create the docs structure.");
     process.exitCode = 1;
     return;
   }
@@ -31,7 +31,7 @@ export function validate(targetDir: string = process.cwd()): void {
   // Validate vision.yaml
   console.log("Validating vision.yaml...");
   try {
-    const vision = readVision(reqDir);
+    const vision = readVision(docsDir);
     // Parser is lenient — run strict validation explicitly
     const visionResult = validateVision(vision);
     if (!visionResult.valid) {
@@ -62,7 +62,7 @@ export function validate(targetDir: string = process.cwd()): void {
   let rootContextIds: Set<string> = new Set();
   console.log("Validating context.yaml...");
   try {
-    const rootContext = readRootContext(reqDir);
+    const rootContext = readRootContext(docsDir);
     if (rootContext) {
       rootContextIds = new Set(rootContext.contexts.map((c) => c.id));
       console.log(
@@ -81,7 +81,7 @@ export function validate(targetDir: string = process.cwd()): void {
   // Validate root-level implementation.yaml (optional)
   console.log("Validating implementation.yaml...");
   try {
-    const generalValidations = readGeneralValidations(reqDir);
+    const generalValidations = readGeneralValidations(docsDir);
     if (generalValidations) {
       console.log(
         `✓ implementation.yaml is valid (${generalValidations.validations.length} general validations)`,
@@ -101,7 +101,7 @@ export function validate(targetDir: string = process.cwd()): void {
   let totalGlobalDecisions = 0;
   console.log("Validating design.yaml (global)...");
   try {
-    const globalDesign = readGlobalDesign(reqDir);
+    const globalDesign = readGlobalDesign(docsDir);
     if (globalDesign) {
       totalGlobalDecisions = globalDesign.decisions.length;
       globalDecisionIds = new Set(globalDesign.decisions.map((d) => d.id));
@@ -119,11 +119,11 @@ export function validate(targetDir: string = process.cwd()): void {
   }
 
   // Validate all project requirements
-  const projects = listProjects(reqDir);
+  const projects = listProjects(docsDir);
   let totalRequirements = 0;
 
   if (projects.length === 0) {
-    console.log("No projects found in desgin-duck/requirements/projects/.");
+    console.log("No projects found in desgin-duck/docs/projects/.");
   }
 
   let totalDecisions = 0;
@@ -134,7 +134,7 @@ export function validate(targetDir: string = process.cwd()): void {
     // Validate requirements.yaml (required)
     let requirementIds: string[] = [];
     try {
-      const projectReqs = readProjectRequirements(reqDir, projectName);
+      const projectReqs = readProjectRequirements(docsDir, projectName);
       // Parser is lenient — run strict checks explicitly
       if (!projectReqs.visionAlignment || projectReqs.visionAlignment.trim() === "") {
         hasErrors = true;
@@ -165,7 +165,7 @@ export function validate(targetDir: string = process.cwd()): void {
     // Validate project context.yaml (optional)
     let projectContextIds: Set<string> = new Set();
     try {
-      const projectContext = readProjectContext(reqDir, projectName);
+      const projectContext = readProjectContext(docsDir, projectName);
       if (projectContext) {
         projectContextIds = new Set(projectContext.contexts.map((c) => c.id));
         console.log(
@@ -181,7 +181,7 @@ export function validate(targetDir: string = process.cwd()): void {
 
     // Validate design.yaml (optional)
     try {
-      const design = readProjectDesign(reqDir, projectName);
+      const design = readProjectDesign(docsDir, projectName);
       if (design) {
         totalDecisions += design.decisions.length;
         console.log(
@@ -256,7 +256,7 @@ export function validate(targetDir: string = process.cwd()): void {
 
     // Validate implementation.yaml (optional)
     try {
-      const impl = readProjectImplementation(reqDir, projectName);
+      const impl = readProjectImplementation(docsDir, projectName);
       if (impl) {
         console.log(
           `✓ ${projectName}/implementation.yaml is valid (${impl.todos.length} todos, ${impl.validations.length} validations, ${impl.tests.length} tests)`,
@@ -319,7 +319,7 @@ export function validate(targetDir: string = process.cwd()): void {
   }
 
   // Validate all playground requirements
-  const playgrounds = listPlaygrounds(reqDir);
+  const playgrounds = listPlaygrounds(docsDir);
   let totalPlaygroundRequirements = 0;
   let totalPlaygroundDecisions = 0;
 
@@ -334,7 +334,7 @@ export function validate(targetDir: string = process.cwd()): void {
     // Validate requirements.yaml (required)
     let playgroundRequirementIds: string[] = [];
     try {
-      const playgroundReqs = readPlaygroundRequirements(reqDir, playgroundName);
+      const playgroundReqs = readPlaygroundRequirements(docsDir, playgroundName);
       // Check problemStatement
       if (!playgroundReqs.problemStatement || playgroundReqs.problemStatement.trim() === "") {
         hasErrors = true;
@@ -355,7 +355,7 @@ export function validate(targetDir: string = process.cwd()): void {
     // Validate playground context.yaml (optional)
     let playgroundContextIds: Set<string> = new Set();
     try {
-      const pgContext = readPlaygroundContext(reqDir, playgroundName);
+      const pgContext = readPlaygroundContext(docsDir, playgroundName);
       if (pgContext) {
         playgroundContextIds = new Set(pgContext.contexts.map((c) => c.id));
         console.log(
@@ -371,7 +371,7 @@ export function validate(targetDir: string = process.cwd()): void {
 
     // Validate design.yaml (optional)
     try {
-      const pgDesign = readPlaygroundDesign(reqDir, playgroundName);
+      const pgDesign = readPlaygroundDesign(docsDir, playgroundName);
       if (pgDesign) {
         totalPlaygroundDecisions += pgDesign.decisions.length;
         console.log(
@@ -418,7 +418,7 @@ export function validate(targetDir: string = process.cwd()): void {
 
     // Validate implementation.yaml (optional)
     try {
-      const pgImpl = readPlaygroundImplementation(reqDir, playgroundName);
+      const pgImpl = readPlaygroundImplementation(docsDir, playgroundName);
       if (pgImpl) {
         console.log(
           `✓ ${playgroundName}/implementation.yaml is valid (${pgImpl.todos.length} todos, ${pgImpl.validations.length} validations, ${pgImpl.tests.length} tests)`,

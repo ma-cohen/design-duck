@@ -394,7 +394,7 @@ problem: ""`;
 
   test("polling calls loadFromFiles periodically", async () => {
     const fetchMock = stubFetch(VALID_VISION_YAML, [], {});
-    useRequirementsStore.getState().startWatching({ intervalMs: 50, requirementsPath: "/test-req" });
+    useRequirementsStore.getState().startWatching({ intervalMs: 50, docsPath: "/test-req" });
 
     await sleep(120);
 

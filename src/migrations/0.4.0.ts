@@ -35,17 +35,17 @@ export const migration: Migration = {
   description:
     "Add context.yaml files for situational context (root-level and per-project)",
   migrate: (duckDir: string) => {
-    const reqDir = join(duckDir, "requirements");
+    const docsDir = join(duckDir, "docs");
 
     // Create root context.yaml if missing
-    const rootContextPath = join(reqDir, "context.yaml");
+    const rootContextPath = join(docsDir, "context.yaml");
     if (!existsSync(rootContextPath)) {
       writeFileSync(rootContextPath, ROOT_CONTEXT_YAML, "utf-8");
-      console.log("  Created requirements/context.yaml");
+      console.log("  Created docs/context.yaml");
     }
 
     // Create context.yaml for each existing project
-    const projectsDir = join(reqDir, "projects");
+    const projectsDir = join(docsDir, "projects");
     if (existsSync(projectsDir)) {
       try {
         const entries = readdirSync(projectsDir);
@@ -55,7 +55,7 @@ export const migration: Migration = {
             const projectContextPath = join(entryPath, "context.yaml");
             if (!existsSync(projectContextPath)) {
               writeFileSync(projectContextPath, PROJECT_CONTEXT_YAML, "utf-8");
-              console.log(`  Created requirements/projects/${entry}/context.yaml`);
+              console.log(`  Created docs/projects/${entry}/context.yaml`);
             }
           }
         }

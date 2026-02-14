@@ -33,7 +33,7 @@ Write clear, concise statements that will guide all downstream project decisions
 - Time horizons and urgency
 - Any existing products or systems
 
-Capture the answers as context items in: desgin-duck/requirements/context.yaml
+Capture the answers as context items in: desgin-duck/docs/context.yaml
 
 ${contextBlock}
 
@@ -41,8 +41,8 @@ ${stateBlock}
 
 ## Instructions
 
-1. First, update context items in desgin-duck/requirements/context.yaml based on the user's situation.
-2. Then, edit desgin-duck/requirements/vision.yaml informed by that context.
+1. First, update context items in desgin-duck/docs/context.yaml based on the user's situation.
+2. Then, edit desgin-duck/docs/vision.yaml informed by that context.
 
 Each context item needs:
 - **id**: A unique identifier (e.g., CTX-001)
@@ -115,7 +115,7 @@ ${contextBlock}${existingBlock}
 ## Instructions
 
 For each new project, create a directory and requirements.yaml file:
-  desgin-duck/requirements/projects/<project-name>/requirements.yaml
+  desgin-duck/docs/projects/<project-name>/requirements.yaml
 
 Use kebab-case for project directory names (e.g., \`user-auth\`, \`notification-service\`).
 
@@ -125,7 +125,7 @@ Each requirements.yaml should contain:
 
 ## Expected YAML Format
 
-For each project file at \`desgin-duck/requirements/projects/<name>/requirements.yaml\`:
+For each project file at \`desgin-duck/docs/projects/<name>/requirements.yaml\`:
 
 \`\`\`yaml
 visionAlignment: "This project contributes to the vision by..."
@@ -181,7 +181,7 @@ ${contextBlock}${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/projects/${projectName}/requirements.yaml
+Edit the file: desgin-duck/docs/projects/${projectName}/requirements.yaml
 
 Each requirement needs:
 - **id**: A unique identifier with a project-specific prefix (e.g., AUTH-001, NOTIF-001).
@@ -261,7 +261,7 @@ Do NOT choose yet — present options for human review.
 - Performance or scale requirements
 - Integration points with other systems
 
-Capture the answers as context items in: desgin-duck/requirements/projects/${projectName}/context.yaml
+Capture the answers as context items in: desgin-duck/docs/projects/${projectName}/context.yaml
 
 ## Vision Context
 
@@ -278,8 +278,8 @@ ${globalDesignBlock}${validationsBlock}
 
 ## Instructions
 
-1. First, update project context items in desgin-duck/requirements/projects/${projectName}/context.yaml based on the user's answers.
-2. Then, edit desgin-duck/requirements/projects/${projectName}/design.yaml
+1. First, update project context items in desgin-duck/docs/projects/${projectName}/context.yaml based on the user's answers.
+2. Then, edit desgin-duck/docs/projects/${projectName}/design.yaml
 
 For each significant architectural or design decision:
 1. Identify the topic and provide context.
@@ -400,7 +400,7 @@ ${designYaml}\`\`\`
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/projects/${projectName}/design.yaml
+Edit the file: desgin-duck/docs/projects/${projectName}/design.yaml
 
 For each decision where \`chosen\` is null:
 1. Analyze all options against the requirements and vision.
@@ -481,7 +481,7 @@ ${designBlock}${globalDesignBlock}${validationsBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/projects/${projectName}/implementation.yaml
+Edit the file: desgin-duck/docs/projects/${projectName}/implementation.yaml
 
 Create:
 1. **plan**: A phased implementation plan (text).
@@ -568,7 +568,7 @@ ${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/implementation.yaml
+Edit the file: desgin-duck/docs/implementation.yaml
 
 Each validation needs:
 - **id**: Unique identifier with VAL-GENERAL prefix (e.g., VAL-GENERAL-001).
@@ -629,7 +629,7 @@ ${existingBlock}
 ## Instructions
 
 For each new playground, create a directory and requirements.yaml file:
-  desgin-duck/requirements/playgrounds/<playground-name>/requirements.yaml
+  desgin-duck/docs/playgrounds/<playground-name>/requirements.yaml
 
 Use kebab-case for playground directory names (e.g., \`caching-strategy\`, \`auth-spike\`).
 
@@ -639,7 +639,7 @@ Each requirements.yaml should contain:
 
 ## Expected YAML Format
 
-For each playground file at \`desgin-duck/requirements/playgrounds/<name>/requirements.yaml\`:
+For each playground file at \`desgin-duck/docs/playgrounds/<name>/requirements.yaml\`:
 
 \`\`\`yaml
 problemStatement: "We need to figure out the best approach to..."
@@ -681,7 +681,7 @@ ${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/requirements.yaml
+Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/requirements.yaml
 
 Each requirement needs:
 - **id**: A unique identifier with a playground-specific prefix (e.g., PG-001, SPIKE-001).
@@ -735,7 +735,7 @@ Do NOT choose yet — present options for review.
 
 **Before brainstorming decisions, ask about the current system and technical situation.**
 Capture the answers as context items in:
-desgin-duck/requirements/playgrounds/${playgroundName}/context.yaml
+desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
 
 ${contextBlock}
 ## Playground Requirements
@@ -745,8 +745,8 @@ ${requirementsYaml}\`\`\`
 
 ## Instructions
 
-1. First, update context items in desgin-duck/requirements/playgrounds/${playgroundName}/context.yaml
-2. Then, edit desgin-duck/requirements/playgrounds/${playgroundName}/design.yaml
+1. First, update context items in desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
+2. Then, edit desgin-duck/docs/playgrounds/${playgroundName}/design.yaml
 
 For each significant decision:
 1. Identify the topic and provide context.
@@ -836,7 +836,7 @@ ${designYaml}\`\`\`
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/design.yaml
+Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/design.yaml
 
 For each decision where \`chosen\` is null:
 1. Analyze all options against the requirements.
@@ -890,7 +890,7 @@ ${designBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/playgrounds/${playgroundName}/implementation.yaml
+Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/implementation.yaml
 
 Create:
 1. **plan**: A phased implementation plan (text).
