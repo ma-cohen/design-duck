@@ -12,14 +12,15 @@ import { join } from "node:path";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
+  parseContextYaml,
   parseProjectDesignYaml,
   parseGeneralValidationsYaml,
   parseProjectImplementationYaml,
 } from "./yaml-parser";
-import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ContextDocument, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 
 // Re-export pure parsers for backward compatibility
-export { parseVisionYaml, parseProjectRequirementsYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
+export { parseVisionYaml, parseProjectRequirementsYaml, parseContextYaml, parseProjectDesignYaml, parseGeneralValidationsYaml, parseProjectImplementationYaml } from "./yaml-parser";
 
 // ---------------------------------------------------------------------------
 // Filesystem readers (Node/Bun only)
@@ -59,6 +60,90 @@ export function readVision(requirementsDir: string): Vision {
     }
     throw err;
   }
+}
+
+/**
+ * Reads and parses the root-level context.yaml into a validated ContextDocument.
+ * Returns null if the file does not exist (context is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @returns Validated context document, or null if context.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readRootContext(
+  requirementsDir: string,
+): ContextDocument | null {
+  const filePath = join(requirementsDir, "context.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading root context from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No root context.yaml found — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from root context.yaml`);
+  }
+
+  const ctx = parseContextYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${ctx.contexts.length} root context items`,
+    );
+  }
+
+  return ctx;
+}
+
+/**
+ * Reads and parses a project's context.yaml into a validated ContextDocument.
+ * Returns null if the file does not exist (project context is optional).
+ *
+ * @param requirementsDir - Path to the requirements/ directory
+ * @param projectName - Name of the project subdirectory
+ * @returns Validated context document, or null if context.yaml doesn't exist
+ * @throws Error if malformed YAML or validation fails (but NOT for missing file)
+ */
+export function readProjectContext(
+  requirementsDir: string,
+  projectName: string,
+): ContextDocument | null {
+  const filePath = join(requirementsDir, "projects", projectName, "context.yaml");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Reading project context from: ${filePath}`);
+  }
+
+  if (!existsSync(filePath)) {
+    if (process.env.DEBUG) {
+      console.error(`[file-store] No context.yaml found for project "${projectName}" — skipping`);
+    }
+    return null;
+  }
+
+  const content = readFileSync(filePath, "utf-8");
+
+  if (process.env.DEBUG) {
+    console.error(`[file-store] Read ${content.length} bytes from ${projectName}/context.yaml`);
+  }
+
+  const ctx = parseContextYaml(content);
+
+  if (process.env.DEBUG) {
+    console.error(
+      `[file-store] Successfully parsed ${ctx.contexts.length} context items for project ${projectName}`,
+    );
+  }
+
+  return ctx;
 }
 
 /**

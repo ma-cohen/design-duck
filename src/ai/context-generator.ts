@@ -43,6 +43,25 @@ function readRawVision(reqDir: string): string | null {
 }
 
 /**
+ * Reads the root context.yaml as raw text. Returns null if missing.
+ */
+function readRawRootContext(reqDir: string): string | null {
+  return readRawOrNull(join(reqDir, "context.yaml"));
+}
+
+/**
+ * Reads a project's context.yaml as raw text. Returns null if missing.
+ */
+function readRawProjectContext(
+  reqDir: string,
+  projectName: string,
+): string | null {
+  return readRawOrNull(
+    join(reqDir, "projects", projectName, "context.yaml"),
+  );
+}
+
+/**
  * Reads a project's requirements.yaml as raw text. Returns null if missing.
  */
 function readRawProjectRequirements(
@@ -89,7 +108,8 @@ function readRawGlobalValidations(reqDir: string): string | null {
  */
 export function generateVisionContext(reqDir: string): string {
   const rawVision = readRawVision(reqDir);
-  return visionPrompt(rawVision);
+  const rawRootContext = readRawRootContext(reqDir);
+  return visionPrompt(rawVision, rawRootContext);
 }
 
 /**
@@ -104,7 +124,8 @@ export function generateProjectsContext(reqDir: string): string {
   }
 
   const existing = listProjects(reqDir);
-  return projectsPrompt(rawVision, existing);
+  const rawRootContext = readRawRootContext(reqDir);
+  return projectsPrompt(rawVision, existing, rawRootContext);
 }
 
 /**
@@ -122,7 +143,8 @@ export function generateRequirementsContext(
   }
 
   const rawReqs = readRawProjectRequirements(reqDir, projectName);
-  return requirementsPrompt(rawVision, projectName, rawReqs);
+  const rawRootContext = readRawRootContext(reqDir);
+  return requirementsPrompt(rawVision, projectName, rawReqs, rawRootContext);
 }
 
 /**
@@ -148,6 +170,8 @@ export function generateDesignContext(
 
   const rawGlobalDesign = readRawGlobalDesign(reqDir);
   const rawGlobalValidations = readRawGlobalValidations(reqDir);
+  const rawRootContext = readRawRootContext(reqDir);
+  const rawProjectContext = readRawProjectContext(reqDir, projectName);
 
   return designPrompt(
     rawVision,
@@ -155,6 +179,8 @@ export function generateDesignContext(
     rawReqs,
     rawGlobalDesign,
     rawGlobalValidations,
+    rawRootContext,
+    rawProjectContext,
   );
 }
 
@@ -186,7 +212,9 @@ export function generateChooseContext(
     );
   }
 
-  return choosePrompt(rawVision, projectName, rawReqs, rawDesign);
+  const rawRootContext = readRawRootContext(reqDir);
+  const rawProjectContext = readRawProjectContext(reqDir, projectName);
+  return choosePrompt(rawVision, projectName, rawReqs, rawDesign, rawRootContext, rawProjectContext);
 }
 
 /**
@@ -213,6 +241,8 @@ export function generateImplementationContext(
   const rawDesign = readRawProjectDesign(reqDir, projectName);
   const rawGlobalDesign = readRawGlobalDesign(reqDir);
   const rawGlobalValidations = readRawGlobalValidations(reqDir);
+  const rawRootContext = readRawRootContext(reqDir);
+  const rawProjectContext = readRawProjectContext(reqDir, projectName);
 
   return implementationPrompt(
     rawVision,
@@ -221,6 +251,8 @@ export function generateImplementationContext(
     rawDesign,
     rawGlobalDesign,
     rawGlobalValidations,
+    rawRootContext,
+    rawProjectContext,
   );
 }
 
@@ -263,5 +295,6 @@ export function generateValidationsContext(reqDir: string): string {
   }
 
   const rawValidations = readRawGlobalValidations(reqDir);
-  return validationsPrompt(rawVision, projectSummaries, rawValidations);
+  const rawRootContext = readRawRootContext(reqDir);
+  return validationsPrompt(rawVision, projectSummaries, rawValidations, rawRootContext);
 }

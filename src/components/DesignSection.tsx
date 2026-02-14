@@ -18,6 +18,7 @@ const DECISION_FIELDS: FieldDefinition[] = [
   { key: "topic", label: "Topic", placeholder: "What this decision is about" },
   { key: "context", label: "Context", type: "textarea", placeholder: "Background and reasoning..." },
   { key: "requirementRefs", label: "Requirement References", type: "string-list", required: false, placeholder: "e.g. REQ-001" },
+  { key: "contextRefs", label: "Context References", type: "string-list", required: false, placeholder: "e.g. CTX-001" },
 ];
 
 export function DesignSection({ design, projectName }: DesignSectionProps) {
@@ -33,11 +34,13 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
   );
 
   const handleSaveDecision = async (values: Record<string, string | string[]>) => {
+    const contextRefsArr = values.contextRefs as string[] | undefined;
     const updated: Decision = {
       id: values.id as string,
       topic: values.topic as string,
       context: values.context as string,
       requirementRefs: values.requirementRefs as string[],
+      ...(contextRefsArr && contextRefsArr.length > 0 ? { contextRefs: contextRefsArr } : {}),
       options: editingDecision?.options ?? [
         { id: "option-1", title: "Option 1", description: "Describe this option", pros: ["Pro 1"], cons: ["Con 1"] },
       ],
@@ -176,6 +179,7 @@ export function DesignSection({ design, projectName }: DesignSectionProps) {
             topic: editingDecision.topic,
             context: editingDecision.context,
             requirementRefs: editingDecision.requirementRefs,
+            contextRefs: editingDecision.contextRefs ?? [],
           }}
           onSave={handleSaveDecision}
           onClose={() => setEditingDecision(null)}

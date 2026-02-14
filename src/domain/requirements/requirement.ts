@@ -27,6 +27,21 @@ export interface ProjectRequirements {
   requirements: Requirement[];
 }
 
+// ---------------------------------------------------------------------------
+// Context types
+// ---------------------------------------------------------------------------
+
+/** A single context item — a one-liner situational fact that informs decisions. */
+export interface ContextItem {
+  id: string;
+  description: string;
+}
+
+/** Context document (root-level or per-project context.yaml). */
+export interface ContextDocument {
+  contexts: ContextItem[];
+}
+
 export type ValidationResult =
   | { valid: true }
   | { valid: false; errors: string[] };
@@ -107,6 +122,41 @@ export function assertRequirement(raw: unknown): asserts raw is Requirement {
 }
 
 // ---------------------------------------------------------------------------
+// Context validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validates a context item.
+ */
+export function validateContextItem(raw: unknown): ValidationResult {
+  if (raw === null || typeof raw !== "object") {
+    return { valid: false, errors: ["ContextItem must be an object"] };
+  }
+  const o = raw as Record<string, unknown>;
+  const errors: string[] = [];
+
+  const idErr = nonEmptyString(o.id, "id");
+  if (idErr) errors.push(idErr);
+  const descErr = nonEmptyString(o.description, "description");
+  if (descErr) errors.push(descErr);
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+  return { valid: true };
+}
+
+/**
+ * Asserts that a value is a valid ContextItem; throws with errors if not.
+ */
+export function assertContextItem(raw: unknown): asserts raw is ContextItem {
+  const result = validateContextItem(raw);
+  if (!result.valid) {
+    throw new Error(`Invalid context item: ${result.errors.join("; ")}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Design session types and validation
 // ---------------------------------------------------------------------------
 
@@ -125,6 +175,8 @@ export interface Decision {
   topic: string;
   context: string;
   requirementRefs: string[];
+  /** Optional references to context item IDs (root or project-level) that inform this decision. */
+  contextRefs?: string[];
   /** Optional references to global design decision IDs that this decision is based on. */
   globalDecisionRefs?: string[];
   options: DesignOption[];
@@ -225,6 +277,16 @@ export function validateDecision(raw: unknown): ValidationResult {
       if (!optResult.valid) {
         errors.push(`option at index ${i}: ${optResult.errors.join("; ")}`);
       }
+    }
+  }
+
+  // contextRefs: optional array of strings
+  if (o.contextRefs !== undefined && o.contextRefs !== null) {
+    if (!Array.isArray(o.contextRefs)) {
+      errors.push("contextRefs must be an array");
+    } else {
+      const crErr = stringArray(o.contextRefs, "contextRefs");
+      if (crErr) errors.push(crErr);
     }
   }
 

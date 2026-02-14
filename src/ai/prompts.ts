@@ -9,10 +9,14 @@
 // Vision
 // ---------------------------------------------------------------------------
 
-export function visionPrompt(currentVision: string | null): string {
+export function visionPrompt(currentVision: string | null, rootContextYaml: string | null): string {
   const stateBlock = currentVision
     ? `## Current State\n\nThe vision.yaml file currently contains:\n\n\`\`\`yaml\n${currentVision}\`\`\`\n\nRefine or rewrite these fields as needed.`
     : `## Current State\n\nThe vision.yaml file is empty or does not yet have content. Start fresh.`;
+
+  const contextBlock = rootContextYaml
+    ? `## Current Context\n\nThe following situational context has been captured:\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n\nUse these facts to inform the vision. You may suggest updates to context items as well.`
+    : `## Current Context\n\nNo context has been captured yet.`;
 
   return `# Vision Definition
 
@@ -21,12 +25,30 @@ export function visionPrompt(currentVision: string | null): string {
 You are helping define the product vision, mission, and core problem statement.
 Write clear, concise statements that will guide all downstream project decisions.
 
+**Before defining or refining the vision, ask the user about their situation.** Understanding the context is critical — you should not define a vision in a vacuum. Ask about:
+- Company stage (startup, scale-up, enterprise?)
+- Team size and composition
+- Budget and resource constraints
+- Target market and users
+- Time horizons and urgency
+- Any existing products or systems
+
+Capture the answers as context items in: desgin-duck/requirements/context.yaml
+
+${contextBlock}
+
 ${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/vision.yaml
+1. First, update context items in desgin-duck/requirements/context.yaml based on the user's situation.
+2. Then, edit desgin-duck/requirements/vision.yaml informed by that context.
 
+Each context item needs:
+- **id**: A unique identifier (e.g., CTX-001)
+- **description**: A one-liner factual statement about the situation
+
+Vision fields:
 - **vision**: A compelling future-state statement describing the world you want to create.
 - **mission**: What your product/team does to achieve that vision.
 - **problem**: The specific problem users face today that you are solving.
@@ -35,6 +57,16 @@ Keep each field to 1-2 sentences. Be specific, not generic.
 
 ## Expected YAML Format
 
+context.yaml:
+\`\`\`yaml
+contexts:
+  - id: CTX-001
+    description: "We are a bootstrapped startup with 3 developers"
+  - id: CTX-002
+    description: "Our target users are small development teams"
+\`\`\`
+
+vision.yaml:
 \`\`\`yaml
 vision: "A world where..."
 mission: "We provide..."
@@ -55,11 +87,16 @@ the vision into deliverable work streams by running: \`dd context projects\`
 export function projectsPrompt(
   visionYaml: string,
   existingProjects: string[],
+  rootContextYaml: string | null,
 ): string {
   const existingBlock =
     existingProjects.length > 0
       ? `## Existing Projects\n\nThese projects already exist:\n${existingProjects.map((p) => `- ${p}`).join("\n")}\n\nYou may suggest additional projects or refine the scope of existing ones.`
       : `## Existing Projects\n\nNo projects exist yet.`;
+
+  const contextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
 
   return `# Project Breakdown
 
@@ -73,7 +110,7 @@ Each project should be a cohesive unit of work that delivers user value independ
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
-${existingBlock}
+${contextBlock}${existingBlock}
 
 ## Instructions
 
@@ -118,10 +155,15 @@ export function requirementsPrompt(
   visionYaml: string,
   projectName: string,
   currentRequirementsYaml: string | null,
+  rootContextYaml: string | null,
 ): string {
   const stateBlock = currentRequirementsYaml
     ? `## Current Requirements\n\n\`\`\`yaml\n${currentRequirementsYaml}\`\`\`\n\nBuild on these or refine them.`
     : `## Current Requirements\n\nNo requirements defined yet for this project.`;
+
+  const contextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
 
   return `# Requirements Gathering: ${projectName}
 
@@ -135,7 +177,7 @@ Focus exclusively on what users need and the value it provides — not technical
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
-${stateBlock}
+${contextBlock}${stateBlock}
 
 ## Instructions
 
@@ -185,6 +227,8 @@ export function designPrompt(
   requirementsYaml: string,
   globalDesignYaml: string | null,
   globalValidationsYaml: string | null,
+  rootContextYaml: string | null,
+  projectContextYaml: string | null,
 ): string {
   const globalDesignBlock = globalDesignYaml
     ? `## Global Design Decisions\n\nThe following system-wide decisions have been made and must be respected:\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
@@ -194,6 +238,14 @@ export function designPrompt(
     ? `## Global Validations\n\nAll decisions must account for these cross-cutting validations:\n\n\`\`\`yaml\n${globalValidationsYaml}\`\`\`\n`
     : "";
 
+  const rootContextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
+
+  const projectContextBlock = projectContextYaml
+    ? `## Project Context\n\nTechnical and system facts for this project:\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
+    : `## Project Context\n\nNo project-level context has been captured yet.\n`;
+
   return `# Design Brainstorm: ${projectName}
 
 ## Your Role
@@ -202,11 +254,21 @@ You are helping brainstorm design decisions for the "${projectName}" project.
 For each key decision, propose multiple options with pros and cons.
 Do NOT choose yet — present options for human review.
 
+**Before brainstorming decisions, ask the user about their current system and technical situation.** Understanding the existing landscape is critical for making good design decisions. Ask about:
+- Existing technology stack and infrastructure
+- Current system architecture
+- Deployment environment (cloud provider, on-prem, etc.)
+- Performance or scale requirements
+- Integration points with other systems
+
+Capture the answers as context items in: desgin-duck/requirements/projects/${projectName}/context.yaml
+
 ## Vision Context
 
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
+${rootContextBlock}${projectContextBlock}
 ## Project Requirements
 
 \`\`\`yaml
@@ -216,18 +278,30 @@ ${globalDesignBlock}${validationsBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/requirements/projects/${projectName}/design.yaml
+1. First, update project context items in desgin-duck/requirements/projects/${projectName}/context.yaml based on the user's answers.
+2. Then, edit desgin-duck/requirements/projects/${projectName}/design.yaml
 
 For each significant architectural or design decision:
 1. Identify the topic and provide context.
 2. Reference which requirements drive this decision.
-3. Propose 2-3 options with pros and cons.
-4. Leave \`chosen\` and \`chosenReason\` as null — the human decides.
+3. Reference which context items are relevant via \`contextRefs\`.
+4. Propose 2-3 options with pros and cons.
+5. Leave \`chosen\` and \`chosenReason\` as null — the human decides.
 
 If relevant global decisions exist, reference them via \`globalDecisionRefs\`.
 
 ## Expected YAML Format
 
+context.yaml:
+\`\`\`yaml
+contexts:
+  - id: CTX-<PREFIX>-001
+    description: "Our backend currently uses Express.js on Node 18"
+  - id: CTX-<PREFIX>-002
+    description: "We deploy to AWS ECS with Fargate"
+\`\`\`
+
+design.yaml:
 \`\`\`yaml
 notes: |
   Research links and analysis notes here...
@@ -237,6 +311,8 @@ decisions:
     context: "Why this decision matters and what constraints exist"
     requirementRefs:
       - PREFIX-001
+    contextRefs:
+      - CTX-<PREFIX>-001
     globalDecisionRefs: []
     options:
       - id: option-a
@@ -262,6 +338,7 @@ decisions:
 ## Guidelines
 
 - Each decision should map to one or more requirements.
+- Use \`contextRefs\` to link decisions to the situational facts that inform them.
 - Provide at least 2 options per decision.
 - Be specific in pros/cons — avoid generic statements.
 - Include a \`notes\` field with research links, constraints, or team context.
@@ -286,19 +363,31 @@ export function choosePrompt(
   projectName: string,
   requirementsYaml: string,
   designYaml: string,
+  rootContextYaml: string | null,
+  projectContextYaml: string | null,
 ): string {
+  const rootContextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
+
+  const projectContextBlock = projectContextYaml
+    ? `## Project Context\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
+    : "";
+
   return `# Design Decision Review: ${projectName}
 
 ## Your Role
 
 You are helping evaluate design options and recommend choices for the "${projectName}" project.
 For each unchosen decision, analyze the options and suggest which to pick and why.
+Consider both the requirements and the situational context when making recommendations.
 
 ## Vision Context
 
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
+${rootContextBlock}${projectContextBlock}
 ## Project Requirements
 
 \`\`\`yaml
@@ -347,6 +436,8 @@ export function implementationPrompt(
   designYaml: string | null,
   globalDesignYaml: string | null,
   globalValidationsYaml: string | null,
+  rootContextYaml: string | null,
+  projectContextYaml: string | null,
 ): string {
   const designBlock = designYaml
     ? `## Chosen Design Decisions\n\n\`\`\`yaml\n${designYaml}\`\`\`\n`
@@ -358,6 +449,14 @@ export function implementationPrompt(
 
   const validationsBlock = globalValidationsYaml
     ? `## Global Validations\n\nAll implementation must respect these cross-cutting validations:\n\n\`\`\`yaml\n${globalValidationsYaml}\`\`\`\n`
+    : "";
+
+  const rootContextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
+
+  const projectContextBlock = projectContextYaml
+    ? `## Project Context\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
     : "";
 
   return `# Implementation Plan: ${projectName}
@@ -372,6 +471,7 @@ Produce a phased plan, actionable todos, project-specific validations, and test 
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
+${rootContextBlock}${projectContextBlock}
 ## Project Requirements
 
 \`\`\`yaml
@@ -437,10 +537,15 @@ export function validationsPrompt(
   visionYaml: string,
   projectSummaries: string,
   currentValidationsYaml: string | null,
+  rootContextYaml: string | null,
 ): string {
   const stateBlock = currentValidationsYaml
     ? `## Current Global Validations\n\n\`\`\`yaml\n${currentValidationsYaml}\`\`\`\n\nRefine or extend these validations.`
     : `## Current Global Validations\n\nNo global validations defined yet.`;
+
+  const contextBlock = rootContextYaml
+    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
 
   return `# Global Validations
 
@@ -454,6 +559,7 @@ These are quality gates, coding standards, and constraints that every project mu
 \`\`\`yaml
 ${visionYaml}\`\`\`
 
+${contextBlock}
 ## Project Overview
 
 ${projectSummaries}

@@ -33,14 +33,18 @@ Use their message as context for what the vision should be about.
    dd context vision
    \`\`\`
 
-3. Read the output carefully — it contains the current \`vision.yaml\` state
-   and detailed instructions for what to do.
+3. Read the output carefully — it contains the current \`vision.yaml\` state,
+   any existing context items, and detailed instructions for what to do.
 
-4. Follow the instructions from the context output. Edit
+4. **Ask the user about their situation first** — company stage, team size,
+   budget, constraints, target users, etc. Capture these as context items in
+   \`desgin-duck/requirements/context.yaml\`. Do not define the vision in a vacuum.
+
+5. Follow the instructions from the context output. Edit
    \`desgin-duck/requirements/vision.yaml\` with a clear **vision**, **mission**,
-   and **problem** statement, incorporating the user's request.
+   and **problem** statement, informed by the context and the user's request.
 
-5. Run validation to check your work:
+6. Run validation to check your work:
 
    \`\`\`bash
    dd validate
@@ -51,6 +55,7 @@ Use their message as context for what the vision should be about.
 - YAML is the source of truth — edit the files directly.
 - Keep descriptions concise and user-focused.
 - Every downstream decision traces back to the vision.
+- Context items should be one-liner factual statements.
 
 ## Next Step
 
@@ -184,14 +189,21 @@ This phase requires a **project name**.
    \`\`\`
 
 2. Read the output carefully — it contains current requirements, existing
-   design decisions, and detailed instructions.
+   design decisions, context items, and detailed instructions.
 
-3. Follow the instructions from the context output. Create or edit
+3. **Ask the user about their current system and technical situation** —
+   existing tech stack, infrastructure, deployment environment, etc. Capture
+   these as context items in
+   \`desgin-duck/requirements/projects/<project-name>/context.yaml\`.
+   Do not make design decisions without understanding the current landscape.
+
+4. Follow the instructions from the context output. Create or edit
    \`desgin-duck/requirements/projects/<project-name>/design.yaml\`
    with design decisions. Each decision should have multiple options with
-   pros/cons. Leave \`chosen\` and \`chosenReason\` as \`null\` — the human picks.
+   pros/cons. Use \`contextRefs\` to link decisions to relevant context items.
+   Leave \`chosen\` and \`chosenReason\` as \`null\` — the human picks.
 
-4. Run validation to check your work:
+5. Run validation to check your work:
 
    \`\`\`bash
    dd validate
@@ -200,6 +212,7 @@ This phase requires a **project name**.
 ## Rules
 
 - Each decision must reference requirements via \`requirementRefs\`.
+- Use \`contextRefs\` to link decisions to relevant context items.
 - Provide at least two options per decision with clear pros/cons.
 - Do NOT make choices — leave \`chosen: null\` for the user to decide.
 - **Favour simplicity.** Always include a simple, straightforward option. Don't propose over-engineered solutions that go beyond what the requirements need.
@@ -386,6 +399,7 @@ The user tagged this file to ask you to **validate** the Design Duck YAML files.
 3. If there are validation errors, fix them:
    - **Invalid YAML**: Fix syntax in the reported file.
    - **Missing requirementRefs**: Add references to existing requirement IDs.
+   - **Missing contextRefs**: Add references to existing context item IDs.
    - **Duplicate IDs**: Rename to ensure uniqueness within scope.
    - **Missing globalDecisionRefs**: Reference existing global decision IDs.
 

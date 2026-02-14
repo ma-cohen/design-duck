@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation } from "../infrastructure/file-store";
+import { readVision, listProjects, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation, readRootContext, readProjectContext } from "../infrastructure/file-store";
 import { validateVision } from "../domain/requirements/requirement";
 
 /**
@@ -56,6 +56,26 @@ export function validate(targetDir: string = process.cwd()): void {
     if (process.env.DEBUG) {
       console.error("[design-duck:validate] vision.yaml error:", err);
     }
+  }
+
+  // Validate root-level context.yaml (optional)
+  let rootContextIds: Set<string> = new Set();
+  console.log("Validating context.yaml...");
+  try {
+    const rootContext = readRootContext(reqDir);
+    if (rootContext) {
+      rootContextIds = new Set(rootContext.contexts.map((c) => c.id));
+      console.log(
+        `✓ context.yaml is valid (${rootContext.contexts.length} context items)`,
+      );
+    } else {
+      console.log("– context.yaml not found (optional, skipping)");
+    }
+  } catch (err) {
+    hasErrors = true;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("✗ context.yaml validation failed:");
+    console.error(`  ${msg}`);
   }
 
   // Validate root-level implementation.yaml (optional)
@@ -142,6 +162,23 @@ export function validate(targetDir: string = process.cwd()): void {
       }
     }
 
+    // Validate project context.yaml (optional)
+    let projectContextIds: Set<string> = new Set();
+    try {
+      const projectContext = readProjectContext(reqDir, projectName);
+      if (projectContext) {
+        projectContextIds = new Set(projectContext.contexts.map((c) => c.id));
+        console.log(
+          `✓ ${projectName}/context.yaml is valid (${projectContext.contexts.length} context items)`,
+        );
+      }
+    } catch (err) {
+      hasErrors = true;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`✗ ${projectName}/context.yaml validation failed:`);
+      console.error(`  ${msg}`);
+    }
+
     // Validate design.yaml (optional)
     try {
       const design = readProjectDesign(reqDir, projectName);
@@ -175,6 +212,24 @@ export function validate(targetDir: string = process.cwd()): void {
                   hasErrors = true;
                   console.error(
                     `✗ ${projectName}/design.yaml: decision "${dec.id}" references unknown global decision "${ref}"`,
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        // Cross-reference: check that contextRefs point to actual context item IDs
+        // (from either root context or project context)
+        const allContextIds = new Set([...rootContextIds, ...projectContextIds]);
+        if (allContextIds.size > 0) {
+          for (const dec of design.decisions) {
+            if (dec.contextRefs) {
+              for (const ref of dec.contextRefs) {
+                if (!allContextIds.has(ref)) {
+                  hasErrors = true;
+                  console.error(
+                    `✗ ${projectName}/design.yaml: decision "${dec.id}" references unknown context item "${ref}"`,
                   );
                 }
               }

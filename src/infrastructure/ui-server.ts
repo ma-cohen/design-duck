@@ -23,6 +23,7 @@ import { watchRequirementsDir } from "./file-watcher";
 import type { FileWatcherHandle } from "./file-watcher";
 import {
   validateRequirement,
+  validateContextItem,
   validateDecision,
   validateGeneralValidation,
   validateImplementationTodo,
@@ -168,6 +169,19 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     // Write API: PUT /api/design (root-level global design)
     if (pathname === "/api/design" && req.method === "PUT") {
       handlePutGlobalDesign(req, res, requirementsDir);
+      return;
+    }
+
+    // Write API: PUT /api/context (root-level context)
+    if (pathname === "/api/context" && req.method === "PUT") {
+      handlePutContext(req, res, requirementsDir);
+      return;
+    }
+
+    // Write API: PUT /api/projects/:name/context
+    const ctxMatch = pathname.match(/^\/api\/projects\/([^/]+)\/context$/);
+    if (ctxMatch && req.method === "PUT") {
+      handlePutProjectContext(req, res, requirementsDir, decodeURIComponent(ctxMatch[1]));
       return;
     }
 
@@ -448,6 +462,73 @@ async function handlePutGlobalDesign(
 
     const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
     writeFileSync(join(requirementsDir, "design.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutContext(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (!Array.isArray(raw.contexts)) {
+      jsonResponse(res, 400, { error: "contexts must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.contexts.length; i++) {
+      const result = validateContextItem(raw.contexts[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Context item at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    writeFileSync(join(requirementsDir, "context.yaml"), yamlContent, "utf-8");
+    jsonResponse(res, 200, { ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    jsonResponse(res, 400, { error: message });
+  }
+}
+
+async function handlePutProjectContext(
+  req: IncomingMessage,
+  res: ServerResponse,
+  requirementsDir: string,
+  projectName: string,
+): Promise<void> {
+  try {
+    const raw = JSON.parse(await readBody(req));
+
+    if (!Array.isArray(raw.contexts)) {
+      jsonResponse(res, 400, { error: "contexts must be an array" });
+      return;
+    }
+    for (let i = 0; i < raw.contexts.length; i++) {
+      const result = validateContextItem(raw.contexts[i]);
+      if (!result.valid) {
+        jsonResponse(res, 400, {
+          error: `Context item at index ${i} is invalid`,
+          details: result.errors,
+        });
+        return;
+      }
+    }
+
+    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
+    const dirPath = join(requirementsDir, "projects", projectName);
+    mkdirSync(dirPath, { recursive: true });
+    writeFileSync(join(dirPath, "context.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -38,6 +38,21 @@ mission: ""
 problem: ""
 `;
 
+const ROOT_CONTEXT_YAML = `# Situational context — business, organizational, and environmental facts
+# that inform vision and all project decisions.
+#
+# Each context item has:
+#   id          - Unique identifier (e.g. CTX-001)
+#   description - One-liner factual statement about the situation
+
+contexts: []
+# Example:
+#   - id: CTX-001
+#     description: "We are a bootstrapped startup with 3 developers"
+#   - id: CTX-002
+#     description: "Our target users are small development teams"
+`;
+
 const GLOBAL_DESIGN_YAML = `# High-level design decisions that all projects must follow
 decisions: []
 `;
@@ -68,6 +83,21 @@ requirements: []
 #   - id: REQ-001
 #     description: "Users can sign up with email and password"
 #     userValue: "Provides a familiar way to access the platform"
+`;
+
+const EXAMPLE_CONTEXT_YAML = `# Project context — technical and system facts specific to this project
+# that inform design decisions.
+#
+# Each context item has:
+#   id          - Unique identifier (e.g. CTX-PROJ-001)
+#   description - One-liner factual statement about the current system
+
+contexts: []
+# Example:
+#   - id: CTX-PROJ-001
+#     description: "Current backend uses Express.js on Node 18"
+#   - id: CTX-PROJ-002
+#     description: "Deployed to AWS ECS with Fargate"
 `;
 
 const EXAMPLE_DESIGN_YAML = `# Design decisions for this project.
@@ -152,6 +182,11 @@ export function init(targetDir: string = process.cwd()): void {
   writeFileSync(visionPath, VISION_YAML, "utf-8");
   console.log("  Created vision.yaml");
 
+  // Write root context.yaml
+  const contextPath = join(reqDir, "context.yaml");
+  writeFileSync(contextPath, ROOT_CONTEXT_YAML, "utf-8");
+  console.log("  Created context.yaml (situational context)");
+
   // Write global design.yaml
   const designPath = join(reqDir, "design.yaml");
   writeFileSync(designPath, GLOBAL_DESIGN_YAML, "utf-8");
@@ -166,6 +201,10 @@ export function init(targetDir: string = process.cwd()): void {
   const reqPath = join(exampleProjectDir, "requirements.yaml");
   writeFileSync(reqPath, EXAMPLE_REQUIREMENTS_YAML, "utf-8");
   console.log("  Created projects/example-project/requirements.yaml");
+
+  const projContextPath = join(exampleProjectDir, "context.yaml");
+  writeFileSync(projContextPath, EXAMPLE_CONTEXT_YAML, "utf-8");
+  console.log("  Created projects/example-project/context.yaml");
 
   const projDesignPath = join(exampleProjectDir, "design.yaml");
   writeFileSync(projDesignPath, EXAMPLE_DESIGN_YAML, "utf-8");
@@ -247,11 +286,13 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-init.md
   │   └── dd-upgrade.md
   └── requirements/
+      ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions
       ├── implementation.yaml          # General validations (linting, tests, CI)
       └── projects/
           └── example-project/
+              ├── context.yaml         # Project-specific context (system, tech)
               ├── requirements.yaml    # User-value requirements
               ├── design.yaml          # Design decisions & options
               └── implementation.yaml  # Todos, validations & test specs

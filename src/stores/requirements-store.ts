@@ -15,6 +15,7 @@ import { create } from "zustand";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
+  parseContextYaml,
   parseProjectDesignYaml,
   parseGeneralValidationsYaml,
   parseProjectImplementationYaml,
@@ -22,6 +23,7 @@ import {
 import type {
   Vision,
   ProjectRequirements,
+  ContextDocument,
   ProjectDesign,
   GlobalDesign,
   GeneralValidations,
@@ -55,10 +57,14 @@ export interface WatchOptions {
 export interface RequirementsState {
   /** Validated vision document. */
   vision: Vision | null;
+  /** Root-level context items (from context.yaml). */
+  rootContext: ContextDocument | null;
   /** Root-level global design decisions that all projects must follow. */
   globalDesign: GlobalDesign | null;
   /** Per-project requirements keyed by project name. */
   projects: Record<string, ProjectRequirements>;
+  /** Per-project context documents keyed by project name. */
+  projectContexts: Record<string, ContextDocument>;
   /** Per-project design documents keyed by project name (only present when design.yaml exists). */
   designs: Record<string, ProjectDesign>;
   /** Root-level general validations (from implementation.yaml). */
@@ -92,6 +98,12 @@ export interface RequirementsState {
 
   /** Saves the vision document to the server (PUT /api/vision). */
   saveVision: (vision: Vision) => Promise<void>;
+
+  /** Saves the root-level context document to the server (PUT /api/context). */
+  saveRootContext: (data: ContextDocument) => Promise<void>;
+
+  /** Saves a project's context document to the server (PUT /api/projects/:name/context). */
+  saveProjectContext: (projectName: string, data: ContextDocument) => Promise<void>;
 
   /** Saves a project's requirements to the server (PUT /api/projects/:name/requirements). */
   saveProjectRequirements: (projectName: string, data: ProjectRequirements) => Promise<void>;
@@ -130,8 +142,10 @@ export function _getWatcherInternals() {
 
 export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   vision: null,
+  rootContext: null,
   globalDesign: null,
   projects: {},
+  projectContexts: {},
   designs: {},
   generalValidations: null,
   implementations: {},
@@ -153,6 +167,18 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const visionContent = await visionRes.text();
       const vision = parseVisionYaml(visionContent);
+
+      // Fetch root-level context (optional — 404 is fine)
+      let rootContext: ContextDocument | null = null;
+      try {
+        const rootCtxRes = await fetch(`${requirementsPath}/context.yaml`);
+        if (rootCtxRes.ok) {
+          const rootCtxContent = await rootCtxRes.text();
+          rootContext = parseContextYaml(rootCtxContent);
+        }
+      } catch {
+        // context.yaml not available — that's fine
+      }
 
       // Fetch root-level global design (optional — 404 is fine)
       let globalDesign: GlobalDesign | null = null;
@@ -187,8 +213,9 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const projectNames: string[] = await projectsRes.json();
 
-      // Fetch all project requirements, designs, and implementations in parallel
+      // Fetch all project requirements, contexts, designs, and implementations in parallel
       const projects: Record<string, ProjectRequirements> = {};
+      const projectContexts: Record<string, ContextDocument> = {};
       const designs: Record<string, ProjectDesign> = {};
       const implementations: Record<string, ProjectImplementation> = {};
       const projectFetches = projectNames.map(async (name) => {
@@ -201,6 +228,17 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         }
         const content = await res.text();
         projects[name] = parseProjectRequirementsYaml(content);
+
+        // Fetch project context (optional — 404 is fine)
+        try {
+          const ctxRes = await fetch(`${requirementsPath}/projects/${name}/context.yaml`);
+          if (ctxRes.ok) {
+            const ctxContent = await ctxRes.text();
+            projectContexts[name] = parseContextYaml(ctxContent);
+          }
+        } catch {
+          // context.yaml not available — that's fine
+        }
 
         // Fetch design (optional — 404 is fine)
         try {
@@ -239,8 +277,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
       set({
         vision,
+        rootContext,
         globalDesign,
         projects,
+        projectContexts,
         designs,
         generalValidations,
         implementations,
@@ -341,6 +381,34 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     set({ vision });
   },
 
+  saveRootContext: async (data: ContextDocument) => {
+    console.log("[design-duck:store] Saving root context...");
+    const res = await fetch("/api/context", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save root context");
+    }
+    set({ rootContext: data });
+  },
+
+  saveProjectContext: async (projectName: string, data: ContextDocument) => {
+    console.log(`[design-duck:store] Saving context for ${projectName}...`);
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/context`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error || "Failed to save project context");
+    }
+    set({ projectContexts: { ...get().projectContexts, [projectName]: data } });
+  },
+
   saveProjectRequirements: async (projectName: string, data: ProjectRequirements) => {
     console.log(`[design-duck:store] Saving requirements for ${projectName}...`);
     const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/requirements`, {
@@ -422,9 +490,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     }
     // Remove from local state immediately
     const { [projectName]: _p, ...remainingProjects } = get().projects;
+    const { [projectName]: _c, ...remainingContexts } = get().projectContexts;
     const { [projectName]: _d, ...remainingDesigns } = get().designs;
     const { [projectName]: _i, ...remainingImplementations } = get().implementations;
-    set({ projects: remainingProjects, designs: remainingDesigns, implementations: remainingImplementations });
+    set({ projects: remainingProjects, projectContexts: remainingContexts, designs: remainingDesigns, implementations: remainingImplementations });
   },
 
   stopWatching: () => {

@@ -14,6 +14,8 @@ import type {
   Vision,
   Requirement,
   ProjectRequirements,
+  ContextItem,
+  ContextDocument,
   Decision,
   ProjectDesign,
   GeneralValidation,
@@ -25,6 +27,7 @@ import type {
 } from "../domain/requirements/requirement";
 import {
   assertRequirement,
+  assertContextItem,
   assertDecision,
   assertGeneralValidation,
   assertImplementationTodo,
@@ -92,6 +95,40 @@ export function parseProjectRequirementsYaml(content: string): ProjectRequiremen
     visionAlignment,
     requirements,
   };
+}
+
+/**
+ * Parses a YAML string into a validated ContextDocument (context items).
+ *
+ * @param content - Raw YAML string from context.yaml
+ * @returns Validated context document
+ * @throws Error if malformed YAML or validation fails
+ */
+export function parseContextYaml(content: string): ContextDocument {
+  const parsed = parseYaml(content) as unknown;
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("context.yaml must contain a YAML object");
+  }
+
+  const file = parsed as Record<string, unknown>;
+
+  const contexts: ContextItem[] = [];
+
+  if (Array.isArray(file.contexts)) {
+    for (let i = 0; i < file.contexts.length; i++) {
+      const raw = file.contexts[i];
+      try {
+        assertContextItem(raw);
+        contexts.push(raw);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`context.yaml context item at index ${i}: ${msg}`);
+      }
+    }
+  }
+
+  return { contexts };
 }
 
 /**

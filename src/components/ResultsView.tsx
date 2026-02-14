@@ -56,6 +56,20 @@ export function ResultsView({ project, design, onViewBrainstorm }: ResultsViewPr
                     </span>
                   </div>
 
+                  {(dec.contextRefs ?? []).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="text-xs font-medium text-slate-400 uppercase mr-1">Context:</span>
+                      {(dec.contextRefs ?? []).map((ref) => (
+                        <span
+                          key={ref}
+                          className="inline-block rounded bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-200"
+                        >
+                          {ref}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {chosenOption && (
                     <div className="mt-4 rounded-md border border-green-800/50 bg-green-950/60 px-5 py-4">
                       <p className="text-base font-medium text-green-200">

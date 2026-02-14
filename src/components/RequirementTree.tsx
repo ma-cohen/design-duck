@@ -5,9 +5,10 @@
  *   - Detail view (project selected): full project section with requirements & design
  */
 
-import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, ContextDocument, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
+import { ContextSection } from "./ContextSection";
 import { GlobalDesignSection } from "./GlobalDesignSection";
 import { ProjectSection } from "./ProjectSection";
 import { ProjectCard } from "./ProjectCard";
@@ -15,8 +16,10 @@ import { GeneralValidationsSection } from "./GeneralValidationsSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
+  rootContext?: ContextDocument | null;
   globalDesign?: GlobalDesign | null;
   projects: Record<string, ProjectRequirements>;
+  projectContexts?: Record<string, ContextDocument>;
   designs?: Record<string, ProjectDesign>;
   generalValidations?: GeneralValidations | null;
   implementations?: Record<string, ProjectImplementation>;
@@ -28,8 +31,10 @@ export interface RequirementTreeProps {
 
 export function RequirementTree({
   vision,
+  rootContext = null,
   globalDesign = null,
   projects,
+  projectContexts = {},
   designs = {},
   generalValidations,
   implementations = {},
@@ -39,6 +44,7 @@ export function RequirementTree({
   onSelectProject,
 }: RequirementTreeProps) {
   const deleteProject = useRequirementsStore((s) => s.deleteProject);
+  const saveRootContext = useRequirementsStore((s) => s.saveRootContext);
   const projectNames = Object.keys(projects).sort();
 
   console.debug(
@@ -93,6 +99,7 @@ export function RequirementTree({
         <ProjectSection
           projectName={selectedProject}
           project={projects[selectedProject]}
+          projectContext={projectContexts[selectedProject] ?? null}
           design={designs[selectedProject] ?? null}
           implementation={implementations[selectedProject] ?? null}
           generalValidations={generalValidations ?? null}
@@ -106,6 +113,14 @@ export function RequirementTree({
   return (
     <div data-testid="requirement-tree">
       <VisionHeader vision={vision} />
+
+      <ContextSection
+        contextDoc={rootContext}
+        onSave={saveRootContext}
+        title="Context"
+        description="Situational facts about your organization, team, and constraints that inform all decisions."
+        testIdPrefix="root-context"
+      />
 
       <GeneralValidationsSection generalValidations={generalValidations ?? null} />
 

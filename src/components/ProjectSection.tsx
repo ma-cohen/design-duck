@@ -8,6 +8,7 @@
 import { useState } from "react";
 import type {
   ProjectRequirements,
+  ContextDocument,
   ProjectDesign,
   ProjectImplementation,
   GeneralValidations,
@@ -15,6 +16,7 @@ import type {
 } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { RequirementCard } from "./RequirementCard";
+import { ContextSection } from "./ContextSection";
 import { DesignSection } from "./DesignSection";
 import { ResultsView } from "./ResultsView";
 import { ImplementationView } from "./ImplementationView";
@@ -25,6 +27,7 @@ type ViewMode = "results" | "brainstorm" | "implementation";
 export interface ProjectSectionProps {
   projectName: string;
   project: ProjectRequirements;
+  projectContext?: ContextDocument | null;
   design?: ProjectDesign | null;
   implementation?: ProjectImplementation | null;
   generalValidations?: GeneralValidations | null;
@@ -37,8 +40,9 @@ const REQUIREMENT_FIELDS: FieldDefinition[] = [
   { key: "userValue", label: "User Value", type: "textarea", placeholder: "Why this matters to the user" },
 ];
 
-export function ProjectSection({ projectName, project, design, implementation, generalValidations, onDeleteProject }: ProjectSectionProps) {
+export function ProjectSection({ projectName, project, projectContext, design, implementation, generalValidations, onDeleteProject }: ProjectSectionProps) {
   const saveProjectRequirements = useRequirementsStore((s) => s.saveProjectRequirements);
+  const saveProjectContext = useRequirementsStore((s) => s.saveProjectContext);
 
   const [viewMode, setViewMode] = useState<ViewMode>("results");
   const [editingReq, setEditingReq] = useState<Requirement | null>(null);
@@ -170,6 +174,15 @@ export function ProjectSection({ projectName, project, design, implementation, g
         {/* Brainstorm view */}
         {viewMode === "brainstorm" && (
           <>
+            {/* Project Context */}
+            <ContextSection
+              contextDoc={projectContext ?? null}
+              onSave={(data) => saveProjectContext(projectName, data)}
+              title="Project Context"
+              description="Technical and system facts specific to this project that inform design decisions."
+              testIdPrefix={`project-context-${projectName}`}
+            />
+
             {/* Requirements */}
             <div className="mb-4 flex items-center justify-between">
               <h4 className="text-base font-semibold text-slate-200">Requirements</h4>

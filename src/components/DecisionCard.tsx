@@ -25,7 +25,7 @@ const OPTION_FIELDS: FieldDefinition[] = [
 ];
 
 export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChooseOption }: DecisionCardProps) {
-  const { id, topic, context, requirementRefs, options, chosen, chosenReason } = decision;
+  const { id, topic, context, requirementRefs, contextRefs = [], options, chosen, chosenReason } = decision;
 
   const [editingOption, setEditingOption] = useState<DesignOption | null>(null);
   const [addingOption, setAddingOption] = useState(false);
@@ -131,6 +131,22 @@ export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChoo
               <span
                 key={ref}
                 className="mr-2 inline-block rounded bg-blue-900/30 px-2.5 py-1 text-sm font-medium text-blue-200"
+              >
+                {ref}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {contextRefs.length > 0 && (
+          <div className="mb-4" data-testid={`decision-context-refs-${id}`}>
+            <span className="text-sm font-medium text-slate-300 uppercase">
+              Context:{" "}
+            </span>
+            {contextRefs.map((ref) => (
+              <span
+                key={ref}
+                className="mr-2 inline-block rounded bg-amber-900/30 px-2.5 py-1 text-sm font-medium text-amber-200"
               >
                 {ref}
               </span>
