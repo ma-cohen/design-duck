@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Design Duck — local requirements management. Run: ./duck ui",
+  "dependencies": {
+    "design-duck": "github:ma-cohen/desgin-duck#main"
+  }
+}

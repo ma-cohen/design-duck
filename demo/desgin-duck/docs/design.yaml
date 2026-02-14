@@ -1,28 +1,2 @@
 # High-level design decisions that all projects must follow
-
-decisions:
-  - id: DEC-GLOBAL-001
-    topic: "Deployment strategy"
-    context: "We need to choose how to deploy and host the application for reliability and cost efficiency."
-    requirementRefs: []
-    options:
-      - id: serverless
-        title: "Serverless (AWS Lambda + API Gateway)"
-        description: "Deploy backend as serverless functions with managed API gateway"
-        pros:
-          - "Pay-per-use pricing ideal for early stage"
-          - "Auto-scaling with zero ops overhead"
-        cons:
-          - "Cold start latency"
-          - "Vendor lock-in"
-      - id: containers
-        title: "Containerized (Docker + Fly.io)"
-        description: "Run containers on a PaaS like Fly.io for predictable performance"
-        pros:
-          - "Consistent response times"
-          - "Easy local development parity"
-        cons:
-          - "Fixed monthly cost even at low traffic"
-          - "Requires container orchestration knowledge"
-    chosen: containers
-    chosenReason: "Consistent latency matters for real-time board updates; Fly.io keeps ops simple and costs reasonable at our scale."
+decisions: []

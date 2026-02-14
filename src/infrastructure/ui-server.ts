@@ -292,19 +292,30 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
   };
 
   // Retry-based port selection: try currentPort, increment on EADDRINUSE
-  function tryListen() {
-    server.listen(currentPort, () => {
-      handle.port = currentPort;
-      const url = `http://localhost:${currentPort}`;
-      if (currentPort !== port) {
-        console.log(`(Port ${port} was in use, using ${currentPort} instead)`);
-      }
-      console.log(`\nDesign Duck UI running at ${url}\n`);
+  //
+  // NOTE: We register the success handler via a single `server.once('listening')`
+  // rather than passing a callback to each `server.listen()` call. In Node.js,
+  // `server.listen(port, cb)` adds `cb` as a `once('listening')` listener, but
+  // failed attempts (EADDRINUSE) do NOT remove those listeners. This caused a
+  // bug where each retry accumulated another listener, and when the server
+  // finally bound successfully ALL of them fired — opening many browser windows.
+  let browserOpened = false;
+  server.once("listening", () => {
+    handle.port = currentPort;
+    const url = `http://localhost:${currentPort}`;
+    if (currentPort !== port) {
+      console.log(`(Port ${port} was in use, using ${currentPort} instead)`);
+    }
+    console.log(`\nDesign Duck UI running at ${url}\n`);
 
-      if (open) {
-        openBrowser(url);
-      }
-    });
+    if (open && !browserOpened) {
+      browserOpened = true;
+      openBrowser(url);
+    }
+  });
+
+  function tryListen() {
+    server.listen(currentPort);
   }
 
   server.on("error", (err: NodeJS.ErrnoException) => {

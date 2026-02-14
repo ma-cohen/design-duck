@@ -1,12 +1,16 @@
 # General validations that apply to ALL projects.
+# These are global checks every project must pass (linting, tests, CI, etc.)
+#
+# Each validation has:
+#   id          - Unique identifier (e.g. VAL-GENERAL-001)
+#   description - What must be validated
+#   category    - Category for grouping (e.g. linting, testing, ci)
 
-validations:
-  - id: VAL-GENERAL-001
-    description: "All code must pass ESLint with zero errors before merge"
-    category: linting
-  - id: VAL-GENERAL-002
-    description: "All tests must pass in CI before merge to main"
-    category: testing
-  - id: VAL-GENERAL-003
-    description: "No secrets or API keys may be committed to the repository"
-    category: security
+validations: []
+# Example:
+#   - id: VAL-GENERAL-001
+#     description: "All code must pass ESLint with zero errors"
+#     category: linting
+#   - id: VAL-GENERAL-002
+#     description: "All tests must pass before merge"
+#     category: testing
