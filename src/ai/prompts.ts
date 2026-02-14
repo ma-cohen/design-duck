@@ -49,11 +49,12 @@ Each context item needs:
 - **description**: A one-liner factual statement about the situation
 
 Vision fields:
+- **productName**: The name of the product or app (shown in the UI header). Ask the user for it.
 - **vision**: A compelling future-state statement describing the world you want to create.
 - **mission**: What your product/team does to achieve that vision.
 - **problem**: The specific problem users face today that you are solving.
 
-Keep each field to 1-2 sentences. Be specific, not generic.
+Keep each field to 1-2 sentences. Be specific, not generic. Always set productName.
 
 ## Expected YAML Format
 
@@ -68,6 +69,7 @@ contexts:
 
 vision.yaml:
 \`\`\`yaml
+productName: "Your Product Name"
 vision: "A world where..."
 mission: "We provide..."
 problem: "Teams currently struggle with..."

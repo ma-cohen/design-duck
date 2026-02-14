@@ -57,17 +57,22 @@ export function App() {
               Back
             </button>
           )}
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
-              {selectedProject ? selectedProject : selectedPlayground ? selectedPlayground : "Design Duck"}
-            </h1>
-            <p className="mt-1 text-base text-slate-300">
-              {selectedProject
-                ? "Project requirements & design"
-                : selectedPlayground
-                  ? "Playground — isolated problem exploration"
-                  : "Vision-driven requirements management"}
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl" role="img" aria-label="duck">🦆</span>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-50">
+                Design Duck
+              </h1>
+              <p className="mt-0.5 text-sm text-slate-400">
+                {selectedProject
+                  ? selectedProject
+                  : selectedPlayground
+                    ? selectedPlayground
+                    : vision?.productName
+                      ? vision.productName
+                      : "Vision-driven requirements management"}
+              </p>
+            </div>
           </div>
         </div>
       </header>

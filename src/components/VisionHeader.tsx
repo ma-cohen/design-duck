@@ -20,6 +20,7 @@ const VISION_FIELDS: FieldDefinition[] = [
 
 export function VisionHeader({ vision }: VisionHeaderProps) {
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const saveVision = useRequirementsStore((s) => s.saveVision);
 
   if (!vision) {
@@ -38,52 +39,77 @@ export function VisionHeader({ vision }: VisionHeaderProps) {
   return (
     <>
       <section
-        className="mb-10 rounded-xl border border-indigo-600/40 bg-gradient-to-br from-indigo-900/30 to-purple-900/30 p-8"
+        className="mb-10 rounded-xl border border-indigo-600/40 bg-gradient-to-br from-indigo-900/30 to-purple-900/30"
         data-testid="vision-header"
       >
-        <div className="mb-5 flex items-center justify-between">
+        {/* Collapsible header row */}
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex w-full items-center justify-between px-8 py-5 text-left cursor-pointer hover:bg-indigo-900/20 rounded-xl transition-colors"
+          data-testid="vision-toggle"
+        >
           <h2 className="text-xl font-bold text-indigo-200">Vision &amp; Mission</h2>
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-indigo-600/40 bg-slate-600/70 px-3 py-2 text-sm font-medium text-indigo-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
-            data-testid="edit-vision-btn"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          <div className="flex items-center gap-2">
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setEditing(true); } }}
+              className="inline-flex items-center gap-1.5 rounded-md border border-indigo-600/40 bg-slate-600/70 px-3 py-2 text-sm font-medium text-indigo-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
+              data-testid="edit-vision-btn"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Edit
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`h-5 w-5 text-indigo-300 transition-transform ${expanded ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
-            Edit
-          </button>
-        </div>
-
-        <div className="space-y-5">
-          <div data-testid="vision-field">
-            <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-              Vision
-            </span>
-            <p className="mt-1 text-base leading-relaxed text-slate-100">
-              {vision.vision}
-            </p>
           </div>
+        </button>
 
-          <div data-testid="mission-field">
-            <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-              Mission
-            </span>
-            <p className="mt-1 text-base leading-relaxed text-slate-100">
-              {vision.mission}
-            </p>
-          </div>
+        {/* Expanded content */}
+        {expanded && (
+          <div className="border-t border-indigo-600/30 px-8 pb-8 pt-5">
+            <div className="space-y-5">
+              <div data-testid="vision-field">
+                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                  Vision
+                </span>
+                <p className="mt-1 text-base leading-relaxed text-slate-100">
+                  {vision.vision}
+                </p>
+              </div>
 
-          <div data-testid="problem-field">
-            <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-              Core Problem
-            </span>
-            <p className="mt-1 text-base leading-relaxed text-slate-100">
-              {vision.problem}
-            </p>
+              <div data-testid="mission-field">
+                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                  Mission
+                </span>
+                <p className="mt-1 text-base leading-relaxed text-slate-100">
+                  {vision.mission}
+                </p>
+              </div>
+
+              <div data-testid="problem-field">
+                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                  Core Problem
+                </span>
+                <p className="mt-1 text-base leading-relaxed text-slate-100">
+                  {vision.problem}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {editing && (

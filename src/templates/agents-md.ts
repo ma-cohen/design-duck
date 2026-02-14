@@ -30,8 +30,9 @@ a context prompt — run it, read the output, then perform the work described.
 design-duck context vision
 \`\`\`
 
-Edit \`desgin-duck/docs/vision.yaml\` with a clear **vision**, **mission**,
-and **problem** statement. Every downstream decision traces back here.
+Edit \`desgin-duck/docs/vision.yaml\` with the **productName**, a clear **vision**, **mission**,
+and **problem** statement. The \`productName\` is displayed in the UI header —
+always ask the user for it. Every downstream decision traces back here.
 
 ### 2. Split into Projects
 
@@ -94,7 +95,7 @@ validation rules (linting, testing, security, etc.) that all projects must respe
 
 \`\`\`
 desgin-duck/docs/
-├── vision.yaml                  # Vision, mission & problem
+├── vision.yaml                  # Product name, vision, mission & problem
 ├── design.yaml                  # Global design decisions
 ├── implementation.yaml          # Global validations
 └── projects/

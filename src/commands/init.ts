@@ -33,6 +33,7 @@ node "%~dp0node_modules\\design-duck\\dist\\cli.js" %*
 `;
 
 const VISION_YAML = `# Vision, mission, and core problem
+productName: ""
 vision: ""
 mission: ""
 problem: ""

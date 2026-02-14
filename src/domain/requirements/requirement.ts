@@ -9,6 +9,8 @@
 
 /** Vision, mission, and core problem statement (vision.yaml). */
 export interface Vision {
+  /** Optional product/app name displayed in the UI header. */
+  productName?: string;
   vision: string;
   mission: string;
   problem: string;
@@ -218,6 +220,8 @@ export interface Decision {
   contextRefs?: string[];
   /** Optional references to global design decision IDs that this decision is based on. */
   globalDecisionRefs?: string[];
+  /** Optional per-decision research notes, links, and analysis. */
+  notes?: string | null;
   options: DesignOption[];
   chosen: string | null;
   chosenReason: string | null;
@@ -347,6 +351,11 @@ export function validateDecision(raw: unknown): ValidationResult {
   // chosenReason: null or string
   if (o.chosenReason !== null && o.chosenReason !== undefined && typeof o.chosenReason !== "string") {
     errors.push("chosenReason must be a string or null");
+  }
+
+  // notes: optional string or null
+  if (o.notes !== null && o.notes !== undefined && typeof o.notes !== "string") {
+    errors.push("notes must be a string or null");
   }
 
   if (errors.length > 0) {

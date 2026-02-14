@@ -53,6 +53,9 @@ export function parseVisionYaml(content: string): Vision {
   const file = parsed as Record<string, unknown>;
 
   return {
+    ...(typeof file.productName === "string" && file.productName.trim() !== ""
+      ? { productName: file.productName }
+      : {}),
     vision: typeof file.vision === "string" ? file.vision : "",
     mission: typeof file.mission === "string" ? file.mission : "",
     problem: typeof file.problem === "string" ? file.problem : "",
