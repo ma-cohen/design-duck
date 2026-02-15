@@ -1,0 +1,207 @@
+notes: "Design decisions for the core TaskFlow app — task management, boards, and real-time collaboration."
+decisions:
+  - id: DES-001
+    topic: "Frontend Framework"
+    context: "We need a reactive UI framework for the task management dashboard that supports fast rendering and component reuse."
+    category: technology
+    requirementRefs:
+      - REQ-001
+      - REQ-002
+      - REQ-005
+    contextRefs:
+      - CTX-004
+    globalDecisionRefs:
+      - GLOBAL-001
+    options:
+      - id: OPT-REACT
+        title: "React with Vite"
+        description: "Use React 18 with Vite for fast HMR and a mature ecosystem of drag-and-drop and virtualization libraries."
+        pros:
+          - "Team is already proficient in React"
+          - "Huge ecosystem for task board components"
+          - "Vite provides excellent DX with fast builds"
+        cons:
+          - "Bundle size can grow without care"
+          - "Need additional state management library"
+      - id: OPT-SOLID
+        title: "SolidJS with Vite"
+        description: "Use SolidJS for fine-grained reactivity and smaller bundle size."
+        pros:
+          - "Smaller bundle, faster runtime"
+          - "Fine-grained reactivity without virtual DOM"
+        cons:
+          - "Smaller ecosystem — fewer ready-made components"
+          - "Team would need to learn new patterns"
+          - "Fewer drag-and-drop libraries available"
+    chosen: OPT-REACT
+    chosenReason: "React's mature ecosystem and our team expertise make it the fastest path to MVP. The drag-and-drop libraries alone save us weeks."
+
+  - id: DES-002
+    topic: "State Management"
+    context: "The task board needs efficient state management for real-time updates, optimistic UI, and cross-component communication."
+    category: architecture
+    parentDecisionRef: DES-001
+    requirementRefs:
+      - REQ-001
+      - REQ-002
+      - REQ-005
+    options:
+      - id: OPT-ZUSTAND
+        title: "Zustand"
+        description: "Lightweight state management with simple API, great TypeScript support, and minimal boilerplate."
+        pros:
+          - "Tiny bundle size (~1KB)"
+          - "Simple API, no providers needed"
+          - "Great TypeScript inference"
+        cons:
+          - "Less structured than Redux for large apps"
+          - "No built-in devtools (need middleware)"
+      - id: OPT-REDUX
+        title: "Redux Toolkit"
+        description: "Full-featured state management with Redux Toolkit for structured state, middleware, and devtools."
+        pros:
+          - "Excellent devtools for debugging"
+          - "Well-structured patterns for large state"
+          - "Large community and documentation"
+        cons:
+          - "More boilerplate than Zustand"
+          - "Larger bundle size"
+          - "Overkill for MVP-sized state"
+    chosen: OPT-ZUSTAND
+    chosenReason: "Zustand's simplicity and tiny footprint are perfect for our MVP. We can always migrate to Redux Toolkit later if state complexity grows."
+
+  - id: DES-003
+    topic: "Database Choice"
+    context: "We need a database that supports the task/board data model, handles concurrent writes from team members, and can be queried efficiently for search and filtering."
+    category: data
+    requirementRefs:
+      - REQ-001
+      - REQ-004
+    contextRefs:
+      - CTX-003
+    options:
+      - id: OPT-POSTGRES
+        title: "PostgreSQL"
+        description: "Relational database with strong ACID guarantees, full-text search, and JSONB for flexible fields."
+        pros:
+          - "ACID transactions for data integrity"
+          - "Built-in full-text search"
+          - "JSONB columns for flexible metadata"
+          - "Mature and widely supported"
+        cons:
+          - "Requires schema migrations"
+          - "Horizontal scaling is complex"
+      - id: OPT-MONGO
+        title: "MongoDB"
+        description: "Document database with flexible schema, good for rapid prototyping."
+        pros:
+          - "Flexible schema for rapid iteration"
+          - "Easy horizontal scaling"
+          - "Good Node.js driver"
+        cons:
+          - "Weaker consistency guarantees"
+          - "No built-in full-text search (needs Atlas Search)"
+          - "Relationships between tasks/boards are awkward"
+    chosen: OPT-POSTGRES
+    chosenReason: "PostgreSQL's ACID guarantees, built-in full-text search, and relational model are ideal for task management data with team collaboration."
+
+  - id: DES-004
+    topic: "API Design Pattern"
+    context: "We need to decide how the frontend communicates with the backend — REST, GraphQL, or tRPC."
+    category: architecture
+    requirementRefs:
+      - REQ-001
+      - REQ-004
+      - REQ-005
+    globalDecisionRefs:
+      - GLOBAL-001
+      - GLOBAL-002
+    options:
+      - id: OPT-TRPC
+        title: "tRPC"
+        description: "End-to-end typesafe API layer that leverages the monorepo's shared TypeScript types."
+        pros:
+          - "Full type safety from backend to frontend"
+          - "No code generation needed"
+          - "Leverages monorepo shared types perfectly"
+          - "Excellent DX with autocompletion"
+        cons:
+          - "Tightly couples frontend and backend"
+          - "Not suitable if we ever need non-TypeScript clients"
+      - id: OPT-REST
+        title: "REST API with OpenAPI"
+        description: "Traditional REST API with OpenAPI spec for documentation and client generation."
+        pros:
+          - "Universal — any client can consume it"
+          - "Well-understood patterns"
+          - "Easy to cache with HTTP caching"
+        cons:
+          - "Type safety requires code generation from OpenAPI spec"
+          - "Over/under-fetching issues"
+    chosen: null
+    chosenReason: null
+
+  - id: DES-005
+    topic: "Board UI Component Strategy"
+    context: "The Kanban board is the core UX — we need to decide on drag-and-drop approach and column rendering."
+    category: product
+    parentDecisionRef: DES-001
+    requirementRefs:
+      - REQ-002
+      - REQ-005
+    options:
+      - id: OPT-DND-KIT
+        title: "@dnd-kit"
+        description: "Modern, lightweight drag-and-drop toolkit built for React with excellent accessibility."
+        pros:
+          - "Built for React, uses hooks"
+          - "Great accessibility out of the box"
+          - "Smooth animations"
+          - "Active maintenance"
+        cons:
+          - "Less battle-tested than react-beautiful-dnd"
+      - id: OPT-RBD
+        title: "react-beautiful-dnd"
+        description: "Atlassian's battle-tested drag-and-drop library, used in Trello."
+        pros:
+          - "Battle-tested at scale (Trello, Jira)"
+          - "Excellent documentation"
+        cons:
+          - "No longer actively maintained"
+          - "Larger bundle size"
+          - "Uses legacy React patterns"
+    chosen: null
+    chosenReason: null
+
+  - id: DES-006
+    topic: "Deployment Platform"
+    context: "We need a hosting solution for our monorepo that supports both the frontend SPA and the backend API."
+    category: infrastructure
+    requirementRefs:
+      - REQ-005
+    contextRefs:
+      - CTX-001
+      - CTX-003
+    options:
+      - id: OPT-VERCEL
+        title: "Vercel + Railway"
+        description: "Vercel for frontend hosting, Railway for the backend API and PostgreSQL."
+        pros:
+          - "Vercel excels at frontend deployment"
+          - "Railway offers managed PostgreSQL"
+          - "Both have generous free tiers"
+        cons:
+          - "Two platforms to manage"
+          - "Cross-platform networking adds complexity"
+      - id: OPT-FLY
+        title: "Fly.io for everything"
+        description: "Deploy both frontend and backend on Fly.io with Fly Postgres."
+        pros:
+          - "Single platform for everything"
+          - "Edge deployment for low latency"
+          - "Built-in PostgreSQL hosting"
+        cons:
+          - "More DevOps work than Vercel"
+          - "Less polished DX for frontend"
+    chosen: null
+    chosenReason: null

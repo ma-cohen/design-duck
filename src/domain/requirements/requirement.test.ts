@@ -302,13 +302,10 @@ describe("validateDecision", () => {
     );
   });
 
-  test("rejects empty options array", () => {
+  test("accepts empty options array (for settled/global decisions)", () => {
     const d = { ...validDecision, options: [] };
     const result = validateDecision(d);
-    expect(result.valid).toBe(false);
-    expect((result as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("at least one option")]),
-    );
+    expect(result.valid).toBe(true);
   });
 
   test("rejects non-array options", () => {

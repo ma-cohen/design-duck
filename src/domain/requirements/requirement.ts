@@ -327,12 +327,10 @@ export function validateDecision(raw: unknown): ValidationResult {
     errors.push("requirementRefs must be an array");
   }
 
-  // options: must be an array with at least one option
+  // options: must be an array (can be empty for settled/global decisions)
   if (!Array.isArray(o.options)) {
     errors.push("options must be an array");
-  } else if (o.options.length === 0) {
-    errors.push("options must have at least one option");
-  } else {
+  } else if (o.options.length > 0) {
     for (let i = 0; i < o.options.length; i++) {
       const optResult = validateDesignOption(o.options[i]);
       if (!optResult.valid) {

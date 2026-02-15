@@ -199,9 +199,17 @@ export function parseProjectDesignYaml(content: string): ProjectDesign {
 
   for (let i = 0; i < file.decisions.length; i++) {
     const raw = file.decisions[i] as Record<string, unknown> | null;
-    // Default category to "other" when missing (robustness for pre-migration or hand-edited YAML)
-    if (raw && typeof raw === "object" && !raw.category) {
-      raw.category = "other" satisfies DecisionCategory;
+    // Robustness for pre-migration or hand-edited YAML: default missing fields
+    if (raw && typeof raw === "object") {
+      if (!raw.category) {
+        raw.category = "other" satisfies DecisionCategory;
+      }
+      if (!Array.isArray(raw.requirementRefs)) {
+        raw.requirementRefs = [];
+      }
+      if (!Array.isArray(raw.options)) {
+        raw.options = [];
+      }
     }
     try {
       assertDecision(raw);

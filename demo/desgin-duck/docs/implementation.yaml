@@ -1,16 +1,13 @@
-# General validations that apply to ALL projects.
-# These are global checks every project must pass (linting, tests, CI, etc.)
-#
-# Each validation has:
-#   id          - Unique identifier (e.g. VAL-GENERAL-001)
-#   description - What must be validated
-#   category    - Category for grouping (e.g. linting, testing, ci)
-
-validations: []
-# Example:
-#   - id: VAL-GENERAL-001
-#     description: "All code must pass ESLint with zero errors"
-#     category: linting
-#   - id: VAL-GENERAL-002
-#     description: "All tests must pass before merge"
-#     category: testing
+validations:
+  - id: VAL-GENERAL-001
+    description: "All code must pass ESLint with zero errors"
+    category: linting
+  - id: VAL-GENERAL-002
+    description: "All integration tests must pass before merge to main"
+    category: testing
+  - id: VAL-GENERAL-003
+    description: "TypeScript strict mode enabled with no type errors"
+    category: linting
+  - id: VAL-GENERAL-004
+    description: "All API endpoints must have integration tests"
+    category: testing
