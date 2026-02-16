@@ -271,6 +271,28 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
     if (pathname.startsWith("/docs/")) {
       const filename = pathname.slice("/docs/".length);
       const filePath = join(docsDir, filename);
+
+      // For optional project YAML files that don't exist yet, return
+      // sensible empty defaults instead of 404. These files are created
+      // as the user progresses through the design workflow.
+      if (!existsSync(filePath) && filename.endsWith(".yaml")) {
+        const basename = filename.split("/").pop();
+        const emptyDefaults: Record<string, string> = {
+          "context.yaml": "contexts: []\n",
+          "design.yaml": "decisions: []\n",
+          "implementation.yaml": "todos: []\nvalidations: []\ntests: []\n",
+        };
+        const defaultContent = basename ? emptyDefaults[basename] : undefined;
+        if (defaultContent) {
+          res.writeHead(200, {
+            "Content-Type": "text/yaml; charset=utf-8",
+            "Access-Control-Allow-Origin": "*",
+          });
+          res.end(defaultContent);
+          return;
+        }
+      }
+
       serveFile(filePath, res);
       return;
     }

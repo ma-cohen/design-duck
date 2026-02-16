@@ -197,4 +197,63 @@ describe("startUiServer", () => {
     expect(handle.port).toBe(port);
     expect(execSyncMock).not.toHaveBeenCalled();
   });
+
+  // -------------------------------------------------------------------------
+  // Empty defaults for missing optional YAML files
+  // -------------------------------------------------------------------------
+
+  test("returns empty defaults for missing project context.yaml", async () => {
+    const port = 19600;
+    mkdirSync(join(docsDir, "projects", "my-project"), { recursive: true });
+    writeFileSync(
+      join(docsDir, "projects", "my-project", "requirements.yaml"),
+      "visionAlignment: test\nrequirements: []\n",
+      "utf-8",
+    );
+
+    handle = startUiServer({ port, distUiDir, docsDir, open: false });
+    await sleep(500);
+
+    const res = await fetch(`http://localhost:${port}/docs/projects/my-project/context.yaml`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/yaml");
+    const body = await res.text();
+    expect(body).toBe("contexts: []\n");
+  });
+
+  test("returns empty defaults for missing project design.yaml", async () => {
+    const port = 19601;
+    mkdirSync(join(docsDir, "projects", "my-project"), { recursive: true });
+
+    handle = startUiServer({ port, distUiDir, docsDir, open: false });
+    await sleep(500);
+
+    const res = await fetch(`http://localhost:${port}/docs/projects/my-project/design.yaml`);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toBe("decisions: []\n");
+  });
+
+  test("returns empty defaults for missing project implementation.yaml", async () => {
+    const port = 19602;
+    mkdirSync(join(docsDir, "projects", "my-project"), { recursive: true });
+
+    handle = startUiServer({ port, distUiDir, docsDir, open: false });
+    await sleep(500);
+
+    const res = await fetch(`http://localhost:${port}/docs/projects/my-project/implementation.yaml`);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toBe("todos: []\nvalidations: []\ntests: []\n");
+  });
+
+  test("returns 404 for missing non-optional YAML files", async () => {
+    const port = 19603;
+
+    handle = startUiServer({ port, distUiDir, docsDir, open: false });
+    await sleep(500);
+
+    const res = await fetch(`http://localhost:${port}/docs/projects/my-project/requirements.yaml`);
+    expect(res.status).toBe(404);
+  });
 });
