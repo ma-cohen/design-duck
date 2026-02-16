@@ -7,7 +7,8 @@ import {
   mock,
 } from "bun:test";
 import { createServer as createTcpServer, type Server } from "node:net";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { load as yamlLoad } from "js-yaml";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -255,5 +256,266 @@ describe("startUiServer", () => {
 
     const res = await fetch(`http://localhost:${port}/docs/projects/my-project/requirements.yaml`);
     expect(res.status).toBe(404);
+  });
+
+  // -------------------------------------------------------------------------
+  // Propagate decision to global
+  // -------------------------------------------------------------------------
+
+  describe("propagate decision to global", () => {
+    const PROJECT_NAME = "test-proj";
+    const BASE_PORT = 19700;
+    let portCounter = 0;
+
+    function nextPort(): number {
+      return BASE_PORT + portCounter++;
+    }
+
+    /** Writes a project design.yaml with the given YAML content. */
+    function writeProjectDesign(yaml: string) {
+      const dir = join(docsDir, "projects", PROJECT_NAME);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "requirements.yaml"), "visionAlignment: test\nrequirements: []\n", "utf-8");
+      writeFileSync(join(dir, "design.yaml"), yaml, "utf-8");
+    }
+
+    /** Writes a global design.yaml with the given YAML content. */
+    function writeGlobalDesign(yaml: string) {
+      writeFileSync(join(docsDir, "design.yaml"), yaml, "utf-8");
+    }
+
+    /** Reads and parses the global design.yaml. */
+    function readGlobalDesign(): Record<string, unknown> {
+      return yamlLoad(readFileSync(join(docsDir, "design.yaml"), "utf-8")) as Record<string, unknown>;
+    }
+
+    /** Reads and parses the project design.yaml. */
+    function readProjectDesign(): Record<string, unknown> {
+      return yamlLoad(readFileSync(join(docsDir, "projects", PROJECT_NAME, "design.yaml"), "utf-8")) as Record<string, unknown>;
+    }
+
+    /** Sends a propagate request. */
+    async function propagate(port: number, decisionId: string): Promise<Response> {
+      return fetch(`http://localhost:${port}/api/projects/${PROJECT_NAME}/design/propagate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decisionId }),
+      });
+    }
+
+    const FULL_PROJECT_DESIGN = `decisions:
+  - id: DEC-TP-001
+    category: architecture
+    topic: App form factor
+    context: How users interact with the app.
+    requirementRefs:
+      - REQ-001
+    contextRefs:
+      - CTX-001
+    globalDecisionRefs: []
+    parentDecisionRef: null
+    options:
+      - id: web-app
+        title: Web App
+        description: A web application.
+        pros:
+          - Simple
+        cons:
+          - Needs hosting
+      - id: extension
+        title: Browser Extension
+        description: A browser extension.
+        pros:
+          - No hosting needed
+        cons:
+          - Platform-specific
+    chosen: extension
+    chosenReason: Best fit for the use case.
+  - id: DEC-TP-002
+    category: technology
+    topic: Database choice
+    context: Where to store data.
+    requirementRefs:
+      - REQ-001
+    contextRefs:
+      - CTX-002
+    globalDecisionRefs: []
+    options:
+      - id: sqlite
+        title: SQLite
+        description: Local database.
+        pros:
+          - Simple
+        cons:
+          - Not scalable
+    chosen: sqlite
+    chosenReason: Simplest option.
+`;
+
+    test("propagates full decision including options and assigns DEC-GLOBAL-001 ID", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-TP-001");
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body.globalDecisionId).toBe("DEC-GLOBAL-001");
+
+      // Global design should contain the full decision with options
+      const global = readGlobalDesign();
+      const decisions = global.decisions as Record<string, unknown>[];
+      expect(decisions).toHaveLength(1);
+
+      const propagated = decisions[0];
+      expect(propagated.id).toBe("DEC-GLOBAL-001");
+      expect(propagated.topic).toBe("App form factor");
+      expect(propagated.chosen).toBe("extension");
+      expect(propagated.chosenReason).toBe("Best fit for the use case.");
+      expect(propagated.category).toBe("architecture");
+
+      // Options must be fully preserved
+      const options = propagated.options as Record<string, unknown>[];
+      expect(options).toHaveLength(2);
+      expect(options[0].id).toBe("web-app");
+      expect(options[1].id).toBe("extension");
+      expect(options[0].pros).toEqual(["Simple"]);
+    });
+
+    test("strips project-specific fields (contextRefs, parentDecisionRef, globalDecisionRefs)", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-TP-001");
+      expect(res.status).toBe(200);
+
+      const global = readGlobalDesign();
+      const propagated = (global.decisions as Record<string, unknown>[])[0];
+
+      expect(propagated.contextRefs).toBeUndefined();
+      expect(propagated.parentDecisionRef).toBeUndefined();
+      expect(propagated.globalDecisionRefs).toBeUndefined();
+
+      // requirementRefs should be kept for traceability
+      expect(propagated.requirementRefs).toEqual(["REQ-001"]);
+    });
+
+    test("removes propagated decision from project design", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      await propagate(port, "DEC-TP-001");
+
+      const project = readProjectDesign();
+      const remaining = project.decisions as Record<string, unknown>[];
+      expect(remaining).toHaveLength(1);
+      expect(remaining[0].id).toBe("DEC-TP-002");
+    });
+
+    test("adds globalDecisionRef to remaining project decisions that share requirementRefs", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      await propagate(port, "DEC-TP-001");
+
+      const project = readProjectDesign();
+      const remaining = (project.decisions as Record<string, unknown>[])[0];
+      // DEC-TP-002 shares REQ-001 with DEC-TP-001, so it should get the new global ref
+      expect(remaining.globalDecisionRefs).toEqual(["DEC-GLOBAL-001"]);
+    });
+
+    test("assigns sequential IDs when global decisions already exist", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+      writeGlobalDesign(`decisions:
+  - id: DEC-GLOBAL-001
+    category: other
+    topic: Existing decision
+    context: Already here.
+    requirementRefs: []
+    options: []
+    chosen: null
+    chosenReason: null
+`);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-TP-001");
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body.globalDecisionId).toBe("DEC-GLOBAL-002");
+
+      const global = readGlobalDesign();
+      const decisions = global.decisions as Record<string, unknown>[];
+      expect(decisions).toHaveLength(2);
+      expect(decisions[1].id).toBe("DEC-GLOBAL-002");
+    });
+
+    test("returns 400 when trying to propagate an unchosen decision", async () => {
+      const port = nextPort();
+      writeProjectDesign(`decisions:
+  - id: DEC-TP-010
+    category: other
+    topic: Unchosen
+    context: Not decided yet.
+    requirementRefs: []
+    options:
+      - id: opt-a
+        title: Option A
+        description: First option.
+        pros: []
+        cons: []
+    chosen: null
+    chosenReason: null
+`);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-TP-010");
+      expect(res.status).toBe(400);
+
+      const body = await res.json();
+      expect(body.error).toContain("has not been chosen yet");
+    });
+
+    test("returns 404 when decision ID does not exist in project", async () => {
+      const port = nextPort();
+      writeProjectDesign(FULL_PROJECT_DESIGN);
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-NONEXISTENT");
+      expect(res.status).toBe(404);
+
+      const body = await res.json();
+      expect(body.error).toContain("not found");
+    });
+
+    test("returns 404 when project design.yaml does not exist", async () => {
+      const port = nextPort();
+      // Don't create project design file
+
+      handle = startUiServer({ port, distUiDir, docsDir, open: false });
+      await sleep(500);
+
+      const res = await propagate(port, "DEC-TP-001");
+      expect(res.status).toBe(404);
+    });
   });
 });

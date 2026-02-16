@@ -1013,14 +1013,27 @@ async function handlePropagateDecision(
       }
     }
 
-    // Check for ID collision in global design
-    if (globalDecisions.some((d) => d.id === decisionId)) {
-      jsonResponse(res, 409, { error: `A global decision with ID "${decisionId}" already exists` });
+    // Assign a new DEC-GLOBAL-NNN ID for the propagated decision
+    const existingGlobalNums = globalDecisions
+      .map((d) => d.id as string)
+      .filter((id) => /^DEC-GLOBAL-\d+$/.test(id))
+      .map((id) => parseInt((id as string).replace("DEC-GLOBAL-", ""), 10));
+    const nextNum = existingGlobalNums.length > 0 ? Math.max(...existingGlobalNums) + 1 : 1;
+    const newGlobalId = `DEC-GLOBAL-${String(nextNum).padStart(3, "0")}`;
+
+    // Check for ID collision (should not happen with sequential numbering, but guard anyway)
+    if (globalDecisions.some((d) => d.id === newGlobalId)) {
+      jsonResponse(res, 409, { error: `A global decision with ID "${newGlobalId}" already exists` });
       return;
     }
 
-    // 1. Add decision to global design
-    globalDecisions.push(decision);
+    // 1. Build the global decision: copy full decision, assign new ID, strip project-specific fields
+    const globalDecision: Record<string, unknown> = { ...decision, id: newGlobalId };
+    delete globalDecision.contextRefs;
+    delete globalDecision.parentDecisionRef;
+    delete globalDecision.globalDecisionRefs;
+    globalDecisions.push(globalDecision);
+
     const globalToWrite: Record<string, unknown> = {};
     if (globalNotes) {
       globalToWrite.notes = globalNotes;
@@ -1040,8 +1053,8 @@ async function handlePropagateDecision(
         const hasSharedRef = dReqRefs.some((ref: string) => propagatedReqRefs.has(ref));
         if (hasSharedRef) {
           const existingGlobalRefs = Array.isArray(d.globalDecisionRefs) ? (d.globalDecisionRefs as string[]) : [];
-          if (!existingGlobalRefs.includes(decisionId)) {
-            return { ...d, globalDecisionRefs: [...existingGlobalRefs, decisionId] };
+          if (!existingGlobalRefs.includes(newGlobalId)) {
+            return { ...d, globalDecisionRefs: [...existingGlobalRefs, newGlobalId] };
           }
         }
         return d;
@@ -1054,8 +1067,8 @@ async function handlePropagateDecision(
     projectToWrite.decisions = remainingDecisions;
     writeFileSync(projectDesignPath, yamlDump(projectToWrite, { lineWidth: 120, noRefs: true }), "utf-8");
 
-    console.log(`[design-duck:server] Propagated decision "${decisionId}" from project "${projectName}" to global design`);
-    jsonResponse(res, 200, { ok: true, globalDecisionId: decisionId });
+    console.log(`[design-duck:server] Propagated decision "${decisionId}" from project "${projectName}" to global as "${newGlobalId}"`);
+    jsonResponse(res, 200, { ok: true, globalDecisionId: newGlobalId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     jsonResponse(res, 400, { error: message });
