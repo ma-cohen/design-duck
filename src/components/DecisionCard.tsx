@@ -22,6 +22,8 @@ const CATEGORY_LABELS: Record<DecisionCategory, string> = {
 
 export interface DecisionCardProps {
   decision: Decision;
+  /** Start with the detail section expanded (default: collapsed). */
+  defaultExpanded?: boolean;
   onEdit?: (decision: Decision) => void;
   onDelete?: (decisionId: string) => void;
   onSaveOptions?: (options: DesignOption[]) => void;
@@ -39,10 +41,10 @@ const OPTION_FIELDS: FieldDefinition[] = [
   { key: "cons", label: "Cons", type: "string-list", placeholder: "Add a con..." },
 ];
 
-export function DecisionCard({ decision, onEdit, onDelete, onSaveOptions, onChooseOption, onSaveNotes, onPropagate }: DecisionCardProps) {
+export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDelete, onSaveOptions, onChooseOption, onSaveNotes, onPropagate }: DecisionCardProps) {
   const { id, topic, context, category, requirementRefs, contextRefs = [], parentDecisionRef, options, chosen, chosenReason, notes } = decision;
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [editingOption, setEditingOption] = useState<DesignOption | null>(null);
   const [addingOption, setAddingOption] = useState(false);
   const [confirmDeleteOption, setConfirmDeleteOption] = useState<string | null>(null);

@@ -10,9 +10,10 @@ import { ui } from "./commands/ui";
 import { validate } from "./commands/validate";
 import { context } from "./commands/context";
 import { upgrade } from "./commands/upgrade";
+import { reset } from "./commands/reset";
 import { checkVersionMismatch } from "./infrastructure/version";
 
-export const COMMANDS = ["init", "ui", "validate", "context", "upgrade"] as const;
+export const COMMANDS = ["init", "ui", "validate", "context", "upgrade", "reset"] as const;
 type Command = (typeof COMMANDS)[number];
 
 function isCommand(s: string): s is Command {
@@ -21,7 +22,7 @@ function isCommand(s: string): s is Command {
 
 function printUsage(): void {
   console.error("Usage: design-duck <command>");
-  console.error("Commands: init | ui | validate | context | upgrade");
+  console.error("Commands: init | ui | validate | context | upgrade | reset");
   process.exitCode = 1;
 }
 
@@ -45,6 +46,10 @@ function cmdUpgrade(): void {
   upgrade();
 }
 
+async function cmdReset(args: string[]): Promise<void> {
+  await reset(args);
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -59,7 +64,7 @@ function main(): void {
   }
 
   // Version-mismatch warning for commands other than init and upgrade
-  if (command !== "init" && command !== "upgrade") {
+  if (command !== "init" && command !== "upgrade" && command !== "reset") {
     checkVersionMismatch();
   }
 
@@ -78,6 +83,9 @@ function main(): void {
       break;
     case "upgrade":
       cmdUpgrade();
+      break;
+    case "reset":
+      cmdReset(args.slice(1));
       break;
   }
 }

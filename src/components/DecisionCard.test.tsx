@@ -44,7 +44,7 @@ describe("DecisionCard", () => {
   });
 
   test("renders decision context", () => {
-    const html = renderToString(<DecisionCard decision={DECISION} />);
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
     expect(html).toContain("We need sub-second search across millions of products");
   });
 
@@ -54,7 +54,7 @@ describe("DecisionCard", () => {
   });
 
   test("renders requirement refs", () => {
-    const html = renderToString(<DecisionCard decision={DECISION} />);
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
     expect(html).toContain("req-001");
     expect(html).toContain("req-002");
     expect(html).toContain("decision-refs-dec-001");
@@ -62,31 +62,32 @@ describe("DecisionCard", () => {
 
   test("does not render refs section when empty", () => {
     const dec: Decision = { ...DECISION, requirementRefs: [] };
-    const html = renderToString(<DecisionCard decision={dec} />);
+    const html = renderToString(<DecisionCard decision={dec} defaultExpanded />);
     expect(html).not.toContain("decision-refs-dec-001");
   });
 
-  test("renders all options", () => {
-    const html = renderToString(<DecisionCard decision={DECISION} />);
+  test("renders all options for unchosen decision", () => {
+    const pending: Decision = { ...DECISION, chosen: null, chosenReason: null };
+    const html = renderToString(<DecisionCard decision={pending} defaultExpanded />);
     expect(html).toContain("option-card-opt-a");
     expect(html).toContain("option-card-opt-b");
   });
 
   test("marks chosen option", () => {
-    const html = renderToString(<DecisionCard decision={DECISION} />);
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
     expect(html).toContain("option-chosen-badge-opt-a");
     expect(html).not.toContain("option-chosen-badge-opt-b");
   });
 
   test("renders chosen reason", () => {
-    const html = renderToString(<DecisionCard decision={DECISION} />);
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
     expect(html).toContain("decision-chosen-reason-dec-001");
     expect(html).toContain("Performance is critical for our user experience");
   });
 
   test("does not render chosen reason when no choice made", () => {
     const dec: Decision = { ...DECISION, chosen: null, chosenReason: null };
-    const html = renderToString(<DecisionCard decision={dec} />);
+    const html = renderToString(<DecisionCard decision={dec} defaultExpanded />);
     expect(html).not.toContain("decision-chosen-reason-dec-001");
   });
 });

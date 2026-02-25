@@ -606,6 +606,41 @@ When you're done, suggest the user start with the **vision** phase to define
 the product direction: \`@dd-vision\`
 `;
 
+const DD_RESET = `# Design Duck — Reset
+
+Reset Design Duck to a clean state, deleting all docs and starting fresh.
+
+## How to Use
+
+The user tagged this file to ask you to **reset** Design Duck.
+
+## Steps
+
+1. Run the reset command with \`--force\` to skip the confirmation prompt:
+
+   \`\`\`bash
+   dd reset --force
+   \`\`\`
+
+2. This will:
+   - Delete the entire \`desgin-duck/docs/\` directory (all projects, playgrounds, vision, design, etc.)
+   - Delete and regenerate the \`desgin-duck/commands/\` directory
+   - Re-create everything with fresh empty templates (same as \`dd init\`)
+
+3. Report to the user that the reset is complete.
+
+## Notes
+
+- Without \`--force\`, the command prompts for confirmation before deleting.
+- This is destructive — all existing YAML content will be lost.
+- The \`desgin-duck/\` directory itself, \`package.json\`, \`.gitignore\`, and the
+  \`duck\` wrapper scripts are preserved.
+
+## Next Step
+
+After resetting, suggest the user start fresh with the **vision** phase: \`@dd-vision\`
+`;
+
 const DD_UPGRADE = `# Design Duck — Upgrade
 
 Upgrade Design Duck to the latest version.
@@ -654,4 +689,5 @@ export const COMMAND_FILES: Record<string, string> = {
   "dd-ui.md": DD_UI,
   "dd-init.md": DD_INIT,
   "dd-upgrade.md": DD_UPGRADE,
+  "dd-reset.md": DD_RESET,
 };

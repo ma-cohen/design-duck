@@ -155,6 +155,69 @@ tests: []
 #     requirementRefs: [REQ-001]
 `;
 
+// ---------------------------------------------------------------------------
+// Shared scaffolding helpers (used by both init and reset)
+// ---------------------------------------------------------------------------
+
+/**
+ * Create the docs/ directory structure and write all YAML templates.
+ * Expects duckDir to already exist.
+ */
+export function scaffoldDocs(duckDir: string): void {
+  const docsDir = join(duckDir, "docs");
+  const exampleProjectDir = join(docsDir, "projects", "example-project");
+  mkdirSync(exampleProjectDir, { recursive: true });
+  const playgroundsDir = join(docsDir, "playgrounds");
+  mkdirSync(playgroundsDir, { recursive: true });
+  console.log("Created desgin-duck/docs/");
+
+  // Write AGENTS.md (AI agent instructions)
+  const agentMdPath = join(duckDir, "AGENTS.md");
+  writeFileSync(agentMdPath, AGENT_MD, "utf-8");
+  console.log("  Created AGENTS.md (AI agent instructions)");
+
+  // Write vision.yaml
+  writeFileSync(join(docsDir, "vision.yaml"), VISION_YAML, "utf-8");
+  console.log("  Created vision.yaml");
+
+  // Write root context.yaml
+  writeFileSync(join(docsDir, "context.yaml"), ROOT_CONTEXT_YAML, "utf-8");
+  console.log("  Created context.yaml (situational context)");
+
+  // Write global design.yaml
+  writeFileSync(join(docsDir, "design.yaml"), GLOBAL_DESIGN_YAML, "utf-8");
+  console.log("  Created design.yaml");
+
+  // Write root-level implementation.yaml (general validations)
+  writeFileSync(join(docsDir, "implementation.yaml"), GENERAL_IMPLEMENTATION_YAML, "utf-8");
+  console.log("  Created implementation.yaml (general validations)");
+
+  // Write example project files
+  writeFileSync(join(exampleProjectDir, "requirements.yaml"), EXAMPLE_REQUIREMENTS_YAML, "utf-8");
+  console.log("  Created projects/example-project/requirements.yaml");
+
+  writeFileSync(join(exampleProjectDir, "context.yaml"), EXAMPLE_CONTEXT_YAML, "utf-8");
+  console.log("  Created projects/example-project/context.yaml");
+
+  writeFileSync(join(exampleProjectDir, "design.yaml"), EXAMPLE_DESIGN_YAML, "utf-8");
+  console.log("  Created projects/example-project/design.yaml");
+
+  writeFileSync(join(exampleProjectDir, "implementation.yaml"), EXAMPLE_IMPLEMENTATION_YAML, "utf-8");
+  console.log("  Created projects/example-project/implementation.yaml");
+}
+
+/**
+ * (Re-)create the commands/ directory with tag-and-go markdown files.
+ */
+export function scaffoldCommands(duckDir: string): void {
+  const commandsDir = join(duckDir, "commands");
+  mkdirSync(commandsDir, { recursive: true });
+  for (const [filename, content] of Object.entries(COMMAND_FILES)) {
+    writeFileSync(join(commandsDir, filename), content, "utf-8");
+  }
+  console.log("  Created commands/ (tag-and-go agent shortcuts)");
+}
+
 export function init(targetDir: string = process.cwd()): void {
   const duckDir = join(targetDir, "desgin-duck");
   const docsDir = join(duckDir, "docs");
@@ -169,61 +232,9 @@ export function init(targetDir: string = process.cwd()): void {
     return;
   }
 
-  const exampleProjectDir = join(docsDir, "projects", "example-project");
-  mkdirSync(exampleProjectDir, { recursive: true });
-  const playgroundsDir = join(docsDir, "playgrounds");
-  mkdirSync(playgroundsDir, { recursive: true });
-  console.log("Created desgin-duck/docs/");
-
-  // Write AGENTS.md (AI agent instructions)
-  const agentMdPath = join(duckDir, "AGENTS.md");
-  writeFileSync(agentMdPath, AGENT_MD, "utf-8");
-  console.log("  Created AGENTS.md (AI agent instructions)");
-
-  // Write vision.yaml
-  const visionPath = join(docsDir, "vision.yaml");
-  writeFileSync(visionPath, VISION_YAML, "utf-8");
-  console.log("  Created vision.yaml");
-
-  // Write root context.yaml
-  const contextPath = join(docsDir, "context.yaml");
-  writeFileSync(contextPath, ROOT_CONTEXT_YAML, "utf-8");
-  console.log("  Created context.yaml (situational context)");
-
-  // Write global design.yaml
-  const designPath = join(docsDir, "design.yaml");
-  writeFileSync(designPath, GLOBAL_DESIGN_YAML, "utf-8");
-  console.log("  Created design.yaml");
-
-  // Write root-level implementation.yaml (general validations)
-  const implPath = join(docsDir, "implementation.yaml");
-  writeFileSync(implPath, GENERAL_IMPLEMENTATION_YAML, "utf-8");
-  console.log("  Created implementation.yaml (general validations)");
-
-  // Write example project files
-  const reqPath = join(exampleProjectDir, "requirements.yaml");
-  writeFileSync(reqPath, EXAMPLE_REQUIREMENTS_YAML, "utf-8");
-  console.log("  Created projects/example-project/requirements.yaml");
-
-  const projContextPath = join(exampleProjectDir, "context.yaml");
-  writeFileSync(projContextPath, EXAMPLE_CONTEXT_YAML, "utf-8");
-  console.log("  Created projects/example-project/context.yaml");
-
-  const projDesignPath = join(exampleProjectDir, "design.yaml");
-  writeFileSync(projDesignPath, EXAMPLE_DESIGN_YAML, "utf-8");
-  console.log("  Created projects/example-project/design.yaml");
-
-  const projImplPath = join(exampleProjectDir, "implementation.yaml");
-  writeFileSync(projImplPath, EXAMPLE_IMPLEMENTATION_YAML, "utf-8");
-  console.log("  Created projects/example-project/implementation.yaml");
-
-  // Write command markdown files (tag-and-go agent shortcuts)
-  const commandsDir = join(duckDir, "commands");
-  mkdirSync(commandsDir, { recursive: true });
-  for (const [filename, content] of Object.entries(COMMAND_FILES)) {
-    writeFileSync(join(commandsDir, filename), content, "utf-8");
-  }
-  console.log("  Created commands/ (tag-and-go agent shortcuts)");
+  // Scaffold docs/ and commands/ using shared helpers
+  scaffoldDocs(duckDir);
+  scaffoldCommands(duckDir);
 
   // Write .version file to track the installed version
   writeProjectVersion(targetDir);
@@ -288,7 +299,8 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-validate.md
   │   ├── dd-ui.md
   │   ├── dd-init.md
-  │   └── dd-upgrade.md
+  │   ├── dd-upgrade.md
+  │   └── dd-reset.md
   └── docs/
       ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem

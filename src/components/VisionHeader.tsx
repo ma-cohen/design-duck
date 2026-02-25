@@ -10,6 +10,8 @@ import { EditModal, type FieldDefinition } from "./EditModal";
 
 export interface VisionHeaderProps {
   vision: Vision | null;
+  /** Start with the vision details expanded (default: collapsed). */
+  defaultExpanded?: boolean;
 }
 
 const VISION_FIELDS: FieldDefinition[] = [
@@ -18,9 +20,9 @@ const VISION_FIELDS: FieldDefinition[] = [
   { key: "problem", label: "Core Problem", type: "textarea", placeholder: "The core problem you are solving..." },
 ];
 
-export function VisionHeader({ vision }: VisionHeaderProps) {
+export function VisionHeader({ vision, defaultExpanded = false }: VisionHeaderProps) {
   const [editing, setEditing] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const saveVision = useRequirementsStore((s) => s.saveVision);
 
   if (!vision) {

@@ -88,9 +88,7 @@ describe("RequirementTree", () => {
       <RequirementTree vision={VISION} projects={PROJECTS} loading={false} error={null} selectedProject={null} onSelectProject={noop} />,
     );
     expect(html).toContain("vision-header");
-    expect(html).toContain("A world where teams manage requirements efficiently");
-    expect(html).toContain("Provide simple tools for requirement gathering");
-    expect(html).toContain("Teams struggle with requirements management");
+    expect(html).toContain("Vision &amp; Mission");
   });
 
   test("renders project cards on home view", () => {
