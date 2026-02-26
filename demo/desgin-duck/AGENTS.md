@@ -67,37 +67,27 @@ design-duck context choose <project>
 For each unchosen decision, evaluate options and set `chosen` + `chosenReason`.
 Do not override decisions that already have a choice.
 
-### 6. Implementation Plan (per project)
+### 6. Propagation Review (per project)
 
 ```bash
-design-duck context implementation <project>
+design-duck context propagate <project>
 ```
 
-Create `implementation.yaml` for the project with a phased **plan**, **todos**,
-**validations**, and **tests**. Every item links back to requirements via
-`requirementRefs`.
-
-### Global Validations (any time)
-
-```bash
-design-duck context validations
-```
-
-Edit `desgin-duck/docs/implementation.yaml` to add cross-cutting
-validation rules (linting, testing, security, etc.) that all projects must respect.
+Review chosen design decisions and determine which should be promoted to the
+global `design.yaml` so they apply across all projects.
 
 ## File Structure
 
 ```
 desgin-duck/docs/
 ├── vision.yaml                  # Product name, vision, mission & problem
+├── context.yaml                 # Situational context (org, team, constraints)
 ├── design.yaml                  # Global design decisions
-├── implementation.yaml          # Global validations
 └── projects/
     └── <project-name>/
+        ├── context.yaml         # Project-specific context
         ├── requirements.yaml    # User-value requirements
-        ├── design.yaml          # Design decisions & options
-        └── implementation.yaml  # Plan, todos, validations, tests
+        └── design.yaml          # Design decisions & options
 ```
 
 ## Other Commands
@@ -139,8 +129,7 @@ your instructions — the agent handles the rest.
 | `@dd-requirements`    | Gather requirements for a project           |
 | `@dd-design`          | Brainstorm design decisions for a project   |
 | `@dd-choose`          | Evaluate and choose design options          |
-| `@dd-implementation`  | Create an implementation plan for a project |
-| `@dd-validations`     | Define global cross-cutting validations     |
+| `@dd-propagate`       | Review decisions for propagation to global  |
 | `@dd-validate`        | Validate all YAML files                     |
 | `@dd-ui`              | Start the live UI dashboard                 |
 | `@dd-init`            | Initialize Design Duck                      |
@@ -151,9 +140,9 @@ context command and fills in vision.yaml based on your description.
 
 ## Design Philosophy
 
-- **Solve the requirements, not more.** Every design decision, option, and
-  implementation task should trace back to a real requirement. If it doesn't
-  serve a requirement, question whether it's needed.
+- **Solve the requirements, not more.** Every design decision and option
+  should trace back to a real requirement. If it doesn't serve a requirement,
+  question whether it's needed.
 - **Favour simplicity and elegance.** The best design is the simplest one that
   fully satisfies the requirements. Prefer straightforward approaches over
   clever or complex ones.

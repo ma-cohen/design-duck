@@ -41,8 +41,7 @@ describe("init", () => {
     expect(content).toContain("design-duck context requirements");
     expect(content).toContain("design-duck context design");
     expect(content).toContain("design-duck context choose");
-    expect(content).toContain("design-duck context implementation");
-    expect(content).toContain("design-duck context validations");
+    expect(content).toContain("design-duck context propagate");
     expect(content).toContain("YAML is the source of truth");
   });
 

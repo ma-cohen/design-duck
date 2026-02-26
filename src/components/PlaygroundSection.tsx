@@ -1,7 +1,7 @@
 /**
  * Renders a playground's requirements with its problem statement,
  * and optionally its design decisions. Supports the same views as ProjectSection
- * (Results, Brainstorm, Implementation) but for isolated playground problems.
+ * (Results, Brainstorm) but for isolated playground problems.
  */
 
 import { useState } from "react";
@@ -9,7 +9,6 @@ import type {
   PlaygroundRequirements,
   ContextDocument,
   ProjectDesign,
-  ProjectImplementation,
   Requirement,
 } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
@@ -17,17 +16,15 @@ import { RequirementCard } from "./RequirementCard";
 import { ContextSection } from "./ContextSection";
 import { DesignSection } from "./DesignSection";
 import { ResultsView } from "./ResultsView";
-import { ImplementationView } from "./ImplementationView";
 import { EditModal, type FieldDefinition } from "./EditModal";
 
-type ViewMode = "results" | "brainstorm" | "implementation";
+type ViewMode = "results" | "brainstorm";
 
 export interface PlaygroundSectionProps {
   playgroundName: string;
   playground: PlaygroundRequirements;
   playgroundContext?: ContextDocument | null;
   design?: ProjectDesign | null;
-  implementation?: ProjectImplementation | null;
   onDeletePlayground?: (playgroundName: string) => void;
 }
 
@@ -37,7 +34,7 @@ const REQUIREMENT_FIELDS: FieldDefinition[] = [
   { key: "userValue", label: "User Value", type: "textarea", placeholder: "Why this matters to the user" },
 ];
 
-export function PlaygroundSection({ playgroundName, playground, playgroundContext, design, implementation, onDeletePlayground }: PlaygroundSectionProps) {
+export function PlaygroundSection({ playgroundName, playground, playgroundContext, design, onDeletePlayground }: PlaygroundSectionProps) {
   const savePlaygroundRequirements = useRequirementsStore((s) => s.savePlaygroundRequirements);
   const savePlaygroundContext = useRequirementsStore((s) => s.savePlaygroundContext);
 
@@ -47,7 +44,7 @@ export function PlaygroundSection({ playgroundName, playground, playgroundContex
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmDeletePlayground, setConfirmDeletePlayground] = useState(false);
 
-  // Build a ProjectRequirements-compatible object for reuse in ResultsView/ImplementationView
+  // Build a ProjectRequirements-compatible object for reuse in ResultsView
   const projectCompat = {
     visionAlignment: playground.problemStatement,
     requirements: playground.requirements,
@@ -150,18 +147,6 @@ export function PlaygroundSection({ playgroundName, playground, playgroundContex
           >
             Brainstorm
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("implementation")}
-            className={`flex-1 rounded-md px-4 py-2.5 text-base font-medium transition-colors cursor-pointer ${
-              viewMode === "implementation"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-            }`}
-            data-testid="playground-tab-implementation"
-          >
-            Implementation
-          </button>
         </div>
 
         {/* Results view */}
@@ -230,15 +215,6 @@ export function PlaygroundSection({ playgroundName, playground, playgroundContex
           </>
         )}
 
-        {/* Implementation view */}
-        {viewMode === "implementation" && (
-          <ImplementationView
-            projectName={playgroundName}
-            implementation={implementation ?? null}
-            generalValidations={null}
-            requirements={playground.requirements}
-          />
-        )}
       </section>
 
       {/* Edit requirement modal */}

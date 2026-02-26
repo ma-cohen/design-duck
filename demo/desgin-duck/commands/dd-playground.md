@@ -55,4 +55,3 @@ When the playground is created, continue to gather requirements:
 Then follow the same flow:
 - `dd context playground-design <playground-name>`
 - `dd context playground-choose <playground-name>`
-- `dd context playground-implementation <playground-name>`

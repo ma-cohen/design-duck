@@ -9,8 +9,6 @@ import {
   generateRequirementsContext,
   generateDesignContext,
   generateChooseContext,
-  generateImplementationContext,
-  generateValidationsContext,
 } from "./context-generator";
 
 describe("context-generator", () => {
@@ -62,14 +60,6 @@ describe("context-generator", () => {
     writeFileSync(
       join(docsDir, "design.yaml"),
       `notes: null\ndecisions:\n  - id: DEC-GLOBAL-001\n    topic: "Global topic"\n    context: "Global context"\n    requirementRefs: []\n    options:\n      - id: g-opt-a\n        title: "Global Option A"\n        description: "A global option"\n        pros: ["Consistent"]\n        cons: ["Rigid"]\n    chosen: g-opt-a\n    chosenReason: "Best for consistency"\n`,
-      "utf-8",
-    );
-  }
-
-  function writeGlobalValidations(): void {
-    writeFileSync(
-      join(docsDir, "implementation.yaml"),
-      `validations:\n  - id: VAL-GENERAL-001\n    description: "All code must pass linting"\n    category: linting\n`,
       "utf-8",
     );
   }
@@ -186,14 +176,6 @@ describe("context-generator", () => {
       expect(output).toContain("DEC-GLOBAL-001");
     });
 
-    test("includes global validations when present", () => {
-      writeVision();
-      writeProject("my-app");
-      writeGlobalValidations();
-      const output = generateDesignContext(docsDir, "my-app");
-      expect(output).toContain("Global Validations");
-      expect(output).toContain("VAL-GENERAL-001");
-    });
   });
 
   // -----------------------------------------------------------------------
@@ -221,75 +203,4 @@ describe("context-generator", () => {
     });
   });
 
-  // -----------------------------------------------------------------------
-  // Implementation
-  // -----------------------------------------------------------------------
-
-  describe("generateImplementationContext", () => {
-    test("throws when requirements are missing", () => {
-      writeVision();
-      expect(() => generateImplementationContext(docsDir, "no-proj")).toThrow(
-        'requirements.yaml not found for project "no-proj"',
-      );
-    });
-
-    test("generates implementation prompt with all context", () => {
-      writeVision();
-      writeProject("my-app");
-      writeProjectDesign("my-app");
-      writeGlobalDesign();
-      writeGlobalValidations();
-      const output = generateImplementationContext(docsDir, "my-app");
-      expect(output).toContain("# Implementation Plan: my-app");
-      expect(output).toContain("REQ-001");
-      expect(output).toContain("DEC-TEST-001");
-      expect(output).toContain("DEC-GLOBAL-001");
-      expect(output).toContain("VAL-GENERAL-001");
-    });
-
-    test("works without optional design files", () => {
-      writeVision();
-      writeProject("my-app");
-      const output = generateImplementationContext(docsDir, "my-app");
-      expect(output).toContain("# Implementation Plan: my-app");
-      expect(output).toContain("No design decisions have been made yet");
-    });
-  });
-
-  // -----------------------------------------------------------------------
-  // Validations
-  // -----------------------------------------------------------------------
-
-  describe("generateValidationsContext", () => {
-    test("throws when vision.yaml is missing", () => {
-      expect(() => generateValidationsContext(docsDir)).toThrow(
-        "vision.yaml not found",
-      );
-    });
-
-    test("generates prompt with no projects", () => {
-      writeVision();
-      const output = generateValidationsContext(docsDir);
-      expect(output).toContain("# Global Validations");
-      expect(output).toContain("No projects defined yet");
-    });
-
-    test("includes project summaries", () => {
-      writeVision();
-      writeProject("my-app");
-      writeProjectDesign("my-app");
-      const output = generateValidationsContext(docsDir);
-      expect(output).toContain("my-app");
-      expect(output).toContain("1 requirement(s)");
-      expect(output).toContain("1 design decision(s)");
-    });
-
-    test("includes existing validations", () => {
-      writeVision();
-      writeGlobalValidations();
-      const output = generateValidationsContext(docsDir);
-      expect(output).toContain("VAL-GENERAL-001");
-      expect(output).toContain("Refine or extend");
-    });
-  });
 });

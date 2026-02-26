@@ -228,17 +228,12 @@ export function designPrompt(
   projectName: string,
   requirementsYaml: string,
   globalDesignYaml: string | null,
-  globalValidationsYaml: string | null,
   rootContextYaml: string | null,
   projectContextYaml: string | null,
   projectDesignYaml: string | null,
 ): string {
   const globalDesignBlock = globalDesignYaml
     ? `## Global Design Decisions\n\nThe following system-wide decisions have been made and must be respected:\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
-    : "";
-
-  const validationsBlock = globalValidationsYaml
-    ? `## Global Validations\n\nAll decisions must account for these cross-cutting validations:\n\n\`\`\`yaml\n${globalValidationsYaml}\`\`\`\n`
     : "";
 
   const rootContextBlock = rootContextYaml
@@ -320,7 +315,7 @@ ${rootContextBlock}${projectContextBlock}
 \`\`\`yaml
 ${requirementsYaml}\`\`\`
 
-${globalDesignBlock}${validationsBlock}${existingDesignBlock}
+${globalDesignBlock}${existingDesignBlock}
 ## Decision Categories
 
 Every decision must have a \`category\`. Assign one of the following:
@@ -527,113 +522,9 @@ phase again to add them:
 
 **If the design feels complete** across all categories, continue to:
 - **Propagation review**: \`dd context propagate ${projectName}\`
-- **Implementation plan**: \`dd context implementation ${projectName}\`
 `;
 }
 
-// ---------------------------------------------------------------------------
-// Implementation Plan
-// ---------------------------------------------------------------------------
-
-export function implementationPrompt(
-  visionYaml: string,
-  projectName: string,
-  requirementsYaml: string,
-  designYaml: string | null,
-  globalDesignYaml: string | null,
-  globalValidationsYaml: string | null,
-  rootContextYaml: string | null,
-  projectContextYaml: string | null,
-): string {
-  const designBlock = designYaml
-    ? `## Chosen Design Decisions\n\n\`\`\`yaml\n${designYaml}\`\`\`\n`
-    : `## Design Decisions\n\nNo design decisions have been made yet for this project.\n`;
-
-  const globalDesignBlock = globalDesignYaml
-    ? `## Global Design Decisions\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
-    : "";
-
-  const validationsBlock = globalValidationsYaml
-    ? `## Global Validations\n\nAll implementation must respect these cross-cutting validations:\n\n\`\`\`yaml\n${globalValidationsYaml}\`\`\`\n`
-    : "";
-
-  const rootContextBlock = rootContextYaml
-    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
-    : "";
-
-  const projectContextBlock = projectContextYaml
-    ? `## Project Context\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
-    : "";
-
-  return `# Implementation Plan: ${projectName}
-
-## Your Role
-
-You are helping create an implementation plan for the "${projectName}" project.
-Produce a phased plan, actionable todos, project-specific validations, and test specifications.
-
-## Vision Context
-
-\`\`\`yaml
-${visionYaml}\`\`\`
-
-${rootContextBlock}${projectContextBlock}
-## Project Requirements
-
-\`\`\`yaml
-${requirementsYaml}\`\`\`
-
-${designBlock}${globalDesignBlock}${validationsBlock}
-
-## Instructions
-
-Edit the file: desgin-duck/docs/projects/${projectName}/implementation.yaml
-
-Create:
-1. **plan**: A phased implementation plan (text).
-2. **todos**: Actionable implementation tasks, each linked to requirements.
-3. **validations**: Project-specific validation rules linked to requirements.
-4. **tests**: Test specifications (unit, integration, e2e) linked to requirements.
-
-## Expected YAML Format
-
-\`\`\`yaml
-plan: |
-  Phase 1: ...
-  Phase 2: ...
-todos:
-  - id: TODO-<PREFIX>-001
-    description: "Implement..."
-    status: pending
-    requirementRefs: [PREFIX-001]
-validations:
-  - id: VAL-<PREFIX>-001
-    description: "Must ensure..."
-    requirementRefs: [PREFIX-001]
-tests:
-  - id: TEST-<PREFIX>-001
-    description: "Verify that..."
-    requirementRefs: [PREFIX-001]
-    type: unit  # unit | integration | e2e
-\`\`\`
-
-## Guidelines
-
-- Every requirement should be covered by at least one todo and one test.
-- Order todos by dependency / implementation phase.
-- Validations are runtime/deployment checks, not test assertions.
-- Initial status for all todos should be "pending".
-- Use requirement IDs consistently in \`requirementRefs\`.
-- **Keep the plan lean.** Only include todos that directly serve a requirement. Avoid adding "nice-to-have" tasks, premature optimizations, or speculative infrastructure.
-- **Favour simplicity.** Prefer straightforward implementations over elaborate architectures. Add complexity only when a requirement explicitly demands it.
-
-## Next Step
-
-When you're done, suggest the user optionally define **global validations** that
-apply across all projects by running: \`dd context validations\`.
-Otherwise, the design is complete and the user can start implementing based on the plan.
-`;
-}
 
 // ---------------------------------------------------------------------------
 // Propagate Review
@@ -720,82 +611,6 @@ recommended for propagation, so the user can quickly act on them in the UI using
 the "Propagate to Global" button on each decision card.
 `;
 }
-
-// ---------------------------------------------------------------------------
-// Global Validations
-// ---------------------------------------------------------------------------
-
-export function validationsPrompt(
-  visionYaml: string,
-  projectSummaries: string,
-  currentValidationsYaml: string | null,
-  rootContextYaml: string | null,
-): string {
-  const stateBlock = currentValidationsYaml
-    ? `## Current Global Validations\n\n\`\`\`yaml\n${currentValidationsYaml}\`\`\`\n\nRefine or extend these validations.`
-    : `## Current Global Validations\n\nNo global validations defined yet.`;
-
-  const contextBlock = rootContextYaml
-    ? `## Situational Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
-    : "";
-
-  return `# Global Validations
-
-## Your Role
-
-You are helping define cross-cutting validation rules that apply to ALL projects.
-These are quality gates, coding standards, and constraints that every project must respect.
-
-## Vision Context
-
-\`\`\`yaml
-${visionYaml}\`\`\`
-
-${contextBlock}
-## Project Overview
-
-${projectSummaries}
-
-${stateBlock}
-
-## Instructions
-
-Edit the file: desgin-duck/docs/implementation.yaml
-
-Each validation needs:
-- **id**: Unique identifier with VAL-GENERAL prefix (e.g., VAL-GENERAL-001).
-- **description**: What must be true / what rule must be followed.
-- **category**: Classification (e.g., linting, testing, security, performance, accessibility).
-
-## Expected YAML Format
-
-\`\`\`yaml
-validations:
-  - id: VAL-GENERAL-001
-    description: "All code must..."
-    category: linting
-  - id: VAL-GENERAL-002
-    description: "All tests must..."
-    category: testing
-\`\`\`
-
-## Guidelines
-
-- Focus on rules that apply universally, not project-specific ones.
-- Categories help organize validations — use consistent category names.
-- Be specific and actionable — avoid vague rules.
-- Consider: linting, testing, security, performance, accessibility, documentation.
-
-## Next Step
-
-When you're done, let the user know the design process is complete. They can now
-start implementing based on the plans in each project's \`implementation.yaml\`.
-If any projects still need an implementation plan, suggest running:
-\`dd context implementation <project-name>\`
-`;
-}
-
-// ---------------------------------------------------------------------------
 // Playground prompts — isolated problem-solving, no vision dependency
 // ---------------------------------------------------------------------------
 
@@ -1115,83 +930,6 @@ whether another design iteration is needed.
 phase again to add them:
 \`dd context playground-design ${playgroundName}\`
 
-**If the design feels complete**, continue to the **playground-implementation** phase:
-\`dd context playground-implementation ${playgroundName}\`
-`;
-}
-
-export function playgroundImplementationPrompt(
-  playgroundName: string,
-  requirementsYaml: string,
-  designYaml: string | null,
-  playgroundContextYaml: string | null,
-): string {
-  const designBlock = designYaml
-    ? `## Chosen Design Decisions\n\n\`\`\`yaml\n${designYaml}\`\`\`\n`
-    : `## Design Decisions\n\nNo design decisions have been made yet for this playground.\n`;
-
-  const contextBlock = playgroundContextYaml
-    ? `## Playground Context\n\n\`\`\`yaml\n${playgroundContextYaml}\`\`\`\n`
-    : "";
-
-  return `# Playground Implementation Plan: ${playgroundName}
-
-## Your Role
-
-You are helping create an implementation plan for the "${playgroundName}" playground.
-Produce a phased plan, actionable todos, validations, and test specifications.
-
-${contextBlock}
-## Playground Requirements
-
-\`\`\`yaml
-${requirementsYaml}\`\`\`
-
-${designBlock}
-
-## Instructions
-
-Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/implementation.yaml
-
-Create:
-1. **plan**: A phased implementation plan (text).
-2. **todos**: Actionable implementation tasks, each linked to requirements.
-3. **validations**: Playground-specific validation rules linked to requirements.
-4. **tests**: Test specifications (unit, integration, e2e) linked to requirements.
-
-## Expected YAML Format
-
-\`\`\`yaml
-plan: |
-  Phase 1: ...
-  Phase 2: ...
-todos:
-  - id: TODO-PG-001
-    description: "Implement..."
-    status: pending
-    requirementRefs: [PG-001]
-validations:
-  - id: VAL-PG-001
-    description: "Must ensure..."
-    requirementRefs: [PG-001]
-tests:
-  - id: TEST-PG-001
-    description: "Verify that..."
-    requirementRefs: [PG-001]
-    type: unit
-\`\`\`
-
-## Guidelines
-
-- Every requirement should be covered by at least one todo and one test.
-- Order todos by dependency / implementation phase.
-- Initial status for all todos should be "pending".
-- **Keep it lean.** Only include tasks that directly serve a requirement.
-
-## Next Step
-
-When you're done, the playground design process is complete. The user can now
-start implementing based on the plan, or throw it away, or promote the playground
-into a real project if the exploration was successful.
-`;
+**If the design feels complete**, the playground design process is complete. The user
+can now start implementing, throw the playground away, or promote it into a real project.`;
 }

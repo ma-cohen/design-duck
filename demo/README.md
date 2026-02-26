@@ -23,9 +23,7 @@ The UI opens in your browser at `http://localhost:3456`.
 - **Vision** — product vision, mission, and core problem
 - **Context** — organizational and environmental facts (3 items)
 - **Global Design** — deployment strategy decision (chosen: containers)
-- **General Validations** — linting, testing, and security checks
 - **Task Board project** with:
   - 4 requirements (drag-and-drop board, columns, assignments, real-time)
   - 2 project context items (React + Hono stack)
   - 2 design decisions (database choice, DnD library)
-  - Implementation plan with todos, validations, and test specs

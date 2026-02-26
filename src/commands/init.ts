@@ -58,24 +58,6 @@ const GLOBAL_DESIGN_YAML = `# High-level design decisions that all projects must
 decisions: []
 `;
 
-const GENERAL_IMPLEMENTATION_YAML = `# General validations that apply to ALL projects.
-# These are global checks every project must pass (linting, tests, CI, etc.)
-#
-# Each validation has:
-#   id          - Unique identifier (e.g. VAL-GENERAL-001)
-#   description - What must be validated
-#   category    - Category for grouping (e.g. linting, testing, ci)
-
-validations: []
-# Example:
-#   - id: VAL-GENERAL-001
-#     description: "All code must pass ESLint with zero errors"
-#     category: linting
-#   - id: VAL-GENERAL-002
-#     description: "All tests must pass before merge"
-#     category: testing
-`;
-
 const EXAMPLE_REQUIREMENTS_YAML = `# Project requirements - user-value focused
 visionAlignment: ""
 
@@ -124,37 +106,6 @@ decisions: []
 #     chosenReason: null
 `;
 
-const EXAMPLE_IMPLEMENTATION_YAML = `# Implementation plan, todos, validations, and tests for this project.
-# Everything here should reference requirements to ensure full coverage.
-#
-# plan:        Free-text implementation plan (describe phases, approach)
-# todos:       Implementation tasks with status tracking
-# validations: Project-specific checks that must pass
-# tests:       Test specifications that must be written
-
-plan: null
-
-todos: []
-# Example:
-#   - id: TODO-001
-#     description: "Set up database schema"
-#     status: pending          # pending | in-progress | done
-#     requirementRefs: [REQ-001]
-
-validations: []
-# Example:
-#   - id: VAL-001
-#     description: "API response times must be under 200ms"
-#     requirementRefs: [REQ-001]
-
-tests: []
-# Example:
-#   - id: TEST-001
-#     description: "User can sign up and receive confirmation"
-#     type: integration        # unit | integration | e2e
-#     requirementRefs: [REQ-001]
-`;
-
 // ---------------------------------------------------------------------------
 // Shared scaffolding helpers (used by both init and reset)
 // ---------------------------------------------------------------------------
@@ -188,10 +139,6 @@ export function scaffoldDocs(duckDir: string): void {
   writeFileSync(join(docsDir, "design.yaml"), GLOBAL_DESIGN_YAML, "utf-8");
   console.log("  Created design.yaml");
 
-  // Write root-level implementation.yaml (general validations)
-  writeFileSync(join(docsDir, "implementation.yaml"), GENERAL_IMPLEMENTATION_YAML, "utf-8");
-  console.log("  Created implementation.yaml (general validations)");
-
   // Write example project files
   writeFileSync(join(exampleProjectDir, "requirements.yaml"), EXAMPLE_REQUIREMENTS_YAML, "utf-8");
   console.log("  Created projects/example-project/requirements.yaml");
@@ -202,8 +149,6 @@ export function scaffoldDocs(duckDir: string): void {
   writeFileSync(join(exampleProjectDir, "design.yaml"), EXAMPLE_DESIGN_YAML, "utf-8");
   console.log("  Created projects/example-project/design.yaml");
 
-  writeFileSync(join(exampleProjectDir, "implementation.yaml"), EXAMPLE_IMPLEMENTATION_YAML, "utf-8");
-  console.log("  Created projects/example-project/implementation.yaml");
 }
 
 /**
@@ -293,8 +238,7 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-requirements.md
   │   ├── dd-design.md
   │   ├── dd-choose.md
-  │   ├── dd-implementation.md
-  │   ├── dd-validations.md
+  │   ├── dd-propagate.md
   │   ├── dd-playground.md
   │   ├── dd-validate.md
   │   ├── dd-ui.md
@@ -305,13 +249,11 @@ Design Duck initialized! Your folder structure:
       ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions
-      ├── implementation.yaml          # General validations (linting, tests, CI)
       ├── projects/
       │   └── example-project/
       │       ├── context.yaml         # Project-specific context (system, tech)
       │       ├── requirements.yaml    # User-value requirements
-      │       ├── design.yaml          # Design decisions & options
-      │       └── implementation.yaml  # Todos, validations & test specs
+      │       └── design.yaml          # Design decisions & options
       └── playgrounds/                 # Isolated problem explorations (empty)
 
 Next steps:

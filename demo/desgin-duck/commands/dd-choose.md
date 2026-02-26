@@ -47,5 +47,5 @@ This phase requires a **project name**.
 
 ## Next Step
 
-When you're done, suggest the user continue to the **implementation** phase to
-create a phased plan, todos, and tests: `@dd-implementation`
+When you're done, suggest the user continue to the **propagate** phase to
+review which decisions should be promoted to global design: `@dd-propagate`

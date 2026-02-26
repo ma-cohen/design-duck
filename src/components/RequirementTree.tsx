@@ -5,7 +5,7 @@
  *   - Detail view (project selected): full project section with requirements & design
  */
 
-import type { Vision, ProjectRequirements, PlaygroundRequirements, ProjectDesign, GlobalDesign, ContextDocument, GeneralValidations, ProjectImplementation } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, PlaygroundRequirements, ProjectDesign, GlobalDesign, ContextDocument } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
 import { ContextSection } from "./ContextSection";
@@ -14,7 +14,6 @@ import { ProjectSection } from "./ProjectSection";
 import { ProjectCard } from "./ProjectCard";
 import { PlaygroundCard } from "./PlaygroundCard";
 import { PlaygroundSection } from "./PlaygroundSection";
-import { GeneralValidationsSection } from "./GeneralValidationsSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
@@ -23,12 +22,9 @@ export interface RequirementTreeProps {
   projects: Record<string, ProjectRequirements>;
   projectContexts?: Record<string, ContextDocument>;
   designs?: Record<string, ProjectDesign>;
-  generalValidations?: GeneralValidations | null;
-  implementations?: Record<string, ProjectImplementation>;
   playgrounds?: Record<string, PlaygroundRequirements>;
   playgroundContexts?: Record<string, ContextDocument>;
   playgroundDesigns?: Record<string, ProjectDesign>;
-  playgroundImplementations?: Record<string, ProjectImplementation>;
   loading: boolean;
   error: string | null;
   selectedProject: string | null;
@@ -44,12 +40,9 @@ export function RequirementTree({
   projects,
   projectContexts = {},
   designs = {},
-  generalValidations,
-  implementations = {},
   playgrounds = {},
   playgroundContexts = {},
   playgroundDesigns = {},
-  playgroundImplementations = {},
   loading,
   error,
   selectedProject,
@@ -122,8 +115,6 @@ export function RequirementTree({
           project={projects[selectedProject]}
           projectContext={projectContexts[selectedProject] ?? null}
           design={designs[selectedProject] ?? null}
-          implementation={implementations[selectedProject] ?? null}
-          generalValidations={generalValidations ?? null}
           onDeleteProject={handleDeleteProject}
         />
       </div>
@@ -139,7 +130,6 @@ export function RequirementTree({
           playground={playgrounds[selectedPlayground]}
           playgroundContext={playgroundContexts[selectedPlayground] ?? null}
           design={playgroundDesigns[selectedPlayground] ?? null}
-          implementation={playgroundImplementations[selectedPlayground] ?? null}
           onDeletePlayground={handleDeletePlayground}
         />
       </div>
@@ -158,8 +148,6 @@ export function RequirementTree({
         description="Situational facts about your organization, team, and constraints that inform all decisions."
         testIdPrefix="root-context"
       />
-
-      <GeneralValidationsSection generalValidations={generalValidations ?? null} />
 
       <GlobalDesignSection globalDesign={globalDesign} />
 

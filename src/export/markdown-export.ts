@@ -5,8 +5,6 @@ import type {
   ProjectRequirements,
   PlaygroundRequirements,
   ProjectDesign,
-  GeneralValidations,
-  ProjectImplementation,
   Decision,
   DesignOption,
 } from "../domain/requirements/requirement";
@@ -19,12 +17,9 @@ export interface DesignDocSnapshot {
   projects: Record<string, ProjectRequirements>;
   projectContexts: Record<string, ContextDocument>;
   designs: Record<string, ProjectDesign>;
-  generalValidations: GeneralValidations | null;
-  implementations: Record<string, ProjectImplementation>;
   playgrounds: Record<string, PlaygroundRequirements>;
   playgroundContexts: Record<string, ContextDocument>;
   playgroundDesigns: Record<string, ProjectDesign>;
-  playgroundImplementations: Record<string, ProjectImplementation>;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,17 +43,6 @@ function renderContextTable(ctx: ContextDocument): string {
   lines.push("| --- | --- |");
   for (const item of ctx.contexts) {
     lines.push(`| ${item.id} | ${item.description} |`);
-  }
-  return lines.join("\n");
-}
-
-function renderGeneralValidations(gv: GeneralValidations): string {
-  if (gv.validations.length === 0) return "";
-  const lines: string[] = [];
-  lines.push("| ID | Category | Description |");
-  lines.push("| --- | --- | --- |");
-  for (const v of gv.validations) {
-    lines.push(`| ${v.id} | ${v.category} | ${v.description} |`);
   }
   return lines.join("\n");
 }
@@ -172,60 +156,12 @@ function renderRequirementsTable(reqs: { id: string; description: string; userVa
   return lines.join("\n");
 }
 
-function renderImplementation(impl: ProjectImplementation): string {
-  const lines: string[] = [];
-
-  if (impl.plan) {
-    lines.push("**Plan:**");
-    lines.push("");
-    lines.push(impl.plan);
-    lines.push("");
-  }
-
-  if (impl.todos.length > 0) {
-    lines.push("**Todos:**");
-    lines.push("");
-    lines.push("| ID | Description | Status | Requirement Refs |");
-    lines.push("| --- | --- | --- | --- |");
-    for (const t of impl.todos) {
-      const checkbox = t.status === "done" ? "[x]" : "[ ]";
-      lines.push(`| ${t.id} | ${checkbox} ${t.description} | ${t.status} | ${t.requirementRefs.join(", ")} |`);
-    }
-    lines.push("");
-  }
-
-  if (impl.validations.length > 0) {
-    lines.push("**Validations:**");
-    lines.push("");
-    lines.push("| ID | Description | Requirement Refs |");
-    lines.push("| --- | --- | --- |");
-    for (const v of impl.validations) {
-      lines.push(`| ${v.id} | ${v.description} | ${v.requirementRefs.join(", ")} |`);
-    }
-    lines.push("");
-  }
-
-  if (impl.tests.length > 0) {
-    lines.push("**Tests:**");
-    lines.push("");
-    lines.push("| ID | Description | Type | Requirement Refs |");
-    lines.push("| --- | --- | --- | --- |");
-    for (const t of impl.tests) {
-      lines.push(`| ${t.id} | ${t.description} | ${t.type} | ${t.requirementRefs.join(", ")} |`);
-    }
-    lines.push("");
-  }
-
-  return lines.join("\n");
-}
-
 function renderProject(
   name: string,
   heading: string,
   reqs: ProjectRequirements,
   ctx: ContextDocument | undefined,
   design: ProjectDesign | undefined,
-  impl: ProjectImplementation | undefined,
 ): string {
   const lines: string[] = [];
   lines.push(heading);
@@ -253,13 +189,6 @@ function renderProject(
     lines.push(renderDesignSection(design));
   }
 
-  if (impl && (impl.plan || impl.todos.length > 0 || impl.validations.length > 0 || impl.tests.length > 0)) {
-    lines.push("");
-    lines.push("**Implementation:**");
-    lines.push("");
-    lines.push(renderImplementation(impl));
-  }
-
   return lines.join("\n");
 }
 
@@ -269,7 +198,6 @@ function renderPlayground(
   reqs: PlaygroundRequirements,
   ctx: ContextDocument | undefined,
   design: ProjectDesign | undefined,
-  impl: ProjectImplementation | undefined,
 ): string {
   const lines: string[] = [];
   lines.push(heading);
@@ -295,13 +223,6 @@ function renderPlayground(
     lines.push("**Design Decisions:**");
     lines.push("");
     lines.push(renderDesignSection(design));
-  }
-
-  if (impl && (impl.plan || impl.todos.length > 0 || impl.validations.length > 0 || impl.tests.length > 0)) {
-    lines.push("");
-    lines.push("**Implementation:**");
-    lines.push("");
-    lines.push(renderImplementation(impl));
   }
 
   return lines.join("\n");
@@ -339,16 +260,7 @@ export function generateDesignDocMarkdown(snapshot: DesignDocSnapshot): string {
     sectionNum++;
   }
 
-  // 3. General Validations
-  if (snapshot.generalValidations && snapshot.generalValidations.validations.length > 0) {
-    sections.push(`## ${sectionNum}. General Validations`);
-    sections.push("");
-    sections.push(renderGeneralValidations(snapshot.generalValidations));
-    sections.push("");
-    sectionNum++;
-  }
-
-  // 4. High-Level Design Decisions
+  // 3. High-Level Design Decisions
   if (snapshot.globalDesign && snapshot.globalDesign.decisions.length > 0) {
     sections.push(`## ${sectionNum}. High-Level Design Decisions`);
     sections.push("");
@@ -356,7 +268,7 @@ export function generateDesignDocMarkdown(snapshot: DesignDocSnapshot): string {
     sectionNum++;
   }
 
-  // 5. Projects
+  // 4. Projects
   const projectNames = Object.keys(snapshot.projects);
   if (projectNames.length > 0) {
     const projectSectionNum = sectionNum;
@@ -372,13 +284,12 @@ export function generateDesignDocMarkdown(snapshot: DesignDocSnapshot): string {
         snapshot.projects[name],
         snapshot.projectContexts[name],
         snapshot.designs[name],
-        snapshot.implementations[name],
       ));
       sections.push("");
     });
   }
 
-  // 6. Playgrounds
+  // 5. Playgrounds
   const playgroundNames = Object.keys(snapshot.playgrounds);
   if (playgroundNames.length > 0) {
     const playgroundSectionNum = sectionNum;
@@ -394,7 +305,6 @@ export function generateDesignDocMarkdown(snapshot: DesignDocSnapshot): string {
         snapshot.playgrounds[name],
         snapshot.playgroundContexts[name],
         snapshot.playgroundDesigns[name],
-        snapshot.playgroundImplementations[name],
       ));
       sections.push("");
     });

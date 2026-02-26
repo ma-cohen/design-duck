@@ -293,7 +293,6 @@ design phase: \`@dd-design\`
 
 **If the design is complete** across all categories, suggest continuing to:
 - **Propagation review**: \`@dd-propagate\`
-- **Implementation plan**: \`@dd-implementation\`
 `;
 
 const DD_PROPAGATE = `# Design Duck — Propagate
@@ -344,106 +343,11 @@ This phase requires a **project name**.
 
 ## Next Step
 
-After the user acts on your recommendations in the UI, suggest continuing to the
-**implementation** phase: \`@dd-implementation\`
+After the user acts on your recommendations in the UI, let the user know the
+design process is complete. They can now start implementing based on the design
+decisions and chosen options.
 `;
 
-const DD_IMPLEMENTATION = `# Design Duck — Implementation
-
-Create an implementation plan for a specific project.
-
-## How to Use
-
-The user tagged this file to ask you to work on the **implementation** phase
-for a project. This phase requires a **project name**.
-
-### Determining the Project Name
-
-1. If the user mentioned a project name in their message, use it.
-2. Otherwise, list the available projects:
-   \`\`\`bash
-   ls desgin-duck/docs/projects/
-   \`\`\`
-3. If there is exactly one project (besides \`example-project\`), use it.
-4. If there are multiple projects, ask the user which one to work on.
-
-## Steps
-
-1. Run the context command with the project name:
-
-   \`\`\`bash
-   dd context implementation <project-name>
-   \`\`\`
-
-2. Read the output carefully — it contains the requirements, chosen designs,
-   and detailed instructions for creating the implementation plan.
-
-3. Follow the instructions from the context output. Create or edit
-   \`desgin-duck/docs/projects/<project-name>/implementation.yaml\`
-   with a phased **plan**, **todos**, **validations**, and **tests**.
-   Every item must link back to requirements via \`requirementRefs\`.
-
-4. Run validation to check your work:
-
-   \`\`\`bash
-   dd validate
-   \`\`\`
-
-## Rules
-
-- Every todo, validation, and test must reference at least one requirement.
-- Keep the plan phased and incremental.
-- Todos track status: \`pending\` | \`in-progress\` | \`done\`.
-- **Keep it lean.** Only include tasks that directly serve a requirement. Avoid speculative infrastructure or premature optimizations.
-
-## Next Step
-
-When you're done, suggest the user optionally define **global validations** that
-apply across all projects: \`@dd-validations\`. Otherwise, the design is complete
-and the user can start implementing based on the plan.
-`;
-
-const DD_VALIDATIONS = `# Design Duck — Validations
-
-Define global cross-cutting validations that all projects must respect.
-
-## How to Use
-
-The user tagged this file to ask you to work on **global validations**.
-These are checks that apply across all projects (linting, testing, security, CI, etc.).
-
-## Steps
-
-1. Run the context command to get the current state and instructions:
-
-   \`\`\`bash
-   dd context validations
-   \`\`\`
-
-2. Read the output carefully — it contains existing validations and
-   detailed instructions.
-
-3. Follow the instructions from the context output. Edit
-   \`desgin-duck/docs/implementation.yaml\` to add or update
-   cross-cutting validation rules.
-
-4. Run validation to check your work:
-
-   \`\`\`bash
-   dd validate
-   \`\`\`
-
-## Rules
-
-- Each validation needs an \`id\`, \`description\`, and \`category\`.
-- Categories group validations (e.g. \`linting\`, \`testing\`, \`ci\`, \`security\`).
-
-## Next Step
-
-When you're done, let the user know the design process is complete. They can
-now start implementing based on the plans in each project's \`implementation.yaml\`.
-If any projects still need an implementation plan, suggest: \`@dd-implementation\`
-`;
 
 // ---------------------------------------------------------------------------
 // Playground commands
@@ -506,7 +410,6 @@ When the playground is created, continue to gather requirements:
 Then follow the same flow:
 - \`dd context playground-design <playground-name>\`
 - \`dd context playground-choose <playground-name>\`
-- \`dd context playground-implementation <playground-name>\`
 `;
 
 // ---------------------------------------------------------------------------
@@ -682,8 +585,6 @@ export const COMMAND_FILES: Record<string, string> = {
   "dd-design.md": DD_DESIGN,
   "dd-choose.md": DD_CHOOSE,
   "dd-propagate.md": DD_PROPAGATE,
-  "dd-implementation.md": DD_IMPLEMENTATION,
-  "dd-validations.md": DD_VALIDATIONS,
   "dd-playground.md": DD_PLAYGROUND,
   "dd-validate.md": DD_VALIDATE,
   "dd-ui.md": DD_UI,

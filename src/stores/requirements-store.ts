@@ -18,8 +18,6 @@ import {
   parsePlaygroundRequirementsYaml,
   parseContextYaml,
   parseProjectDesignYaml,
-  parseGeneralValidationsYaml,
-  parseProjectImplementationYaml,
 } from "../infrastructure/yaml-parser";
 import type {
   Vision,
@@ -28,8 +26,6 @@ import type {
   ContextDocument,
   ProjectDesign,
   GlobalDesign,
-  GeneralValidations,
-  ProjectImplementation,
 } from "../domain/requirements/requirement";
 
 /** Options for configuring file watching behavior. */
@@ -69,18 +65,12 @@ export interface RequirementsState {
   projectContexts: Record<string, ContextDocument>;
   /** Per-project design documents keyed by project name (only present when design.yaml exists). */
   designs: Record<string, ProjectDesign>;
-  /** Root-level general validations (from implementation.yaml). */
-  generalValidations: GeneralValidations | null;
-  /** Per-project implementation documents keyed by project name. */
-  implementations: Record<string, ProjectImplementation>;
   /** Per-playground requirements keyed by playground name. */
   playgrounds: Record<string, PlaygroundRequirements>;
   /** Per-playground context documents keyed by playground name. */
   playgroundContexts: Record<string, ContextDocument>;
   /** Per-playground design documents keyed by playground name. */
   playgroundDesigns: Record<string, ProjectDesign>;
-  /** Per-playground implementation documents keyed by playground name. */
-  playgroundImplementations: Record<string, ProjectImplementation>;
   /** True while a loadFromFiles() call is in progress. */
   loading: boolean;
   /** Human-readable error message from the last failed load, or null. */
@@ -124,12 +114,6 @@ export interface RequirementsState {
   /** Saves a project's design document to the server (PUT /api/projects/:name/design). */
   saveProjectDesign: (projectName: string, data: ProjectDesign) => Promise<void>;
 
-  /** Saves the root-level general validations to the server (PUT /api/implementation). */
-  saveGeneralValidations: (data: GeneralValidations) => Promise<void>;
-
-  /** Saves a project's implementation document to the server (PUT /api/projects/:name/implementation). */
-  saveProjectImplementation: (projectName: string, data: ProjectImplementation) => Promise<void>;
-
   /** Deletes a project from the server (DELETE /api/projects/:name). */
   deleteProject: (projectName: string) => Promise<void>;
 
@@ -141,9 +125,6 @@ export interface RequirementsState {
 
   /** Saves a playground's design document to the server (PUT /api/playgrounds/:name/design). */
   savePlaygroundDesign: (playgroundName: string, data: ProjectDesign) => Promise<void>;
-
-  /** Saves a playground's implementation document to the server (PUT /api/playgrounds/:name/implementation). */
-  savePlaygroundImplementation: (playgroundName: string, data: ProjectImplementation) => Promise<void>;
 
   /** Deletes a playground from the server (DELETE /api/playgrounds/:name). */
   deletePlayground: (playgroundName: string) => Promise<void>;
@@ -175,12 +156,9 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   projects: {},
   projectContexts: {},
   designs: {},
-  generalValidations: null,
-  implementations: {},
   playgrounds: {},
   playgroundContexts: {},
   playgroundDesigns: {},
-  playgroundImplementations: {},
   loading: false,
   error: null,
   watching: false,
@@ -224,18 +202,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         // design.yaml not available — that's fine
       }
 
-      // Fetch root-level general validations (optional — 404 is fine)
-      let generalValidations: GeneralValidations | null = null;
-      try {
-        const implRes = await fetch(`${docsPath}/implementation.yaml`);
-        if (implRes.ok) {
-          const implContent = await implRes.text();
-          generalValidations = parseGeneralValidationsYaml(implContent);
-        }
-      } catch {
-        // implementation.yaml not available — that's fine
-      }
-
       // Fetch project list
       const projectsRes = await fetch(projectsApiUrl);
       if (!projectsRes.ok) {
@@ -245,11 +211,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       }
       const projectNames: string[] = await projectsRes.json();
 
-      // Fetch all project requirements, contexts, designs, and implementations in parallel
+      // Fetch all project requirements, contexts, and designs in parallel
       const projects: Record<string, ProjectRequirements> = {};
       const projectContexts: Record<string, ContextDocument> = {};
       const designs: Record<string, ProjectDesign> = {};
-      const implementations: Record<string, ProjectImplementation> = {};
       const projectFetches = projectNames.map(async (name) => {
         // Fetch requirements (required)
         const res = await fetch(`${docsPath}/projects/${name}/requirements.yaml`);
@@ -283,16 +248,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
           // design.yaml not available — that's fine
         }
 
-        // Fetch implementation (optional — 404 is fine)
-        try {
-          const implRes = await fetch(`${docsPath}/projects/${name}/implementation.yaml`);
-          if (implRes.ok) {
-            const implContent = await implRes.text();
-            implementations[name] = parseProjectImplementationYaml(implContent);
-          }
-        } catch {
-          // implementation.yaml not available — that's fine
-        }
       });
 
       await Promise.all(projectFetches);
@@ -301,7 +256,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const playgrounds: Record<string, PlaygroundRequirements> = {};
       const playgroundContexts: Record<string, ContextDocument> = {};
       const playgroundDesigns: Record<string, ProjectDesign> = {};
-      const playgroundImplementations: Record<string, ProjectImplementation> = {};
       try {
         const playgroundsRes = await fetch("/api/playgrounds");
         if (playgroundsRes.ok) {
@@ -336,16 +290,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
               // design.yaml not available — that's fine
             }
 
-            // Fetch implementation (optional)
-            try {
-              const implRes = await fetch(`${docsPath}/playgrounds/${name}/implementation.yaml`);
-              if (implRes.ok) {
-                const implContent = await implRes.text();
-                playgroundImplementations[name] = parseProjectImplementationYaml(implContent);
-              }
-            } catch {
-              // implementation.yaml not available — that's fine
-            }
           });
 
           await Promise.all(playgroundFetches);
@@ -372,12 +316,9 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         projects,
         projectContexts,
         designs,
-        generalValidations,
-        implementations,
         playgrounds,
         playgroundContexts,
         playgroundDesigns,
-        playgroundImplementations,
         loading: false,
         error: null,
       });
@@ -546,34 +487,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     set({ designs: { ...get().designs, [projectName]: data } });
   },
 
-  saveGeneralValidations: async (data: GeneralValidations) => {
-    console.log("[design-duck:store] Saving general validations...");
-    const res = await fetch("/api/implementation", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save general validations");
-    }
-    set({ generalValidations: data });
-  },
-
-  saveProjectImplementation: async (projectName: string, data: ProjectImplementation) => {
-    console.log(`[design-duck:store] Saving implementation for ${projectName}...`);
-    const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}/implementation`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save implementation");
-    }
-    set({ implementations: { ...get().implementations, [projectName]: data } });
-  },
-
   deleteProject: async (projectName: string) => {
     console.log(`[design-duck:store] Deleting project ${projectName}...`);
     const res = await fetch(`/api/projects/${encodeURIComponent(projectName)}`, {
@@ -587,8 +500,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     const { [projectName]: _p, ...remainingProjects } = get().projects;
     const { [projectName]: _c, ...remainingContexts } = get().projectContexts;
     const { [projectName]: _d, ...remainingDesigns } = get().designs;
-    const { [projectName]: _i, ...remainingImplementations } = get().implementations;
-    set({ projects: remainingProjects, projectContexts: remainingContexts, designs: remainingDesigns, implementations: remainingImplementations });
+    set({ projects: remainingProjects, projectContexts: remainingContexts, designs: remainingDesigns });
   },
 
   savePlaygroundRequirements: async (playgroundName: string, data: PlaygroundRequirements) => {
@@ -633,20 +545,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     set({ playgroundDesigns: { ...get().playgroundDesigns, [playgroundName]: data } });
   },
 
-  savePlaygroundImplementation: async (playgroundName: string, data: ProjectImplementation) => {
-    console.log(`[design-duck:store] Saving playground implementation for ${playgroundName}...`);
-    const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}/implementation`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save playground implementation");
-    }
-    set({ playgroundImplementations: { ...get().playgroundImplementations, [playgroundName]: data } });
-  },
-
   deletePlayground: async (playgroundName: string) => {
     console.log(`[design-duck:store] Deleting playground ${playgroundName}...`);
     const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}`, {
@@ -659,8 +557,7 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
     const { [playgroundName]: _p, ...remainingPlaygrounds } = get().playgrounds;
     const { [playgroundName]: _c, ...remainingContexts } = get().playgroundContexts;
     const { [playgroundName]: _d, ...remainingDesigns } = get().playgroundDesigns;
-    const { [playgroundName]: _i, ...remainingImpls } = get().playgroundImplementations;
-    set({ playgrounds: remainingPlaygrounds, playgroundContexts: remainingContexts, playgroundDesigns: remainingDesigns, playgroundImplementations: remainingImpls });
+    set({ playgrounds: remainingPlaygrounds, playgroundContexts: remainingContexts, playgroundDesigns: remainingDesigns });
   },
 
   propagateToGlobal: async (projectName: string, decisionId: string) => {

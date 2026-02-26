@@ -10,8 +10,6 @@ import type {
   ProjectRequirements,
   ContextDocument,
   ProjectDesign,
-  ProjectImplementation,
-  GeneralValidations,
   Requirement,
 } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
@@ -19,18 +17,15 @@ import { RequirementCard } from "./RequirementCard";
 import { ContextSection } from "./ContextSection";
 import { DesignSection } from "./DesignSection";
 import { ResultsView } from "./ResultsView";
-import { ImplementationView } from "./ImplementationView";
 import { EditModal, type FieldDefinition } from "./EditModal";
 
-type ViewMode = "results" | "brainstorm" | "implementation";
+type ViewMode = "results" | "brainstorm";
 
 export interface ProjectSectionProps {
   projectName: string;
   project: ProjectRequirements;
   projectContext?: ContextDocument | null;
   design?: ProjectDesign | null;
-  implementation?: ProjectImplementation | null;
-  generalValidations?: GeneralValidations | null;
   onDeleteProject?: (projectName: string) => void;
 }
 
@@ -40,7 +35,7 @@ const REQUIREMENT_FIELDS: FieldDefinition[] = [
   { key: "userValue", label: "User Value", type: "textarea", placeholder: "Why this matters to the user" },
 ];
 
-export function ProjectSection({ projectName, project, projectContext, design, implementation, generalValidations, onDeleteProject }: ProjectSectionProps) {
+export function ProjectSection({ projectName, project, projectContext, design, onDeleteProject }: ProjectSectionProps) {
   const saveProjectRequirements = useRequirementsStore((s) => s.saveProjectRequirements);
   const saveProjectContext = useRequirementsStore((s) => s.saveProjectContext);
 
@@ -148,18 +143,6 @@ export function ProjectSection({ projectName, project, projectContext, design, i
           >
             Brainstorm
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("implementation")}
-            className={`flex-1 rounded-md px-4 py-2.5 text-base font-medium transition-colors cursor-pointer ${
-              viewMode === "implementation"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-            }`}
-            data-testid="tab-implementation"
-          >
-            Implementation
-          </button>
         </div>
 
         {/* Results view */}
@@ -228,15 +211,6 @@ export function ProjectSection({ projectName, project, projectContext, design, i
           </>
         )}
 
-        {/* Implementation view */}
-        {viewMode === "implementation" && (
-          <ImplementationView
-            projectName={projectName}
-            implementation={implementation ?? null}
-            generalValidations={generalValidations ?? null}
-            requirements={project.requirements}
-          />
-        )}
       </section>
 
       {/* Edit requirement modal */}

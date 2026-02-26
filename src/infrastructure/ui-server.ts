@@ -25,10 +25,6 @@ import {
   validateRequirement,
   validateContextItem,
   validateDecision,
-  validateGeneralValidation,
-  validateImplementationTodo,
-  validateImplementationValidation,
-  validateTestSpec,
 } from "../domain/requirements/requirement";
 
 /** Options for starting the UI server. */
@@ -212,19 +208,6 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       return;
     }
 
-    // Write API: PUT /api/implementation (root-level general validations)
-    if (pathname === "/api/implementation" && req.method === "PUT") {
-      handlePutGeneralValidations(req, res, docsDir);
-      return;
-    }
-
-    // Write API: PUT /api/projects/:name/implementation
-    const implMatch = pathname.match(/^\/api\/projects\/([^/]+)\/implementation$/);
-    if (implMatch && req.method === "PUT") {
-      handlePutImplementation(req, res, docsDir, decodeURIComponent(implMatch[1]));
-      return;
-    }
-
     // Delete API: DELETE /api/projects/:name
     const deleteMatch = pathname.match(/^\/api\/projects\/([^/]+)$/);
     if (deleteMatch && req.method === "DELETE") {
@@ -253,13 +236,6 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
       return;
     }
 
-    // Write API: PUT /api/playgrounds/:name/implementation
-    const pgImplMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)\/implementation$/);
-    if (pgImplMatch && req.method === "PUT") {
-      handlePutPlaygroundImplementation(req, res, docsDir, decodeURIComponent(pgImplMatch[1]));
-      return;
-    }
-
     // Delete API: DELETE /api/playgrounds/:name
     const pgDeleteMatch = pathname.match(/^\/api\/playgrounds\/([^/]+)$/);
     if (pgDeleteMatch && req.method === "DELETE") {
@@ -280,7 +256,6 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
         const emptyDefaults: Record<string, string> = {
           "context.yaml": "contexts: []\n",
           "design.yaml": "decisions: []\n",
-          "implementation.yaml": "todos: []\nvalidations: []\ntests: []\n",
         };
         const defaultContent = basename ? emptyDefaults[basename] : undefined;
         if (defaultContent) {
@@ -579,75 +554,6 @@ async function handlePutPlaygroundDesign(
     const dirPath = join(docsDir, "playgrounds", playgroundName);
     mkdirSync(dirPath, { recursive: true });
     writeFileSync(join(dirPath, "design.yaml"), yamlContent, "utf-8");
-    jsonResponse(res, 200, { ok: true });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    jsonResponse(res, 400, { error: message });
-  }
-}
-
-async function handlePutPlaygroundImplementation(
-  req: IncomingMessage,
-  res: ServerResponse,
-  docsDir: string,
-  playgroundName: string,
-): Promise<void> {
-  try {
-    const raw = JSON.parse(await readBody(req));
-
-    if (raw.plan !== undefined && raw.plan !== null && typeof raw.plan !== "string") {
-      jsonResponse(res, 400, { error: "plan must be a string or null" });
-      return;
-    }
-
-    if (!Array.isArray(raw.todos)) {
-      jsonResponse(res, 400, { error: "todos must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.todos.length; i++) {
-      const result = validateImplementationTodo(raw.todos[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, { error: `Todo at index ${i} is invalid`, details: result.errors });
-        return;
-      }
-    }
-
-    if (!Array.isArray(raw.validations)) {
-      jsonResponse(res, 400, { error: "validations must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.validations.length; i++) {
-      const result = validateImplementationValidation(raw.validations[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, { error: `Validation at index ${i} is invalid`, details: result.errors });
-        return;
-      }
-    }
-
-    if (!Array.isArray(raw.tests)) {
-      jsonResponse(res, 400, { error: "tests must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.tests.length; i++) {
-      const result = validateTestSpec(raw.tests[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, { error: `Test at index ${i} is invalid`, details: result.errors });
-        return;
-      }
-    }
-
-    const toWrite: Record<string, unknown> = {};
-    if (raw.plan) {
-      toWrite.plan = raw.plan;
-    }
-    toWrite.todos = raw.todos;
-    toWrite.validations = raw.validations;
-    toWrite.tests = raw.tests;
-
-    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(docsDir, "playgrounds", playgroundName);
-    mkdirSync(dirPath, { recursive: true });
-    writeFileSync(join(dirPath, "implementation.yaml"), yamlContent, "utf-8");
     jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -1069,125 +975,6 @@ async function handlePropagateDecision(
 
     console.log(`[design-duck:server] Propagated decision "${decisionId}" from project "${projectName}" to global as "${newGlobalId}"`);
     jsonResponse(res, 200, { ok: true, globalDecisionId: newGlobalId });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    jsonResponse(res, 400, { error: message });
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Implementation API handlers
-// ---------------------------------------------------------------------------
-
-async function handlePutGeneralValidations(
-  req: IncomingMessage,
-  res: ServerResponse,
-  docsDir: string,
-): Promise<void> {
-  try {
-    const raw = JSON.parse(await readBody(req));
-
-    if (!Array.isArray(raw.validations)) {
-      jsonResponse(res, 400, { error: "validations must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.validations.length; i++) {
-      const result = validateGeneralValidation(raw.validations[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, {
-          error: `Validation at index ${i} is invalid`,
-          details: result.errors,
-        });
-        return;
-      }
-    }
-
-    const yamlContent = yamlDump(raw, { lineWidth: 120, noRefs: true });
-    writeFileSync(join(docsDir, "implementation.yaml"), yamlContent, "utf-8");
-    jsonResponse(res, 200, { ok: true });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    jsonResponse(res, 400, { error: message });
-  }
-}
-
-async function handlePutImplementation(
-  req: IncomingMessage,
-  res: ServerResponse,
-  docsDir: string,
-  projectName: string,
-): Promise<void> {
-  try {
-    const raw = JSON.parse(await readBody(req));
-
-    // Validate optional plan field
-    if (raw.plan !== undefined && raw.plan !== null && typeof raw.plan !== "string") {
-      jsonResponse(res, 400, { error: "plan must be a string or null" });
-      return;
-    }
-
-    // Validate todos
-    if (!Array.isArray(raw.todos)) {
-      jsonResponse(res, 400, { error: "todos must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.todos.length; i++) {
-      const result = validateImplementationTodo(raw.todos[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, {
-          error: `Todo at index ${i} is invalid`,
-          details: result.errors,
-        });
-        return;
-      }
-    }
-
-    // Validate validations
-    if (!Array.isArray(raw.validations)) {
-      jsonResponse(res, 400, { error: "validations must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.validations.length; i++) {
-      const result = validateImplementationValidation(raw.validations[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, {
-          error: `Validation at index ${i} is invalid`,
-          details: result.errors,
-        });
-        return;
-      }
-    }
-
-    // Validate tests
-    if (!Array.isArray(raw.tests)) {
-      jsonResponse(res, 400, { error: "tests must be an array" });
-      return;
-    }
-    for (let i = 0; i < raw.tests.length; i++) {
-      const result = validateTestSpec(raw.tests[i]);
-      if (!result.valid) {
-        jsonResponse(res, 400, {
-          error: `Test at index ${i} is invalid`,
-          details: result.errors,
-        });
-        return;
-      }
-    }
-
-    // Build clean object for YAML serialization
-    const toWrite: Record<string, unknown> = {};
-    if (raw.plan) {
-      toWrite.plan = raw.plan;
-    }
-    toWrite.todos = raw.todos;
-    toWrite.validations = raw.validations;
-    toWrite.tests = raw.tests;
-
-    const yamlContent = yamlDump(toWrite, { lineWidth: 120, noRefs: true });
-    const dirPath = join(docsDir, "projects", projectName);
-    mkdirSync(dirPath, { recursive: true });
-    writeFileSync(join(dirPath, "implementation.yaml"), yamlContent, "utf-8");
-    jsonResponse(res, 200, { ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     jsonResponse(res, 400, { error: message });

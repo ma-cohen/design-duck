@@ -20,21 +20,11 @@ import type {
   Decision,
   DecisionCategory,
   ProjectDesign,
-  GeneralValidation,
-  GeneralValidations,
-  ImplementationTodo,
-  ImplementationValidation,
-  TestSpec,
-  ProjectImplementation,
 } from "../domain/requirements/requirement";
 import {
   assertRequirement,
   assertContextItem,
   assertDecision,
-  assertGeneralValidation,
-  assertImplementationTodo,
-  assertImplementationValidation,
-  assertTestSpec,
 } from "../domain/requirements/requirement";
 
 /**
@@ -225,113 +215,3 @@ export function parseProjectDesignYaml(content: string): ProjectDesign {
   return { notes, decisions };
 }
 
-/**
- * Parses a YAML string into a validated GeneralValidations object.
- *
- * @param content - Raw YAML string from implementation.yaml (root-level)
- * @returns Validated general validations object
- * @throws Error if malformed YAML or validation fails
- */
-export function parseGeneralValidationsYaml(content: string): GeneralValidations {
-  const parsed = parseYaml(content) as unknown;
-
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("implementation.yaml must contain a YAML object");
-  }
-
-  const file = parsed as Record<string, unknown>;
-
-  if (!Array.isArray(file.validations)) {
-    throw new Error("implementation.yaml must have a 'validations' array");
-  }
-
-  const validations: GeneralValidation[] = [];
-
-  for (let i = 0; i < file.validations.length; i++) {
-    const raw = file.validations[i];
-    try {
-      assertGeneralValidation(raw);
-      validations.push(raw);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`implementation.yaml validation at index ${i}: ${msg}`);
-    }
-  }
-
-  return { validations };
-}
-
-/**
- * Parses a YAML string into a validated ProjectImplementation object.
- *
- * @param content - Raw YAML string from a project's implementation.yaml
- * @returns Validated project implementation object
- * @throws Error if malformed YAML or validation fails
- */
-export function parseProjectImplementationYaml(content: string): ProjectImplementation {
-  const parsed = parseYaml(content) as unknown;
-
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("implementation.yaml must contain a YAML object");
-  }
-
-  const file = parsed as Record<string, unknown>;
-
-  const plan = typeof file.plan === "string" ? file.plan : null;
-
-  // Parse todos
-  const todos: ImplementationTodo[] = [];
-  if (file.todos !== undefined) {
-    if (!Array.isArray(file.todos)) {
-      throw new Error("implementation.yaml 'todos' must be an array");
-    }
-    for (let i = 0; i < file.todos.length; i++) {
-      const raw = file.todos[i];
-      try {
-        assertImplementationTodo(raw);
-        todos.push(raw);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`implementation.yaml todo at index ${i}: ${msg}`);
-      }
-    }
-  }
-
-  // Parse validations
-  const validations: ImplementationValidation[] = [];
-  if (file.validations !== undefined) {
-    if (!Array.isArray(file.validations)) {
-      throw new Error("implementation.yaml 'validations' must be an array");
-    }
-    for (let i = 0; i < file.validations.length; i++) {
-      const raw = file.validations[i];
-      try {
-        assertImplementationValidation(raw);
-        validations.push(raw);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`implementation.yaml validation at index ${i}: ${msg}`);
-      }
-    }
-  }
-
-  // Parse tests
-  const tests: TestSpec[] = [];
-  if (file.tests !== undefined) {
-    if (!Array.isArray(file.tests)) {
-      throw new Error("implementation.yaml 'tests' must be an array");
-    }
-    for (let i = 0; i < file.tests.length; i++) {
-      const raw = file.tests[i];
-      try {
-        assertTestSpec(raw);
-        tests.push(raw);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`implementation.yaml test at index ${i}: ${msg}`);
-      }
-    }
-  }
-
-  return { plan, todos, validations, tests };
-}

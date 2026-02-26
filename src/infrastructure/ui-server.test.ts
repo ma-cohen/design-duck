@@ -235,19 +235,6 @@ describe("startUiServer", () => {
     expect(body).toBe("decisions: []\n");
   });
 
-  test("returns empty defaults for missing project implementation.yaml", async () => {
-    const port = 19602;
-    mkdirSync(join(docsDir, "projects", "my-project"), { recursive: true });
-
-    handle = startUiServer({ port, distUiDir, docsDir, open: false });
-    await sleep(500);
-
-    const res = await fetch(`http://localhost:${port}/docs/projects/my-project/implementation.yaml`);
-    expect(res.status).toBe(200);
-    const body = await res.text();
-    expect(body).toBe("todos: []\nvalidations: []\ntests: []\n");
-  });
-
   test("returns 404 for missing non-optional YAML files", async () => {
     const port = 19603;
 

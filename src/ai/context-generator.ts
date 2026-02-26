@@ -21,13 +21,10 @@ import {
   designPrompt,
   choosePrompt,
   propagatePrompt,
-  implementationPrompt,
-  validationsPrompt,
   playgroundPrompt,
   playgroundRequirementsPrompt,
   playgroundDesignPrompt,
   playgroundChoosePrompt,
-  playgroundImplementationPrompt,
 } from "./prompts";
 
 // ---------------------------------------------------------------------------
@@ -97,13 +94,6 @@ function readRawProjectDesign(
  */
 function readRawGlobalDesign(docsDir: string): string | null {
   return readRawOrNull(join(docsDir, "design.yaml"));
-}
-
-/**
- * Reads the root implementation.yaml (global validations) as raw text. Returns null if missing.
- */
-function readRawGlobalValidations(docsDir: string): string | null {
-  return readRawOrNull(join(docsDir, "implementation.yaml"));
 }
 
 /**
@@ -212,7 +202,6 @@ export function generateDesignContext(
   }
 
   const rawGlobalDesign = readRawGlobalDesign(docsDir);
-  const rawGlobalValidations = readRawGlobalValidations(docsDir);
   const rawRootContext = readRawRootContext(docsDir);
   const rawProjectContext = readRawProjectContext(docsDir, projectName);
   const rawProjectDesign = readRawProjectDesign(docsDir, projectName);
@@ -222,7 +211,6 @@ export function generateDesignContext(
     projectName,
     rawReqs,
     rawGlobalDesign,
-    rawGlobalValidations,
     rawRootContext,
     rawProjectContext,
     rawProjectDesign,
@@ -305,88 +293,6 @@ export function generatePropagateContext(
   );
 }
 
-/**
- * Phase 6: Implementation Plan — create todos, validations, and tests.
- */
-export function generateImplementationContext(
-  docsDir: string,
-  projectName: string,
-): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
-
-  const rawReqs = readRawProjectRequirements(docsDir, projectName);
-  if (!rawReqs) {
-    throw new Error(
-      `requirements.yaml not found for project "${projectName}".`,
-    );
-  }
-
-  const rawDesign = readRawProjectDesign(docsDir, projectName);
-  const rawGlobalDesign = readRawGlobalDesign(docsDir);
-  const rawGlobalValidations = readRawGlobalValidations(docsDir);
-  const rawRootContext = readRawRootContext(docsDir);
-  const rawProjectContext = readRawProjectContext(docsDir, projectName);
-
-  return implementationPrompt(
-    rawVision,
-    projectName,
-    rawReqs,
-    rawDesign,
-    rawGlobalDesign,
-    rawGlobalValidations,
-    rawRootContext,
-    rawProjectContext,
-  );
-}
-
-/**
- * Global Validations — define cross-cutting validation rules.
- */
-export function generateValidationsContext(docsDir: string): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
-
-  // Build a summary of all projects
-  const projects = listProjects(docsDir);
-  let projectSummaries: string;
-
-  if (projects.length === 0) {
-    projectSummaries = "No projects defined yet.";
-  } else {
-    const summaryLines = projects.map((name) => {
-      const reqs = readRawProjectRequirements(docsDir, name);
-      const design = readRawProjectDesign(docsDir, name);
-      const parts = [`- **${name}**`];
-      if (reqs) {
-        // Count requirements by looking for "- id:" lines
-        const reqCount = (reqs.match(/- id:/g) || []).length;
-        parts.push(`${reqCount} requirement(s)`);
-      } else {
-        parts.push("no requirements yet");
-      }
-      if (design) {
-        const decCount = (design.match(/- id: DEC/g) || []).length;
-        parts.push(`${decCount} design decision(s)`);
-      }
-      return parts.join(" — ");
-    });
-    projectSummaries = summaryLines.join("\n");
-  }
-
-  const rawValidations = readRawGlobalValidations(docsDir);
-  const rawRootContext = readRawRootContext(docsDir);
-  return validationsPrompt(rawVision, projectSummaries, rawValidations, rawRootContext);
-}
-
 // ---------------------------------------------------------------------------
 // Playground context generators
 // ---------------------------------------------------------------------------
@@ -454,21 +360,3 @@ export function generatePlaygroundChooseContext(
   return playgroundChoosePrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
 }
 
-/**
- * Playground Implementation: create implementation plan for a playground.
- */
-export function generatePlaygroundImplementationContext(
-  docsDir: string,
-  playgroundName: string,
-): string {
-  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
-  if (!rawReqs) {
-    throw new Error(
-      `requirements.yaml not found for playground "${playgroundName}".`,
-    );
-  }
-
-  const rawDesign = readRawPlaygroundDesign(docsDir, playgroundName);
-  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
-  return playgroundImplementationPrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
-}

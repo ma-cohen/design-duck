@@ -17,12 +17,9 @@ export function App() {
     projects,
     projectContexts,
     designs,
-    generalValidations,
-    implementations,
     playgrounds,
     playgroundContexts,
     playgroundDesigns,
-    playgroundImplementations,
     loading,
     error,
     loadFromFiles,
@@ -41,12 +38,9 @@ export function App() {
       projects,
       projectContexts,
       designs,
-      generalValidations,
-      implementations,
       playgrounds,
       playgroundContexts,
       playgroundDesigns,
-      playgroundImplementations,
     };
     const md = generateDesignDocMarkdown(snapshot);
     const slug = (vision?.productName || "design-doc")
@@ -56,8 +50,8 @@ export function App() {
     downloadMarkdown(md, `${slug}-design-doc.md`);
   }, [
     vision, rootContext, globalDesign, projects, projectContexts, designs,
-    generalValidations, implementations, playgrounds, playgroundContexts,
-    playgroundDesigns, playgroundImplementations,
+    playgrounds, playgroundContexts,
+    playgroundDesigns,
   ]);
 
   useEffect(() => {
@@ -124,12 +118,9 @@ export function App() {
           projects={projects}
           projectContexts={projectContexts}
           designs={designs}
-          generalValidations={generalValidations}
-          implementations={implementations}
           playgrounds={playgrounds}
           playgroundContexts={playgroundContexts}
           playgroundDesigns={playgroundDesigns}
-          playgroundImplementations={playgroundImplementations}
           loading={loading}
           error={error}
           selectedProject={selectedProject}

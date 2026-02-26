@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { readVision, listProjects, listPlaygrounds, readProjectRequirements, readProjectDesign, readGlobalDesign, readGeneralValidations, readProjectImplementation, readRootContext, readProjectContext, readPlaygroundRequirements, readPlaygroundContext, readPlaygroundDesign, readPlaygroundImplementation } from "../infrastructure/file-store";
+import { readVision, listProjects, listPlaygrounds, readProjectRequirements, readProjectDesign, readGlobalDesign, readRootContext, readProjectContext, readPlaygroundRequirements, readPlaygroundContext, readPlaygroundDesign } from "../infrastructure/file-store";
 import { validateVision } from "../domain/requirements/requirement";
 
 /**
@@ -75,24 +75,6 @@ export function validate(targetDir: string = process.cwd()): void {
     hasErrors = true;
     const msg = err instanceof Error ? err.message : String(err);
     console.error("✗ context.yaml validation failed:");
-    console.error(`  ${msg}`);
-  }
-
-  // Validate root-level implementation.yaml (optional)
-  console.log("Validating implementation.yaml...");
-  try {
-    const generalValidations = readGeneralValidations(docsDir);
-    if (generalValidations) {
-      console.log(
-        `✓ implementation.yaml is valid (${generalValidations.validations.length} general validations)`,
-      );
-    } else {
-      console.log("– implementation.yaml not found (optional, skipping)");
-    }
-  } catch (err) {
-    hasErrors = true;
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("✗ implementation.yaml validation failed:");
     console.error(`  ${msg}`);
   }
 
@@ -254,68 +236,6 @@ export function validate(targetDir: string = process.cwd()): void {
       }
     }
 
-    // Validate implementation.yaml (optional)
-    try {
-      const impl = readProjectImplementation(docsDir, projectName);
-      if (impl) {
-        console.log(
-          `✓ ${projectName}/implementation.yaml is valid (${impl.todos.length} todos, ${impl.validations.length} validations, ${impl.tests.length} tests)`,
-        );
-
-        // Cross-reference: check that requirementRefs point to actual requirement IDs
-        if (requirementIds.length > 0) {
-          const reqIdSet = new Set(requirementIds);
-
-          for (const todo of impl.todos) {
-            for (const ref of todo.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${projectName}/implementation.yaml: todo "${todo.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-
-          for (const val of impl.validations) {
-            for (const ref of val.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${projectName}/implementation.yaml: validation "${val.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-
-          for (const test of impl.tests) {
-            for (const ref of test.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${projectName}/implementation.yaml: test "${test.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-        }
-
-        if (process.env.DEBUG) {
-          console.error(
-            `[design-duck:validate] Successfully validated implementation for project "${projectName}"`,
-          );
-        }
-      }
-    } catch (err) {
-      hasErrors = true;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`✗ ${projectName}/implementation.yaml validation failed:`);
-      console.error(`  ${msg}`);
-
-      if (process.env.DEBUG) {
-        console.error(`[design-duck:validate] ${projectName} implementation error:`, err);
-      }
-    }
   }
 
   // Validate all playground requirements
@@ -416,58 +336,6 @@ export function validate(targetDir: string = process.cwd()): void {
       console.error(`  ${msg}`);
     }
 
-    // Validate implementation.yaml (optional)
-    try {
-      const pgImpl = readPlaygroundImplementation(docsDir, playgroundName);
-      if (pgImpl) {
-        console.log(
-          `✓ ${playgroundName}/implementation.yaml is valid (${pgImpl.todos.length} todos, ${pgImpl.validations.length} validations, ${pgImpl.tests.length} tests)`,
-        );
-
-        // Cross-reference: check that requirementRefs point to actual requirement IDs
-        if (playgroundRequirementIds.length > 0) {
-          const reqIdSet = new Set(playgroundRequirementIds);
-
-          for (const todo of pgImpl.todos) {
-            for (const ref of todo.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${playgroundName}/implementation.yaml: todo "${todo.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-
-          for (const val of pgImpl.validations) {
-            for (const ref of val.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${playgroundName}/implementation.yaml: validation "${val.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-
-          for (const test of pgImpl.tests) {
-            for (const ref of test.requirementRefs) {
-              if (!reqIdSet.has(ref)) {
-                hasErrors = true;
-                console.error(
-                  `✗ ${playgroundName}/implementation.yaml: test "${test.id}" references unknown requirement "${ref}"`,
-                );
-              }
-            }
-          }
-        }
-      }
-    } catch (err) {
-      hasErrors = true;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`✗ ${playgroundName}/implementation.yaml validation failed:`);
-      console.error(`  ${msg}`);
-    }
   }
 
   // Summary

@@ -14,13 +14,10 @@ import {
   generateDesignContext,
   generateChooseContext,
   generatePropagateContext,
-  generateImplementationContext,
-  generateValidationsContext,
   generatePlaygroundContext,
   generatePlaygroundRequirementsContext,
   generatePlaygroundDesignContext,
   generatePlaygroundChooseContext,
-  generatePlaygroundImplementationContext,
 } from "../ai/context-generator";
 
 export const PHASES = [
@@ -30,13 +27,10 @@ export const PHASES = [
   "design",
   "choose",
   "propagate",
-  "implementation",
-  "validations",
   "playground",
   "playground-requirements",
   "playground-design",
   "playground-choose",
-  "playground-implementation",
 ] as const;
 
 export type Phase = (typeof PHASES)[number];
@@ -47,7 +41,6 @@ const PROJECT_PHASES = new Set<Phase>([
   "design",
   "choose",
   "propagate",
-  "implementation",
 ]);
 
 /** Phases that require a playground name argument. */
@@ -55,7 +48,6 @@ const PLAYGROUND_PHASES = new Set<Phase>([
   "playground-requirements",
   "playground-design",
   "playground-choose",
-  "playground-implementation",
 ]);
 
 function isPhase(s: string): s is Phase {
@@ -72,15 +64,12 @@ function printContextUsage(): void {
   console.error("  design <p>                    Brainstorm design decisions for a project");
   console.error("  choose <p>                    Evaluate and choose design options");
   console.error("  propagate <p>                 Review decisions for propagation to global");
-  console.error("  implementation <p>            Create implementation plan for a project");
-  console.error("  validations                   Define global cross-cutting validations");
   console.error("");
   console.error("Playground phases (isolated problem-solving):");
   console.error("  playground                    Create/list playgrounds");
   console.error("  playground-requirements <pg>  Gather requirements for a playground");
   console.error("  playground-design <pg>        Brainstorm design decisions for a playground");
   console.error("  playground-choose <pg>        Evaluate and choose design options");
-  console.error("  playground-implementation <pg> Create implementation plan for a playground");
   process.exitCode = 1;
 }
 
@@ -165,12 +154,6 @@ export function context(
       case "propagate":
         output = generatePropagateContext(docsDir!, projectName!);
         break;
-      case "implementation":
-        output = generateImplementationContext(docsDir!, projectName!);
-        break;
-      case "validations":
-        output = generateValidationsContext(docsDir!);
-        break;
       case "playground":
         output = generatePlaygroundContext(docsDir!);
         break;
@@ -182,9 +165,6 @@ export function context(
         break;
       case "playground-choose":
         output = generatePlaygroundChooseContext(docsDir!, projectName!);
-        break;
-      case "playground-implementation":
-        output = generatePlaygroundImplementationContext(docsDir!, projectName!);
         break;
     }
 

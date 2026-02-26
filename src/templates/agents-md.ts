@@ -88,37 +88,16 @@ to global** — making them system-wide decisions that all projects must follow.
 The AI recommends candidates; the user uses the "Propagate to Global" button in
 the UI to move decisions. Only chosen decisions can be propagated.
 
-### 6. Implementation Plan (per project)
-
-\`\`\`bash
-design-duck context implementation <project>
-\`\`\`
-
-Create \`implementation.yaml\` for the project with a phased **plan**, **todos**,
-**validations**, and **tests**. Every item links back to requirements via
-\`requirementRefs\`.
-
-### Global Validations (any time)
-
-\`\`\`bash
-design-duck context validations
-\`\`\`
-
-Edit \`desgin-duck/docs/implementation.yaml\` to add cross-cutting
-validation rules (linting, testing, security, etc.) that all projects must respect.
-
 ## File Structure
 
 \`\`\`
 desgin-duck/docs/
 ├── vision.yaml                  # Product name, vision, mission & problem
 ├── design.yaml                  # Global design decisions
-├── implementation.yaml          # Global validations
 └── projects/
     └── <project-name>/
         ├── requirements.yaml    # User-value requirements
-        ├── design.yaml          # Design decisions & options
-        └── implementation.yaml  # Plan, todos, validations, tests
+        └── design.yaml          # Design decisions & options
 \`\`\`
 
 ## Other Commands
@@ -161,8 +140,6 @@ your instructions — the agent handles the rest.
 | \`@dd-design\`          | Brainstorm design decisions for a project   |
 | \`@dd-choose\`          | Evaluate and choose design options          |
 | \`@dd-propagate\`       | Review decisions for propagation to global  |
-| \`@dd-implementation\`  | Create an implementation plan for a project |
-| \`@dd-validations\`     | Define global cross-cutting validations     |
 | \`@dd-validate\`        | Validate all YAML files                     |
 | \`@dd-ui\`              | Start the live UI dashboard                 |
 | \`@dd-init\`            | Initialize Design Duck                      |
