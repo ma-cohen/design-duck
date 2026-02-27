@@ -28,9 +28,9 @@ describe("RequirementCard", () => {
     expect(html).toContain("Users need to search products");
   });
 
-  test("renders user value", () => {
+  test("hides user value when collapsed", () => {
     const html = renderToString(<RequirementCard requirement={REQUIREMENT} />);
-    expect(html).toContain("Reduces time to find products");
+    expect(html).not.toContain("Reduces time to find products");
   });
 
   test("renders data-testid with requirement id", () => {
@@ -47,6 +47,10 @@ describe("RequirementCard", () => {
     const html = renderToString(<RequirementCard requirement={other} />);
     expect(html).toContain("req-042");
     expect(html).toContain("Users can export orders");
-    expect(html).toContain("Keep records of purchases");
+  });
+
+  test("renders toggle button", () => {
+    const html = renderToString(<RequirementCard requirement={REQUIREMENT} />);
+    expect(html).toContain("requirement-toggle-req-001");
   });
 });

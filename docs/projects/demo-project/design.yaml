@@ -1,0 +1,55 @@
+decisions:
+  - id: dec-001
+    topic: UI Layout Strategy
+    context: We need to decide between tabbed views and a single unified view for displaying design data
+    category: product
+    requirementRefs:
+      - REQ-001
+      - REQ-002
+    options:
+      - id: opt-tabs
+        title: Tabbed View
+        description: Separate Results and Brainstorm into tabs
+        pros:
+          - Clean separation of concerns
+        cons:
+          - Users must switch tabs to see all data
+          - Redundant display of same data
+      - id: opt-unified
+        title: Unified View
+        description: Show all data in a single scrollable view
+        pros:
+          - Everything visible at once
+          - No redundant views
+        cons:
+          - Longer page
+    chosen: opt-unified
+    chosenReason: Reduces cognitive overhead - users see everything without navigating
+    notes: Validated by user feedback showing tab switching was confusing
+
+  - id: dec-002
+    topic: Export Format
+    context: Users need to share design decisions with stakeholders outside the tool
+    category: technology
+    requirementRefs:
+      - REQ-004
+    options:
+      - id: opt-md
+        title: Markdown
+        description: Export to standard markdown files
+        pros:
+          - Universal format
+          - Works with GitHub and docs tools
+        cons:
+          - Limited formatting
+      - id: opt-pdf
+        title: PDF
+        description: Export to styled PDF documents
+        pros:
+          - Professional look
+          - Print-ready
+        cons:
+          - Harder to generate
+          - Not easily editable
+    chosen: null
+    chosenReason: null

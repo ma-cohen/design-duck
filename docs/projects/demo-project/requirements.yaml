@@ -1,0 +1,15 @@
+visionAlignment: "Enable teams to capture and trace design decisions alongside their code"
+
+requirements:
+  - id: REQ-001
+    description: "Users can view all design decisions in a single unified view"
+    userValue: "No more switching between tabs or tools to see the full picture"
+  - id: REQ-002
+    description: "Chosen decisions show alternatives inline"
+    userValue: "Easy to compare the chosen option against what was considered"
+  - id: REQ-003
+    description: "Requirements link to the decisions that address them"
+    userValue: "Traceability from user need to design choice without manual tracking"
+  - id: REQ-004
+    description: "Export design documentation to markdown"
+    userValue: "Share decisions with stakeholders who don't use the tool"

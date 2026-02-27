@@ -51,6 +51,7 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
   const [choosingOptionId, setChoosingOptionId] = useState<string | null>(null);
   const [chooseReason, setChooseReason] = useState("");
   const [editingNotes, setEditingNotes] = useState(false);
+  const [activeTab, setActiveTab] = useState<"chosen" | "alternatives" | "notes">("chosen");
 
   // Split options into chosen and alternatives
   const chosenOption = chosen ? options.find((o) => o.id === chosen) ?? null : null;
@@ -261,88 +262,118 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
               )}
             </div>
 
-            {/* Content — flat layout for both chosen and pending decisions */}
+            {/* Content */}
             {hasChosen ? (
               <>
-                {/* Chosen option */}
-                <div className="grid gap-3" data-testid={`decision-options-${id}`}>
-                  <OptionCard
-                    key={chosenOption!.id}
-                    option={chosenOption!}
-                    isChosen
-                    onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
-                    onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
-                    onChoose={onChooseOption ? handleChooseRequest : undefined}
-                  />
-                  {chosenReason && (
-                    <div
-                      className="rounded-md bg-green-900/30 px-5 py-4"
-                      data-testid={`decision-chosen-reason-${id}`}
-                    >
-                      <p className="text-base text-green-200">
-                        <span className="font-medium">Reason: </span>
-                        {chosenReason}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Alternatives */}
-                <div className="mt-4 border-t border-slate-600 pt-4" data-testid={`decision-alternatives-${id}`}>
-                  <span className="mb-3 block text-sm font-medium text-slate-300 uppercase">
+                {/* Tabs for chosen decisions */}
+                <div className="mb-4 flex gap-1 border-b border-slate-600">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("chosen")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors cursor-pointer -mb-px ${activeTab === "chosen" ? "border-b-2 border-indigo-400 text-indigo-300" : "text-slate-400 hover:text-slate-200"}`}
+                    data-testid={`tab-chosen-${id}`}
+                  >
+                    Chosen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("alternatives")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors cursor-pointer -mb-px ${activeTab === "alternatives" ? "border-b-2 border-indigo-400 text-indigo-300" : "text-slate-400 hover:text-slate-200"}`}
+                    data-testid={`tab-alternatives-${id}`}
+                  >
                     Alternatives{alternativeOptions.length > 0 ? ` (${alternativeOptions.length})` : ""}
-                  </span>
-                  {alternativeOptions.length > 0 ? (
-                    <div className="grid gap-3">
-                      {alternativeOptions.map((opt) => (
-                        <OptionCard
-                          key={opt.id}
-                          option={opt}
-                          isChosen={false}
-                          onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
-                          onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
-                          onChoose={onChooseOption ? handleChooseRequest : undefined}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-400 italic">No alternative options.</p>
-                  )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("notes")}
+                    className={`px-4 py-2 text-sm font-medium transition-colors cursor-pointer -mb-px ${activeTab === "notes" ? "border-b-2 border-indigo-400 text-indigo-300" : "text-slate-400 hover:text-slate-200"}`}
+                    data-testid={`tab-notes-${id}`}
+                  >
+                    Notes
+                  </button>
                 </div>
 
-                {/* Notes */}
-                <div className="mt-4 border-t border-slate-600 pt-4" data-testid={`decision-notes-${id}`}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-300 uppercase">Research &amp; Notes</span>
-                    {onSaveNotes && (
-                      <button
-                        type="button"
-                        onClick={() => setEditingNotes(true)}
-                        className="inline-flex items-center gap-1.5 rounded border border-slate-500 bg-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-500 transition-colors cursor-pointer"
-                        data-testid={`edit-notes-${id}`}
+                {/* Tab: Chosen */}
+                {activeTab === "chosen" && (
+                  <div className="grid gap-3" data-testid={`decision-options-${id}`}>
+                    <OptionCard
+                      key={chosenOption!.id}
+                      option={chosenOption!}
+                      isChosen
+                      onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
+                      onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
+                      onChoose={onChooseOption ? handleChooseRequest : undefined}
+                    />
+                    {chosenReason && (
+                      <div
+                        className="rounded-md bg-green-900/30 px-5 py-4"
+                        data-testid={`decision-chosen-reason-${id}`}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                        {notes ? "Edit Notes" : "Add Notes"}
-                      </button>
+                        <p className="text-base text-green-200">
+                          <span className="font-medium">Reason: </span>
+                          {chosenReason}
+                        </p>
+                      </div>
                     )}
                   </div>
-                  {notes ? (
-                    <div className="rounded-lg border border-amber-600/40 bg-amber-900/30 px-5 py-4">
-                      <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-100">
-                        {notes}
-                      </p>
+                )}
+
+                {/* Tab: Alternatives */}
+                {activeTab === "alternatives" && (
+                  <div data-testid={`decision-alternatives-${id}`}>
+                    {alternativeOptions.length > 0 ? (
+                      <div className="grid gap-3">
+                        {alternativeOptions.map((opt) => (
+                          <OptionCard
+                            key={opt.id}
+                            option={opt}
+                            isChosen={false}
+                            onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
+                            onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
+                            onChoose={onChooseOption ? handleChooseRequest : undefined}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic">No alternative options.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab: Notes */}
+                {activeTab === "notes" && (
+                  <div data-testid={`decision-notes-${id}`}>
+                    <div className="mb-2 flex items-center justify-end">
+                      {onSaveNotes && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingNotes(true)}
+                          className="inline-flex items-center gap-1.5 rounded border border-slate-500 bg-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-500 transition-colors cursor-pointer"
+                          data-testid={`edit-notes-${id}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                          {notes ? "Edit Notes" : "Add Notes"}
+                        </button>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-sm text-slate-400 italic">
-                      No notes yet. Add research, links, or analysis for this decision.
-                    </p>
-                  )}
-                </div>
+                    {notes ? (
+                      <div className="rounded-lg border border-amber-600/40 bg-amber-900/30 px-5 py-4">
+                        <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-100">
+                          {notes}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic">
+                        No notes yet. Add research, links, or analysis for this decision.
+                      </p>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
-              /* Pending decisions: show flat options list + notes section below */
+              /* Pending decisions: show all options flat */
               <>
                 <div className="grid gap-3" data-testid={`decision-options-${id}`}>
                   {options.map((opt) => (
@@ -357,7 +388,7 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
                   ))}
                 </div>
 
-                {/* Notes section for pending decisions (no tabs) */}
+                {/* Notes section for pending decisions */}
                 <div className="mt-4 border-t border-slate-600 pt-4" data-testid={`decision-notes-${id}`}>
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-300 uppercase">Research &amp; Notes</span>

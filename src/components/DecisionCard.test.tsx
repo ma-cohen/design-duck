@@ -91,17 +91,27 @@ describe("DecisionCard", () => {
     expect(html).not.toContain("decision-chosen-reason-dec-001");
   });
 
-  test("chosen decision renders both chosen and alternative options without tabs", () => {
+  test("chosen decision shows only chosen option on default tab", () => {
     const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
-    // Both chosen and alternative option cards are visible
+    // Chosen option is visible on the default "chosen" tab
     expect(html).toContain("option-card-opt-a");
-    expect(html).toContain("option-card-opt-b");
-    // Alternatives section is rendered
-    expect(html).toContain("decision-alternatives-dec-001");
+    // Alternative is hidden (in the alternatives tab, not rendered)
+    expect(html).not.toContain("option-card-opt-b");
   });
 
-  test("no option-tabs rendered for chosen decisions", () => {
+  test("chosen decision renders tabs for chosen, alternatives, and notes", () => {
     const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
-    expect(html).not.toContain("option-tabs-dec-001");
+    expect(html).toContain("tab-chosen-dec-001");
+    expect(html).toContain("tab-alternatives-dec-001");
+    expect(html).toContain("tab-notes-dec-001");
+  });
+
+  test("pending decision shows all options flat without tabs", () => {
+    const pending: Decision = { ...DECISION, chosen: null, chosenReason: null };
+    const html = renderToString(<DecisionCard decision={pending} defaultExpanded />);
+    expect(html).toContain("option-card-opt-a");
+    expect(html).toContain("option-card-opt-b");
+    expect(html).not.toContain("tab-chosen-");
+    expect(html).not.toContain("tab-alternatives-");
   });
 });
