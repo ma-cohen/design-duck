@@ -1,8 +1,6 @@
 /**
  * Renders a project's requirements with its vision alignment statement,
- * and optionally its design decisions. Supports two views:
- *   - Results: clean read-only summary of chosen outcomes
- *   - Brainstorm: full editable view with all options, pros/cons, and actions
+ * and optionally its design decisions in a single unified editable view.
  */
 
 import { useState } from "react";
@@ -16,10 +14,7 @@ import { useRequirementsStore } from "../stores/requirements-store";
 import { RequirementCard } from "./RequirementCard";
 import { ContextSection } from "./ContextSection";
 import { DesignSection } from "./DesignSection";
-import { ResultsView } from "./ResultsView";
 import { EditModal, type FieldDefinition } from "./EditModal";
-
-type ViewMode = "results" | "brainstorm";
 
 export interface ProjectSectionProps {
   projectName: string;
@@ -39,7 +34,6 @@ export function ProjectSection({ projectName, project, projectContext, design, o
   const saveProjectRequirements = useRequirementsStore((s) => s.saveProjectRequirements);
   const saveProjectContext = useRequirementsStore((s) => s.saveProjectContext);
 
-  const [viewMode, setViewMode] = useState<ViewMode>("results");
   const [editingReq, setEditingReq] = useState<Requirement | null>(null);
   const [addingReq, setAddingReq] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -117,98 +111,56 @@ export function ProjectSection({ projectName, project, projectContext, design, o
           )}
         </div>
 
-        {/* Tab bar */}
-        <div className="mb-6 flex gap-1 rounded-lg bg-slate-600 p-1" data-testid="view-mode-tabs">
+        {/* Project Context */}
+        <ContextSection
+          contextDoc={projectContext ?? null}
+          onSave={(data) => saveProjectContext(projectName, data)}
+          title="Project Context"
+          description="Technical and system facts specific to this project that inform design decisions."
+          testIdPrefix={`project-context-${projectName}`}
+        />
+
+        {/* Requirements */}
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-base font-semibold text-slate-200">Requirements</h4>
           <button
             type="button"
-            onClick={() => setViewMode("results")}
-            className={`flex-1 rounded-md px-4 py-2.5 text-base font-medium transition-colors cursor-pointer ${
-              viewMode === "results"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-            }`}
-            data-testid="tab-results"
+            onClick={() => setAddingReq(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-500 bg-slate-600 px-3 py-2 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
+            data-testid={`add-requirement-${projectName}`}
           >
-            Results
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("brainstorm")}
-            className={`flex-1 rounded-md px-4 py-2.5 text-base font-medium transition-colors cursor-pointer ${
-              viewMode === "brainstorm"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-            }`}
-            data-testid="tab-brainstorm"
-          >
-            Brainstorm
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Requirement
           </button>
         </div>
 
-        {/* Results view */}
-        {viewMode === "results" && (
-          <ResultsView
-            project={project}
-            design={design ?? null}
-            onViewBrainstorm={() => setViewMode("brainstorm")}
-          />
+        {project.requirements.length === 0 ? (
+          <p
+            className="text-base text-slate-300"
+            data-testid={`empty-project-${projectName}`}
+          >
+            No requirements yet.
+          </p>
+        ) : (
+          <div className="grid gap-4" data-testid={`requirements-list-${projectName}`}>
+            {project.requirements.map((req) => (
+              <RequirementCard
+                key={req.id}
+                requirement={req}
+                onEdit={(r) => setEditingReq(r)}
+                onDelete={(id) => setConfirmDelete(id)}
+              />
+            ))}
+          </div>
         )}
 
-        {/* Brainstorm view */}
-        {viewMode === "brainstorm" && (
-          <>
-            {/* Project Context */}
-            <ContextSection
-              contextDoc={projectContext ?? null}
-              onSave={(data) => saveProjectContext(projectName, data)}
-              title="Project Context"
-              description="Technical and system facts specific to this project that inform design decisions."
-              testIdPrefix={`project-context-${projectName}`}
-            />
-
-            {/* Requirements */}
-            <div className="mb-4 flex items-center justify-between">
-              <h4 className="text-base font-semibold text-slate-200">Requirements</h4>
-              <button
-                type="button"
-                onClick={() => setAddingReq(true)}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-500 bg-slate-600 px-3 py-2 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 transition-colors cursor-pointer"
-                data-testid={`add-requirement-${projectName}`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Requirement
-              </button>
-            </div>
-
-            {project.requirements.length === 0 ? (
-              <p
-                className="text-base text-slate-300"
-                data-testid={`empty-project-${projectName}`}
-              >
-                No requirements yet.
-              </p>
-            ) : (
-              <div className="grid gap-4" data-testid={`requirements-list-${projectName}`}>
-                {project.requirements.map((req) => (
-                  <RequirementCard
-                    key={req.id}
-                    requirement={req}
-                    onEdit={(r) => setEditingReq(r)}
-                    onDelete={(id) => setConfirmDelete(id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Design */}
-            {design && (
-              <div className="mt-5 border-t border-slate-600 pt-5">
-                <DesignSection design={design} projectName={projectName} />
-              </div>
-            )}
-          </>
+        {/* Design */}
+        {design && (
+          <div className="mt-5 border-t border-slate-600 pt-5">
+            <DesignSection design={design} projectName={projectName} />
+          </div>
         )}
 
       </section>

@@ -90,4 +90,18 @@ describe("DecisionCard", () => {
     const html = renderToString(<DecisionCard decision={dec} defaultExpanded />);
     expect(html).not.toContain("decision-chosen-reason-dec-001");
   });
+
+  test("chosen decision renders both chosen and alternative options without tabs", () => {
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
+    // Both chosen and alternative option cards are visible
+    expect(html).toContain("option-card-opt-a");
+    expect(html).toContain("option-card-opt-b");
+    // Alternatives section is rendered
+    expect(html).toContain("decision-alternatives-dec-001");
+  });
+
+  test("no option-tabs rendered for chosen decisions", () => {
+    const html = renderToString(<DecisionCard decision={DECISION} defaultExpanded />);
+    expect(html).not.toContain("option-tabs-dec-001");
+  });
 });

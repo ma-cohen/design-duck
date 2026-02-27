@@ -1,7 +1,7 @@
 /**
  * Renders a single design decision with its options, linked requirements, and chosen status.
  * Collapsed by default showing only the topic and chosen option name.
- * Expandable to show tabbed view: Chosen | Alternatives | Notes.
+ * Expandable to show chosen option, alternatives, and notes in a single flat view.
  */
 
 import { useState } from "react";
@@ -50,7 +50,6 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
   const [confirmDeleteOption, setConfirmDeleteOption] = useState<string | null>(null);
   const [choosingOptionId, setChoosingOptionId] = useState<string | null>(null);
   const [chooseReason, setChooseReason] = useState("");
-  const [optionTab, setOptionTab] = useState<"chosen" | "alternatives" | "notes">("chosen");
   const [editingNotes, setEditingNotes] = useState(false);
 
   // Split options into chosen and alternatives
@@ -262,78 +261,40 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
               )}
             </div>
 
-            {/* Tab bar — shown when a decision has been made (Chosen/Alternatives/Notes) */}
-            {hasChosen && (
-              <div className="mb-3 flex gap-1 rounded-lg bg-slate-600 p-1" data-testid={`option-tabs-${id}`}>
-                <button
-                  type="button"
-                  onClick={() => setOptionTab("chosen")}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-                    optionTab === "chosen"
-                      ? "bg-green-600 text-white shadow-sm"
-                      : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-                  }`}
-                  data-testid={`tab-chosen-${id}`}
-                >
-                  Chosen
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOptionTab("alternatives")}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-                    optionTab === "alternatives"
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-                  }`}
-                  data-testid={`tab-alternatives-${id}`}
-                >
-                  Alternatives{alternativeOptions.length > 0 ? ` (${alternativeOptions.length})` : ""}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOptionTab("notes")}
-                  className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
-                    optionTab === "notes"
-                      ? "bg-amber-600 text-white shadow-sm"
-                      : "text-slate-300 hover:text-slate-100 hover:bg-slate-500"
-                  }`}
-                  data-testid={`tab-notes-${id}`}
-                >
-                  Notes
-                </button>
-              </div>
-            )}
-
-            {/* Tab content */}
+            {/* Content — flat layout for both chosen and pending decisions */}
             {hasChosen ? (
               <>
-                {optionTab === "chosen" && chosenOption && (
-                  <div className="grid gap-3" data-testid={`decision-options-${id}`}>
-                    <OptionCard
-                      key={chosenOption.id}
-                      option={chosenOption}
-                      isChosen
-                      onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
-                      onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
-                      onChoose={onChooseOption ? handleChooseRequest : undefined}
-                    />
-                    {chosenReason && (
-                      <div
-                        className="rounded-md bg-green-900/30 px-5 py-4"
-                        data-testid={`decision-chosen-reason-${id}`}
-                      >
-                        <p className="text-base text-green-200">
-                          <span className="font-medium">Reason: </span>
-                          {chosenReason}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {optionTab === "alternatives" && (
-                  <div className="grid gap-3" data-testid={`decision-alternatives-${id}`}>
-                    {alternativeOptions.length > 0 ? (
-                      alternativeOptions.map((opt) => (
+                {/* Chosen option */}
+                <div className="grid gap-3" data-testid={`decision-options-${id}`}>
+                  <OptionCard
+                    key={chosenOption!.id}
+                    option={chosenOption!}
+                    isChosen
+                    onEdit={onSaveOptions ? (o) => setEditingOption(o) : undefined}
+                    onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
+                    onChoose={onChooseOption ? handleChooseRequest : undefined}
+                  />
+                  {chosenReason && (
+                    <div
+                      className="rounded-md bg-green-900/30 px-5 py-4"
+                      data-testid={`decision-chosen-reason-${id}`}
+                    >
+                      <p className="text-base text-green-200">
+                        <span className="font-medium">Reason: </span>
+                        {chosenReason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Alternatives */}
+                <div className="mt-4 border-t border-slate-600 pt-4" data-testid={`decision-alternatives-${id}`}>
+                  <span className="mb-3 block text-sm font-medium text-slate-300 uppercase">
+                    Alternatives{alternativeOptions.length > 0 ? ` (${alternativeOptions.length})` : ""}
+                  </span>
+                  {alternativeOptions.length > 0 ? (
+                    <div className="grid gap-3">
+                      {alternativeOptions.map((opt) => (
                         <OptionCard
                           key={opt.id}
                           option={opt}
@@ -342,42 +303,43 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
                           onDelete={onSaveOptions ? (optId) => setConfirmDeleteOption(optId) : undefined}
                           onChoose={onChooseOption ? handleChooseRequest : undefined}
                         />
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-400 italic">No alternative options.</p>
-                    )}
-                  </div>
-                )}
-                {optionTab === "notes" && (
-                  <div data-testid={`decision-notes-${id}`}>
-                    <div className="mb-3 flex items-center justify-end">
-                      {onSaveNotes && (
-                        <button
-                          type="button"
-                          onClick={() => setEditingNotes(true)}
-                          className="inline-flex items-center gap-1.5 rounded border border-slate-500 bg-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-500 transition-colors cursor-pointer"
-                          data-testid={`edit-notes-${id}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                          {notes ? "Edit Notes" : "Add Notes"}
-                        </button>
-                      )}
+                      ))}
                     </div>
-                    {notes ? (
-                      <div className="rounded-lg border border-amber-600/40 bg-amber-900/30 px-5 py-4">
-                        <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-100">
-                          {notes}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400 italic">
-                        No notes yet. Add research, links, or analysis for this decision.
-                      </p>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">No alternative options.</p>
+                  )}
+                </div>
+
+                {/* Notes */}
+                <div className="mt-4 border-t border-slate-600 pt-4" data-testid={`decision-notes-${id}`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-300 uppercase">Research &amp; Notes</span>
+                    {onSaveNotes && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingNotes(true)}
+                        className="inline-flex items-center gap-1.5 rounded border border-slate-500 bg-slate-600 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-500 transition-colors cursor-pointer"
+                        data-testid={`edit-notes-${id}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        {notes ? "Edit Notes" : "Add Notes"}
+                      </button>
                     )}
                   </div>
-                )}
+                  {notes ? (
+                    <div className="rounded-lg border border-amber-600/40 bg-amber-900/30 px-5 py-4">
+                      <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-100">
+                        {notes}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">
+                      No notes yet. Add research, links, or analysis for this decision.
+                    </p>
+                  )}
+                </div>
               </>
             ) : (
               /* Pending decisions: show flat options list + notes section below */
