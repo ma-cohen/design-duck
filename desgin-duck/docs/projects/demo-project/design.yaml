@@ -1,0 +1,53 @@
+decisions:
+  - id: dec-001
+    topic: UI Layout Strategy
+    context: We need to decide between tabbed views and a single unified view for displaying design data
+    category: technology
+    requirementRefs:
+      - REQ-001
+      - REQ-002
+    options:
+      - id: opt-tabs
+        title: Tabbed View
+        description: Separate Results and Brainstorm into tabs
+        pros:
+          - Clean separation of concerns
+        cons:
+          - Users must switch tabs to see all data
+          - Redundant display of same data
+      - id: opt-unified
+        title: Unified View
+        description: Show all data in a single scrollable view
+        pros:
+          - Everything visible at once
+          - No redundant views
+        cons:
+          - Longer page
+    chosen: opt-unified
+    chosenReason: Reduces cognitive overhead — users see everything without navigating
+    notes: This was validated by user feedback showing tab switching was confusing
+  - id: dec-002
+    topic: State Management
+    context: Need to decide how to manage UI state for the design dashboard
+    category: architecture
+    requirementRefs:
+      - REQ-001
+    options:
+      - id: opt-zustand
+        title: Zustand
+        description: Lightweight state management
+        pros:
+          - Simple API
+          - Small bundle
+        cons:
+          - Less ecosystem
+      - id: opt-redux
+        title: Redux
+        description: Full-featured state management
+        pros:
+          - Large ecosystem
+        cons:
+          - Boilerplate heavy
+    chosen: opt-zustand
+    chosenReason: null
+    notes: null

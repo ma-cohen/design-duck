@@ -1,0 +1,5 @@
+# Vision, mission, and core problem
+productName: "Design Duck Demo"
+vision: "Make design decisions visible and traceable"
+mission: "Help teams capture and share architectural decisions"
+problem: "Design decisions are scattered across Slack, docs, and people's heads"

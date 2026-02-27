@@ -1,0 +1,9 @@
+visionAlignment: "Enable teams to capture design decisions close to the code"
+
+requirements:
+  - id: REQ-001
+    description: "Users can view all design decisions in a single unified view"
+    userValue: "No more switching between tabs to see results vs brainstorm"
+  - id: REQ-002
+    description: "Chosen decisions show alternatives inline"
+    userValue: "Easy to compare the chosen option against what was considered"
