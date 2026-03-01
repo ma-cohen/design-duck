@@ -55,6 +55,13 @@ export function App() {
   ]);
 
   useEffect(() => {
+    const productName = vision?.productName;
+    document.title = productName
+      ? `${productName} - Design Duck`
+      : "Design Duck";
+  }, [vision?.productName]);
+
+  useEffect(() => {
     console.log("[design-duck:ui] App mounted, loading requirements");
     loadFromFiles();
     startWatching();
