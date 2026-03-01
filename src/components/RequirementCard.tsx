@@ -28,14 +28,14 @@ export function RequirementCard({ requirement, onEdit, onDelete }: RequirementCa
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between px-5 py-3.5 text-left cursor-pointer hover:bg-slate-600/60 rounded-lg transition-colors"
+        className="flex w-full items-start justify-between px-5 py-3.5 text-left cursor-pointer hover:bg-slate-600/60 rounded-lg transition-colors"
         data-testid={`requirement-toggle-${id}`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="shrink-0 text-sm font-medium tracking-wide text-slate-400 uppercase">
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="shrink-0 mt-0.5 text-sm font-medium tracking-wide text-slate-400 uppercase">
             {id}
           </span>
-          <h3 className="text-base font-semibold text-slate-50 truncate">{description}</h3>
+          <h3 className="text-base font-semibold text-slate-50">{description}</h3>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-3">
           {(onEdit || onDelete) && (
