@@ -31,38 +31,24 @@ describe("validateVision", () => {
     });
   });
 
-  test("rejects missing or empty vision field", () => {
+  test("accepts empty vision field", () => {
     const v = { vision: "", mission: "m", problem: "p" };
-    const out = validateVision(v);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("vision")]),
-    );
+    expect(validateVision(v)).toEqual({ valid: true });
   });
 
-  test("rejects missing or empty mission field", () => {
+  test("accepts empty mission field", () => {
     const v = { vision: "v", mission: "", problem: "p" };
-    const out = validateVision(v);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("mission")]),
-    );
+    expect(validateVision(v)).toEqual({ valid: true });
   });
 
-  test("rejects missing or empty problem field", () => {
+  test("accepts empty problem field", () => {
     const v = { vision: "v", mission: "m", problem: "" };
-    const out = validateVision(v);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toEqual(
-      expect.arrayContaining([expect.stringContaining("problem")]),
-    );
+    expect(validateVision(v)).toEqual({ valid: true });
   });
 
-  test("rejects all fields empty", () => {
+  test("accepts all fields empty (brainstorm-only)", () => {
     const v = { vision: "", mission: "", problem: "" };
-    const out = validateVision(v);
-    expect(out.valid).toBe(false);
-    expect((out as { errors: string[] }).errors).toHaveLength(3);
+    expect(validateVision(v)).toEqual({ valid: true });
   });
 });
 
@@ -127,8 +113,12 @@ describe("assertVision", () => {
     expect(() => assertVision(v)).not.toThrow();
   });
 
-  test("throws for invalid vision", () => {
-    expect(() => assertVision({ vision: "" })).toThrow(
+  test("does not throw for empty vision (brainstorm-only)", () => {
+    expect(() => assertVision({ vision: "", mission: "", problem: "" })).not.toThrow();
+  });
+
+  test("throws for non-object", () => {
+    expect(() => assertVision(null)).toThrow(
       /Invalid vision/,
     );
   });

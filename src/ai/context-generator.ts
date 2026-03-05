@@ -149,12 +149,7 @@ export function generateVisionContext(docsDir: string): string {
  * Phase 2: Projects — suggest how to split the vision into projects.
  */
 export function generateProjectsContext(docsDir: string): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first to define your vision.",
-    );
-  }
+  const rawVision = readRawVision(docsDir) ?? "";
 
   const existing = listProjects(docsDir);
   const rawRootContext = readRawRootContext(docsDir);
@@ -168,12 +163,7 @@ export function generateRequirementsContext(
   docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
+  const rawVision = readRawVision(docsDir) ?? "";
 
   const rawReqs = readRawProjectRequirements(docsDir, projectName);
   const rawRootContext = readRawRootContext(docsDir);
@@ -187,12 +177,7 @@ export function generateDesignContext(
   docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
+  const rawVision = readRawVision(docsDir) ?? "";
 
   const rawReqs = readRawProjectRequirements(docsDir, projectName);
   if (!rawReqs) {
@@ -224,12 +209,7 @@ export function generateChooseContext(
   docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
+  const rawVision = readRawVision(docsDir) ?? "";
 
   const rawReqs = readRawProjectRequirements(docsDir, projectName);
   if (!rawReqs) {
@@ -257,12 +237,7 @@ export function generatePropagateContext(
   docsDir: string,
   projectName: string,
 ): string {
-  const rawVision = readRawVision(docsDir);
-  if (!rawVision) {
-    throw new Error(
-      "vision.yaml not found. Run 'design-duck context vision' first.",
-    );
-  }
+  const rawVision = readRawVision(docsDir) ?? "";
 
   const rawDesign = readRawProjectDesign(docsDir, projectName);
   if (!rawDesign) {

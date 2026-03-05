@@ -7,7 +7,7 @@
  * Requirements are user-value focused only — no technical/derived requirements.
  */
 
-/** Vision, mission, and core problem statement (vision.yaml). */
+/** Vision, mission, and core problem statement (vision.yaml). All fields are optional to support brainstorm-only projects. */
 export interface Vision {
   /** Optional product/app name displayed in the UI header. */
   productName?: string;
@@ -62,24 +62,12 @@ function nonEmptyString(value: unknown, field: string): string | null {
 }
 
 /**
- * Validates a vision document.
+ * Validates a vision document. All fields are optional (empty strings allowed)
+ * to support brainstorm-only projects.
  */
 export function validateVision(raw: unknown): ValidationResult {
   if (raw === null || typeof raw !== "object") {
     return { valid: false, errors: ["Vision must be an object"] };
-  }
-  const o = raw as Record<string, unknown>;
-  const errors: string[] = [];
-
-  const vErr = nonEmptyString(o.vision, "vision");
-  if (vErr) errors.push(vErr);
-  const mErr = nonEmptyString(o.mission, "mission");
-  if (mErr) errors.push(mErr);
-  const pErr = nonEmptyString(o.problem, "problem");
-  if (pErr) errors.push(pErr);
-
-  if (errors.length > 0) {
-    return { valid: false, errors };
   }
   return { valid: true };
 }

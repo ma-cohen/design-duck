@@ -90,8 +90,10 @@ describe("context-generator", () => {
   // -----------------------------------------------------------------------
 
   describe("generateProjectsContext", () => {
-    test("throws when vision.yaml is missing", () => {
-      expect(() => generateProjectsContext(docsDir)).toThrow("vision.yaml not found");
+    test("generates prompt even without vision.yaml", () => {
+      const output = generateProjectsContext(docsDir);
+      expect(output).toContain("# Project Breakdown");
+      expect(output).toContain("No projects exist yet");
     });
 
     test("generates prompt with no existing projects", () => {
@@ -116,10 +118,11 @@ describe("context-generator", () => {
   // -----------------------------------------------------------------------
 
   describe("generateRequirementsContext", () => {
-    test("throws when vision.yaml is missing", () => {
-      expect(() => generateRequirementsContext(docsDir, "test")).toThrow(
-        "vision.yaml not found",
-      );
+    test("generates prompt even without vision.yaml", () => {
+      const projDir = join(docsDir, "projects", "new-proj");
+      mkdirSync(projDir, { recursive: true });
+      const output = generateRequirementsContext(docsDir, "new-proj");
+      expect(output).toContain("# Requirements Gathering: new-proj");
     });
 
     test("generates prompt for new project (no requirements yet)", () => {
@@ -145,12 +148,6 @@ describe("context-generator", () => {
   // -----------------------------------------------------------------------
 
   describe("generateDesignContext", () => {
-    test("throws when vision.yaml is missing", () => {
-      expect(() => generateDesignContext(docsDir, "test")).toThrow(
-        "vision.yaml not found",
-      );
-    });
-
     test("throws when project requirements are missing", () => {
       writeVision();
       expect(() => generateDesignContext(docsDir, "no-proj")).toThrow(

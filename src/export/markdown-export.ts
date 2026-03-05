@@ -28,11 +28,20 @@ export interface DesignDocSnapshot {
 
 function renderVision(vision: Vision): string {
   const lines: string[] = [];
-  lines.push(`**Vision:** ${vision.vision}`);
-  lines.push("");
-  lines.push(`**Mission:** ${vision.mission}`);
-  lines.push("");
-  lines.push(`**Core Problem:** ${vision.problem}`);
+  if (vision.vision) {
+    lines.push(`**Vision:** ${vision.vision}`);
+    lines.push("");
+  }
+  if (vision.mission) {
+    lines.push(`**Mission:** ${vision.mission}`);
+    lines.push("");
+  }
+  if (vision.problem) {
+    lines.push(`**Core Problem:** ${vision.problem}`);
+  }
+  if (lines.length === 0) {
+    lines.push("*No vision defined yet.*");
+  }
   return lines.join("\n");
 }
 

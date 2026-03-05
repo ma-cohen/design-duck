@@ -117,11 +117,6 @@ export function validate(targetDir: string = process.cwd()): void {
     let requirementIds: string[] = [];
     try {
       const projectReqs = readProjectRequirements(docsDir, projectName);
-      // Parser is lenient — run strict checks explicitly
-      if (!projectReqs.visionAlignment || projectReqs.visionAlignment.trim() === "") {
-        hasErrors = true;
-        console.error(`✗ ${projectName}/requirements.yaml: visionAlignment must be a non-empty string`);
-      }
       totalRequirements += projectReqs.requirements.length;
       requirementIds = projectReqs.requirements.map((r) => r.id);
       console.log(

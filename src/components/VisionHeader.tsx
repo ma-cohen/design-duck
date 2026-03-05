@@ -83,32 +83,44 @@ export function VisionHeader({ vision, defaultExpanded = false }: VisionHeaderPr
         {expanded && (
           <div className="border-t border-indigo-600/30 px-8 pb-8 pt-5">
             <div className="space-y-5">
-              <div data-testid="vision-field">
-                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-                  Vision
-                </span>
-                <p className="mt-1 text-base leading-relaxed text-slate-100">
-                  {vision.vision}
-                </p>
-              </div>
+              {vision.vision ? (
+                <div data-testid="vision-field">
+                  <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                    Vision
+                  </span>
+                  <p className="mt-1 text-base leading-relaxed text-slate-100">
+                    {vision.vision}
+                  </p>
+                </div>
+              ) : null}
 
-              <div data-testid="mission-field">
-                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-                  Mission
-                </span>
-                <p className="mt-1 text-base leading-relaxed text-slate-100">
-                  {vision.mission}
-                </p>
-              </div>
+              {vision.mission ? (
+                <div data-testid="mission-field">
+                  <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                    Mission
+                  </span>
+                  <p className="mt-1 text-base leading-relaxed text-slate-100">
+                    {vision.mission}
+                  </p>
+                </div>
+              ) : null}
 
-              <div data-testid="problem-field">
-                <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
-                  Core Problem
-                </span>
-                <p className="mt-1 text-base leading-relaxed text-slate-100">
-                  {vision.problem}
+              {vision.problem ? (
+                <div data-testid="problem-field">
+                  <span className="text-sm font-semibold tracking-wide text-indigo-300 uppercase">
+                    Core Problem
+                  </span>
+                  <p className="mt-1 text-base leading-relaxed text-slate-100">
+                    {vision.problem}
+                  </p>
+                </div>
+              ) : null}
+
+              {!vision.vision && !vision.mission && !vision.problem && (
+                <p className="text-sm text-slate-400 italic">
+                  No vision defined yet. Click Edit to add one.
                 </p>
-              </div>
+              )}
             </div>
           </div>
         )}

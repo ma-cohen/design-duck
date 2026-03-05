@@ -61,18 +61,18 @@ requirements:
     expect(process.exitCode).toBe(1);
   });
 
-  test("exits with code 1 when vision.yaml has invalid content", () => {
-    writeFileSync(join(docsDir, "vision.yaml"), 'vision: ""\nmission: "m"\nproblem: "p"', "utf-8");
+  test("passes when vision.yaml has empty fields (brainstorm-only)", () => {
+    writeFileSync(join(docsDir, "vision.yaml"), 'vision: ""\nmission: ""\nproblem: ""', "utf-8");
     writeFileSync(
       join(docsDir, "projects", "test-project", "requirements.yaml"),
       'visionAlignment: "a"\nrequirements: []',
       "utf-8",
     );
     validate(testDir);
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 
-  test("exits with code 1 when project has empty visionAlignment", () => {
+  test("passes when project has empty visionAlignment", () => {
     writeFileSync(join(docsDir, "vision.yaml"), 'vision: "v"\nmission: "m"\nproblem: "p"', "utf-8");
     writeFileSync(
       join(docsDir, "projects", "test-project", "requirements.yaml"),
@@ -80,7 +80,7 @@ requirements:
       "utf-8",
     );
     validate(testDir);
-    expect(process.exitCode).toBe(1);
+    expect(process.exitCode).toBe(0);
   });
 
   test("exits with code 1 when project has invalid requirement", () => {
