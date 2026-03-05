@@ -165,7 +165,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
   loadFromFiles: async (docsPath = "/docs", projectsApiUrl = "/api/projects") => {
     console.log("[design-duck:store] Loading requirements...");
-    set({ loading: true, error: null });
+    const isInitialLoad = get().vision === null && Object.keys(get().projects).length === 0;
+    if (isInitialLoad) {
+      set({ loading: true, error: null });
+    }
 
     try {
       // Fetch vision
@@ -332,7 +335,9 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       console.error(
         `[design-duck:store] Failed to load requirements: ${message}`,
       );
-      set({ loading: false, error: message });
+      if (isInitialLoad) {
+        set({ loading: false, error: message });
+      }
     }
   },
 

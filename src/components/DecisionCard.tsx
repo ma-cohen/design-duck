@@ -4,7 +4,7 @@
  * Expandable to show chosen option, alternatives, and notes in a single flat view.
  */
 
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import type { Decision, DecisionCategory, DesignOption } from "../domain/requirements/requirement";
 import { OptionCard } from "./OptionCard";
 import { EditModal, type FieldDefinition } from "./EditModal";
@@ -53,10 +53,23 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
   const [editingNotes, setEditingNotes] = useState(false);
   const [activeTab, setActiveTab] = useState<"chosen" | "alternatives" | "notes">("chosen");
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const prevChosenRef = useRef(chosen);
+
   // Split options into chosen and alternatives
   const chosenOption = chosen ? options.find((o) => o.id === chosen) ?? null : null;
   const alternativeOptions = chosen ? options.filter((o) => o.id !== chosen) : options;
   const hasChosen = chosenOption !== null;
+
+  useLayoutEffect(() => {
+    if (prevChosenRef.current !== chosen && cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      if (rect.top < 0) {
+        cardRef.current.scrollIntoView({ block: "nearest" });
+      }
+    }
+    prevChosenRef.current = chosen;
+  }, [chosen]);
 
   console.debug(`[design-duck:ui] Rendering DecisionCard: ${id}`);
 
@@ -114,6 +127,7 @@ export function DecisionCard({ decision, defaultExpanded = false, onEdit, onDele
   return (
     <>
       <div
+        ref={cardRef}
         className="rounded-lg border border-slate-600 bg-slate-700 shadow-sm"
         data-testid={`decision-card-${id}`}
       >
