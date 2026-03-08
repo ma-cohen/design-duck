@@ -15,7 +15,7 @@ decisions:
     options:
       - id: OPT-REACT
         title: "React with Vite"
-        description: "Use React 18 with Vite for fast HMR and a mature ecosystem of drag-and-drop and virtualization libraries."
+        description: "Use React 19 with Vite for fast HMR and a mature ecosystem of drag-and-drop and virtualization libraries."
         pros:
           - "Team is already proficient in React"
           - "Huge ecosystem for task board components"
@@ -149,6 +149,8 @@ decisions:
     requirementRefs:
       - REQ-002
       - REQ-005
+    contextRefs:
+      - P1-CTX-003
     options:
       - id: OPT-DND-KIT
         title: "@dnd-kit"

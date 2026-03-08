@@ -1,0 +1,14 @@
+visionAlignment: "Notifications keep teams in sync — surfacing task changes, mentions, and deadlines so nothing falls through the cracks"
+requirements:
+  - id: NOTIF-001
+    description: "Users receive in-app notifications when they are assigned a task or mentioned in a comment"
+    userValue: "Team members never miss work directed at them"
+  - id: NOTIF-002
+    description: "Users can configure notification preferences (in-app, email, or both)"
+    userValue: "Each person controls how they stay informed without being overwhelmed"
+  - id: NOTIF-003
+    description: "Users see a notification bell with unread count that updates in real time"
+    userValue: "Instant awareness of new activity without refreshing the page"
+  - id: NOTIF-004
+    description: "Users receive a daily digest email summarizing tasks due today and overdue items"
+    userValue: "Teams start each day knowing exactly what needs attention"

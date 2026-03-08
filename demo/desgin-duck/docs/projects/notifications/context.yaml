@@ -1,0 +1,5 @@
+contexts:
+  - id: N-CTX-001
+    description: "Notifications should work without requiring users to keep the app open — email fallback is essential"
+  - id: N-CTX-002
+    description: "We expect low notification volume initially (small teams), but the system should handle bursts when many tasks are updated at once"

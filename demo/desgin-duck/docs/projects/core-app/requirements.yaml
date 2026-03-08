@@ -15,3 +15,6 @@ requirements:
   - id: REQ-005
     description: "The app loads and responds in under 200ms for all common actions"
     userValue: "The tool feels instant and never slows the team down"
+  - id: REQ-006
+    description: "Users can add labels and priorities to tasks"
+    userValue: "Teams can triage and categorize work at a glance"
