@@ -1,38 +1,46 @@
 # Design Duck Demo
 
-This directory contains a pre-populated demo project for Design Duck.
-It showcases a fictional **TaskFlow** product with a complete set of
-vision, context, requirements, design decisions, and a playground.
+Pre-populated demo data for Design Duck.
 
-## Running the demo
+This demo uses a fictional product called **TaskFlow** and includes realistic
+examples across `vision.yaml`, `context.yaml`, project requirements/design, and
+a playground flow.
+
+## Run the demo
 
 From the repository root:
 
 ```bash
-# Build the project (if not already built)
 npm run build
-
-# Start the UI server against the demo data
 cd demo && node ../dist/cli.js ui
 ```
 
-The UI opens in your browser at `http://localhost:3456`.
+The UI opens automatically in your browser. The server starts from port `3456`
+and picks the next available port if needed.
 
-## What's included
+## Demo contents
 
-- **Vision** — TaskFlow product vision, mission, and core problem
-- **Context** — 5 organizational and environmental facts
-- **Global Design** — 4 cross-cutting decisions (language, monorepo, testing, auth — all chosen)
-- **Core App project** with:
-  - 3 project context items
-  - 6 requirements (CRUD, boards, assignments, search, performance, labels)
-  - 6 design decisions (3 chosen, 3 pending)
-- **Notifications project** with:
-  - 2 project context items
-  - 4 requirements (real-time, preferences, bell, digest)
-  - 3 design decisions (1 chosen, 2 pending)
-- **AI Task Assistant playground** with:
-  - Problem statement exploring AI-powered task enhancement
-  - 3 context items
-  - 3 requirements
-  - 2 design decisions (1 chosen, 1 pending)
+- **Vision**: product name, vision, mission, and core problem
+- **Root context**: organizational and environmental constraints
+- **Global design**: cross-project decisions that projects can reference via `globalDecisionRefs`
+- **Project: core-app**:
+  - project context
+  - user-value requirements
+  - categorized design decisions with chosen and pending options
+- **Project: notifications**:
+  - project context
+  - user-value requirements
+  - design decisions linked to requirements
+- **Playground: ai-task-assistant**:
+  - `problemStatement` and requirements
+  - playground context
+  - isolated design exploration (separate from project decisions)
+
+## Files to inspect
+
+- `demo/desgin-duck/docs/vision.yaml`
+- `demo/desgin-duck/docs/context.yaml`
+- `demo/desgin-duck/docs/design.yaml`
+- `demo/desgin-duck/docs/projects/core-app/`
+- `demo/desgin-duck/docs/projects/notifications/`
+- `demo/desgin-duck/docs/playgrounds/ai-task-assistant/`

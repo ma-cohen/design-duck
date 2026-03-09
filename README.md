@@ -2,16 +2,17 @@
 
 Vision-driven requirements and design management for human-agent collaboration.
 
-Design Duck gives your AI coding agent the context it needs at every step — from
-defining a vision, through requirements and design, all the way to implementation
-planning. You stay in control of the decisions; the agent does the heavy lifting.
+Design Duck gives your AI coding agent structured context at each step:
+vision, projects, requirements, and design decisions. You stay in control of
+the decisions; the agent does the drafting work.
 
-All state lives in plain YAML files. A live UI updates instantly when files change.
+All state lives in plain YAML files under `desgin-duck/docs/`. A live UI updates
+instantly when those files change.
 
 ## Getting Started
 
-Design Duck works in **any project**, regardless of technology (Python, Java,
-Go, Rust, Node.js, etc.). The only prerequisite is [Node.js](https://nodejs.org) (v18+).
+Design Duck works in any codebase (Node.js, Python, Go, Rust, Java, and more).
+Only [Node.js](https://nodejs.org) v18+ is required.
 
 ### 1. Initialize
 
@@ -19,258 +20,202 @@ Go, Rust, Node.js, etc.). The only prerequisite is [Node.js](https://nodejs.org)
 npx github:ma-cohen/desgin-duck#main init
 ```
 
-This creates a `desgin-duck/` directory in your project with YAML templates,
-an AI agent guide, and everything needed to run locally.
+This scaffolds a local `desgin-duck/` folder with templates, command shortcuts,
+and an agent guide.
 
-### 2. Install (one-time)
+### 2. Install once
 
 ```bash
 cd desgin-duck && npm install && cd ..
 ```
 
-This installs Design Duck locally inside the `desgin-duck/` folder. After this,
-all commands are fast and local — no network access needed.
-
-### 3. Work with Your AI Agent
-
-Design Duck follows a phased workflow. At each step, run a `context` command to
-generate a structured prompt, then feed it to your AI agent. The agent edits the
-YAML files, and the cycle continues.
-
-```
-You                        Design Duck                   Your AI Agent
-───                        ───────────                   ─────────────
-
-Run context command ────▶  Reads YAML state
-                           Generates prompt ───────────▶  Receives context
-                                                          Edits YAML files
-                           File watcher detects change ◀──────────┘
-                           UI updates instantly
-Review in UI ◀─────────────────────┘
-```
-
-#### Phase 1: Define the Vision
-
-```bash
-./desgin-duck/duck context vision
-```
-
-Give the output to your agent. It will fill in `vision.yaml` with a clear
-vision, mission, and problem statement.
-
-#### Phase 2: Split into Projects
-
-```bash
-./desgin-duck/duck context projects
-```
-
-The agent reads your vision and suggests how to break the work into projects,
-creating directories under `requirements/projects/`.
-
-#### Phase 3: Gather Requirements
-
-```bash
-./desgin-duck/duck context requirements <project>
-```
-
-For each project, the agent gets the vision context and produces user-value
-requirements — focused on what users need, not technical details.
-
-#### Phase 4: Brainstorm Design
-
-```bash
-./desgin-duck/duck context design <project>
-```
-
-The agent proposes design decisions with multiple options, pros, and cons.
-It also sees global design decisions and validations as constraints.
-All choices are left as `null` for you to decide.
-
-#### Phase 5: Choose Design
-
-```bash
-./desgin-duck/duck context choose <project>
-```
-
-The agent evaluates the options and recommends choices. Review and adjust
-as needed — you have the final say.
-
-#### Phase 6: Plan Implementation
-
-```bash
-./desgin-duck/duck context implementation <project>
-```
-
-The agent creates a phased plan with actionable todos, validation rules,
-and test specifications — all linked back to requirements.
-
-#### Global Validations (any time)
-
-```bash
-./desgin-duck/duck context validations
-```
-
-Define cross-cutting rules (linting, testing, security, etc.) that every
-project must respect. These are injected into design and implementation
-context automatically.
-
-### 4. Validate
-
-```bash
-./desgin-duck/duck validate
-```
-
-Checks all YAML files against the schema and verifies that `requirementRefs`
-and `globalDecisionRefs` point to valid IDs.
-
-### 5. View in UI
+### 3. Run the UI
 
 ```bash
 ./desgin-duck/duck ui
 ```
 
-Opens a browser showing your vision, projects, designs, and implementation
-plans. The server auto-selects an available port starting from 3456, so you
-can run multiple projects simultaneously.
+The dashboard opens in your browser and auto-reloads when YAML files change.
 
-**Live reload**: edit any YAML file and the UI updates automatically — no
-refresh needed.
+### 4. Work through context phases
 
-### Upgrading
+Run a context command, feed the output to your AI agent, let it edit YAML, and
+review results in the UI.
+
+```text
+You                        Design Duck                    Your AI Agent
+---                        -----------                    -------------
+Run context command -----> Reads YAML state
+                           Generates prompt ----------->  Receives context
+                                                          Edits YAML files
+                           File watcher detects change <-┘
+                           UI updates instantly
+Review in UI <------------┘
+```
+
+## Workflow Phases
+
+### Core phases
 
 ```bash
-cd desgin-duck && npm update && cd ..  # get latest CLI
-./desgin-duck/duck upgrade             # run migrations & regenerate AGENTS.md
+./desgin-duck/duck context vision
+./desgin-duck/duck context projects
+./desgin-duck/duck context requirements <project>
+./desgin-duck/duck context design <project>
+./desgin-duck/duck context choose <project>
+./desgin-duck/duck context propagate <project>
 ```
+
+- `vision`: define/refine `vision.yaml`
+- `projects`: split work into project folders
+- `requirements`: write user-value requirements for one project
+- `design`: brainstorm decision options
+- `choose`: select options and rationale
+- `propagate`: review chosen project decisions for promotion to global design
+
+### Playground phases (isolated problem-solving)
+
+```bash
+./desgin-duck/duck context playground
+./desgin-duck/duck context playground-requirements <playground>
+./desgin-duck/duck context playground-design <playground>
+./desgin-duck/duck context playground-choose <playground>
+```
+
+Use playgrounds for experiments that should not directly alter your main project
+design flow.
+
+### Validate
+
+```bash
+./desgin-duck/duck validate
+```
+
+Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
+`globalDecisionRefs`).
 
 ## CLI Commands
 
-All commands are run from your **project root** via the `duck` wrapper:
-
-| Command                       | Description                                          |
-| ----------------------------- | ---------------------------------------------------- |
-| `./desgin-duck/duck init`     | Scaffold `desgin-duck/` directory with AGENTS.md and YAML templates |
-| `./desgin-duck/duck context <phase> [p]` | Generate AI context prompt for a workflow phase |
-| `./desgin-duck/duck validate` | Validate all YAML files and cross-references         |
-| `./desgin-duck/duck ui`       | Start the live UI (auto-selects port from 3456)      |
-| `./desgin-duck/duck upgrade`  | Run migrations and regenerate AGENTS.md              |
-
-### Context Phases
-
-| Phase            | Command                            | Needs Project? |
-| ---------------- | ---------------------------------- | -------------- |
-| Vision           | `context vision`                   | No             |
-| Projects         | `context projects`                 | No             |
-| Requirements     | `context requirements <project>`   | Yes            |
-| Design           | `context design <project>`         | Yes            |
-| Choose           | `context choose <project>`         | Yes            |
-| Implementation   | `context implementation <project>` | Yes            |
-| Validations      | `context validations`              | No             |
+| Command | Description |
+| --- | --- |
+| `./desgin-duck/duck init` | Scaffold `desgin-duck/` with templates and command files |
+| `./desgin-duck/duck context <phase> [name]` | Generate AI context prompt for a phase |
+| `./desgin-duck/duck validate` | Validate YAML files and references |
+| `./desgin-duck/duck ui` | Start live UI (auto-selects an available port from 3456) |
+| `./desgin-duck/duck upgrade` | Reinstall latest package and run migrations |
+| `./desgin-duck/duck reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
 
 ## File Structure
 
-```
+```text
 desgin-duck/
-├── duck                                 # CLI wrapper (bash)
-├── duck.cmd                             # CLI wrapper (Windows)
-├── package.json                         # npm dependencies
-├── .gitignore                           # ignores node_modules/
-├── node_modules/                        # installed locally (gitignored)
-├── AGENTS.md                            # AI agent instructions
-└── requirements/
-    ├── vision.yaml                      # Vision, mission, core problem
-    ├── design.yaml                      # Global design decisions
-    ├── implementation.yaml              # Global validations
-    └── projects/
-        └── <project-name>/
-            ├── requirements.yaml        # Vision alignment + requirements
-            ├── design.yaml              # Design decisions & options
-            └── implementation.yaml      # Plan, todos, validations, tests
+├── duck
+├── duck.cmd
+├── AGENTS.md
+├── commands/
+│   ├── dd-vision.md
+│   ├── dd-projects.md
+│   ├── dd-requirements.md
+│   ├── dd-design.md
+│   ├── dd-choose.md
+│   ├── dd-propagate.md
+│   ├── dd-playground.md
+│   ├── dd-validate.md
+│   ├── dd-ui.md
+│   ├── dd-init.md
+│   ├── dd-upgrade.md
+│   └── dd-reset.md
+└── docs/
+    ├── vision.yaml
+    ├── context.yaml
+    ├── design.yaml
+    ├── projects/
+    │   └── <project-name>/
+    │       ├── requirements.yaml
+    │       ├── context.yaml
+    │       └── design.yaml
+    └── playgrounds/
+        └── <playground-name>/
+            ├── requirements.yaml
+            ├── context.yaml
+            └── design.yaml
 ```
 
 ## YAML Reference
 
-### Vision (`vision.yaml`)
+### `vision.yaml`
 
-| Field     | Required | Description                            |
-| --------- | -------- | -------------------------------------- |
-| `vision`  | Yes      | Future-state you want to create        |
-| `mission` | Yes      | What your product does to get there    |
-| `problem` | Yes      | The problem users face today           |
+- `productName` (optional string)
+- `vision` (string)
+- `mission` (string)
+- `problem` (string)
 
-### Requirement (`requirements.yaml`)
+### `context.yaml` (root or project/playground)
 
-| Field             | Required | Description                           |
-| ----------------- | -------- | ------------------------------------- |
-| `visionAlignment` | Yes      | How this project serves the vision    |
-| `requirements`    | Yes      | Array of requirements                 |
-| `requirements[].id`          | Yes | Unique ID (e.g. `AUTH-001`)    |
-| `requirements[].description` | Yes | What the user can do           |
-| `requirements[].userValue`   | Yes | Why it matters to the user     |
+- `contexts` (array)
+- `contexts[].id` (string, unique in file)
+- `contexts[].description` (string)
 
-### Decision (`design.yaml`)
+### `requirements.yaml` (project)
 
-| Field               | Required | Description                                       |
-| ------------------- | -------- | ------------------------------------------------- |
-| `notes`             | No       | Free-text research notes, links, constraints      |
-| `decisions`         | Yes      | Array of decisions                                |
-| `id`                | Yes      | Unique ID (e.g. `DEC-AUTH-001`)                   |
-| `topic`             | Yes      | What question this answers                        |
-| `context`           | Yes      | Background and constraints                        |
-| `requirementRefs`   | Yes      | Requirement IDs this addresses                    |
-| `globalDecisionRefs`| No       | Global decision IDs this builds on                |
-| `options`           | Yes      | Array of alternatives (at least one)              |
-| `chosen`            | No       | ID of the selected option (`null` while exploring)|
-| `chosenReason`      | No       | Why this option was picked                        |
+- `visionAlignment` (string)
+- `requirements` (array)
+- `requirements[].id` (string)
+- `requirements[].description` (string)
+- `requirements[].userValue` (string)
 
-Each option has: `id`, `title`, `description`, `pros` (array), `cons` (array).
+### `requirements.yaml` (playground)
 
-### Implementation (`implementation.yaml` per project)
+- `problemStatement` (string)
+- `requirements` (array)
+- `requirements[].id` (string)
+- `requirements[].description` (string)
+- `requirements[].userValue` (string)
 
-| Field         | Required | Description                                |
-| ------------- | -------- | ------------------------------------------ |
-| `plan`        | No       | Free-text phased implementation plan       |
-| `todos`       | Yes      | Tasks with `id`, `description`, `status` (pending/in-progress/done), `requirementRefs` |
-| `validations` | Yes      | Rules with `id`, `description`, `requirementRefs` |
-| `tests`       | Yes      | Specs with `id`, `description`, `type` (unit/integration/e2e), `requirementRefs` |
+### `design.yaml` (global/project/playground)
 
-### General Validations (`implementation.yaml` at root)
-
-| Field         | Required | Description                                |
-| ------------- | -------- | ------------------------------------------ |
-| `validations` | Yes      | Array of global validation rules           |
-| `id`          | Yes      | Unique ID (e.g. `VAL-GENERAL-001`)         |
-| `description` | Yes      | What must be validated                     |
-| `category`    | Yes      | Grouping (linting, testing, security, etc.)|
+- `notes` (string or `null`)
+- `decisions` (array)
+- `decisions[].id` (string)
+- `decisions[].topic` (string)
+- `decisions[].context` (string)
+- `decisions[].category` (`product`, `architecture`, `technology`, `data`, `testing`, `infrastructure`, `other`)
+- `decisions[].requirementRefs` (string[])
+- `decisions[].contextRefs` (optional string[])
+- `decisions[].globalDecisionRefs` (optional string[])
+- `decisions[].parentDecisionRef` (optional string or `null`)
+- `decisions[].options` (array of options: `id`, `title`, `description`, `pros`, `cons`)
+- `decisions[].chosen` (string or `null`)
+- `decisions[].chosenReason` (string or `null`)
 
 ## Development
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) (v18+) — required for building
-- [Bun](https://bun.sh) — optional, used for running tests
+- [Node.js](https://nodejs.org) v18+
+- [Bun](https://bun.sh) (for tests)
 
 ### Commands
 
 ```bash
-npm install            # Install dependencies
-npm run build          # Build CLI + UI for distribution
-npm run dev:ui         # Dev mode with Vite HMR (for working on the UI)
-node dist/cli.js ui    # Run built CLI
-bun test               # Run tests (requires Bun)
+npm install
+npm run build
+npm run dev:ui
+node dist/cli.js ui
+bun test
 ```
 
-### Project Structure
+### Source Layout
 
-```
+```text
 src/
-├── ai/                # AI context generation (prompts, context assembly)
-├── commands/          # CLI command handlers (init, ui, validate, context)
-├── domain/            # Types and validation
-├── infrastructure/    # File I/O, YAML parsing, file watcher, HTTP server
-├── stores/            # Zustand state management
-├── components/        # React UI components
-└── ui/                # React entry point
+├── ai/              # Context generation and prompts
+├── commands/        # CLI command handlers
+├── domain/          # YAML types and validators
+├── infrastructure/  # File store, server, migration/version helpers
+├── stores/          # Zustand UI state
+├── components/      # React components
+└── ui/              # React entry point
 ```
 
 ## License
