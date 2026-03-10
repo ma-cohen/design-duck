@@ -17,9 +17,6 @@ export function App() {
     projects,
     projectContexts,
     designs,
-    playgrounds,
-    playgroundContexts,
-    playgroundDesigns,
     loading,
     error,
     loadFromFiles,
@@ -28,7 +25,6 @@ export function App() {
   } = useRequirementsStore();
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
-  const [selectedPlayground, setSelectedPlayground] = useState<string | null>(null);
 
   const handleExport = useCallback(() => {
     const snapshot = {
@@ -38,9 +34,6 @@ export function App() {
       projects,
       projectContexts,
       designs,
-      playgrounds,
-      playgroundContexts,
-      playgroundDesigns,
     };
     const md = generateDesignDocMarkdown(snapshot);
     const slug = (vision?.productName || "design-doc")
@@ -50,8 +43,6 @@ export function App() {
     downloadMarkdown(md, `${slug}-design-doc.md`);
   }, [
     vision, rootContext, globalDesign, projects, projectContexts, designs,
-    playgrounds, playgroundContexts,
-    playgroundDesigns,
   ]);
 
   useEffect(() => {
@@ -75,10 +66,10 @@ export function App() {
     <div className="min-h-screen bg-slate-800 text-slate-100">
       <header className="border-b border-slate-600 bg-slate-700 px-8 py-5 shadow-sm">
         <div className="mx-auto max-w-6xl flex items-center gap-4">
-          {(selectedProject || selectedPlayground) && (
+          {selectedProject && (
             <button
               type="button"
-              onClick={() => { setSelectedProject(null); setSelectedPlayground(null); }}
+              onClick={() => { setSelectedProject(null); }}
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-500 bg-slate-600 px-3 py-2 text-sm font-medium text-slate-200 shadow-sm hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1 focus:ring-offset-slate-800 transition-colors cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -96,11 +87,9 @@ export function App() {
               <p className="mt-0.5 text-sm text-slate-400">
                 {selectedProject
                   ? selectedProject
-                  : selectedPlayground
-                    ? selectedPlayground
-                    : vision?.productName
-                      ? vision.productName
-                      : "Vision-driven requirements management"}
+                  : vision?.productName
+                    ? vision.productName
+                    : "Vision-driven requirements management"}
               </p>
             </div>
           </div>
@@ -125,15 +114,10 @@ export function App() {
           projects={projects}
           projectContexts={projectContexts}
           designs={designs}
-          playgrounds={playgrounds}
-          playgroundContexts={playgroundContexts}
-          playgroundDesigns={playgroundDesigns}
           loading={loading}
           error={error}
           selectedProject={selectedProject}
-          onSelectProject={(name) => { setSelectedProject(name); setSelectedPlayground(null); }}
-          selectedPlayground={selectedPlayground}
-          onSelectPlayground={(name) => { setSelectedPlayground(name); setSelectedProject(null); }}
+          onSelectProject={(name) => { setSelectedProject(name); }}
         />
       </main>
     </div>

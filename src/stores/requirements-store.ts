@@ -15,14 +15,12 @@ import { create } from "zustand";
 import {
   parseVisionYaml,
   parseProjectRequirementsYaml,
-  parsePlaygroundRequirementsYaml,
   parseContextYaml,
   parseProjectDesignYaml,
 } from "../infrastructure/yaml-parser";
 import type {
   Vision,
   ProjectRequirements,
-  PlaygroundRequirements,
   ContextDocument,
   ProjectDesign,
   GlobalDesign,
@@ -65,12 +63,6 @@ export interface RequirementsState {
   projectContexts: Record<string, ContextDocument>;
   /** Per-project design documents keyed by project name (only present when design.yaml exists). */
   designs: Record<string, ProjectDesign>;
-  /** Per-playground requirements keyed by playground name. */
-  playgrounds: Record<string, PlaygroundRequirements>;
-  /** Per-playground context documents keyed by playground name. */
-  playgroundContexts: Record<string, ContextDocument>;
-  /** Per-playground design documents keyed by playground name. */
-  playgroundDesigns: Record<string, ProjectDesign>;
   /** True while a loadFromFiles() call is in progress. */
   loading: boolean;
   /** Human-readable error message from the last failed load, or null. */
@@ -117,18 +109,6 @@ export interface RequirementsState {
   /** Deletes a project from the server (DELETE /api/projects/:name). */
   deleteProject: (projectName: string) => Promise<void>;
 
-  /** Saves a playground's requirements to the server (PUT /api/playgrounds/:name/requirements). */
-  savePlaygroundRequirements: (playgroundName: string, data: PlaygroundRequirements) => Promise<void>;
-
-  /** Saves a playground's context document to the server (PUT /api/playgrounds/:name/context). */
-  savePlaygroundContext: (playgroundName: string, data: ContextDocument) => Promise<void>;
-
-  /** Saves a playground's design document to the server (PUT /api/playgrounds/:name/design). */
-  savePlaygroundDesign: (playgroundName: string, data: ProjectDesign) => Promise<void>;
-
-  /** Deletes a playground from the server (DELETE /api/playgrounds/:name). */
-  deletePlayground: (playgroundName: string) => Promise<void>;
-
   /** Propagates a project design decision to global design (POST /api/projects/:name/design/propagate). */
   propagateToGlobal: (projectName: string, decisionId: string) => Promise<void>;
 }
@@ -156,9 +136,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
   projects: {},
   projectContexts: {},
   designs: {},
-  playgrounds: {},
-  playgroundContexts: {},
-  playgroundDesigns: {},
   loading: false,
   error: null,
   watching: false,
@@ -255,52 +232,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
 
       await Promise.all(projectFetches);
 
-      // Fetch playground list
-      const playgrounds: Record<string, PlaygroundRequirements> = {};
-      const playgroundContexts: Record<string, ContextDocument> = {};
-      const playgroundDesigns: Record<string, ProjectDesign> = {};
-      try {
-        const playgroundsRes = await fetch("/api/playgrounds");
-        if (playgroundsRes.ok) {
-          const playgroundNames: string[] = await playgroundsRes.json();
-
-          const playgroundFetches = playgroundNames.map(async (name) => {
-            // Fetch requirements (required)
-            const res = await fetch(`${docsPath}/playgrounds/${name}/requirements.yaml`);
-            if (!res.ok) return; // skip if missing
-            const content = await res.text();
-            playgrounds[name] = parsePlaygroundRequirementsYaml(content);
-
-            // Fetch playground context (optional)
-            try {
-              const ctxRes = await fetch(`${docsPath}/playgrounds/${name}/context.yaml`);
-              if (ctxRes.ok) {
-                const ctxContent = await ctxRes.text();
-                playgroundContexts[name] = parseContextYaml(ctxContent);
-              }
-            } catch {
-              // context.yaml not available — that's fine
-            }
-
-            // Fetch design (optional)
-            try {
-              const designRes = await fetch(`${docsPath}/playgrounds/${name}/design.yaml`);
-              if (designRes.ok) {
-                const designContent = await designRes.text();
-                playgroundDesigns[name] = parseProjectDesignYaml(designContent);
-              }
-            } catch {
-              // design.yaml not available — that's fine
-            }
-
-          });
-
-          await Promise.all(playgroundFetches);
-        }
-      } catch {
-        // playgrounds API not available — that's fine
-      }
-
       const totalReqs = Object.values(projects).reduce(
         (sum, p) => sum + p.requirements.length,
         0,
@@ -310,7 +241,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         0,
       );
       const globalDecisionCount = globalDesign ? globalDesign.decisions.length : 0;
-      const playgroundCount = Object.keys(playgrounds).length;
 
       set({
         vision,
@@ -319,16 +249,12 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
         projects,
         projectContexts,
         designs,
-        playgrounds,
-        playgroundContexts,
-        playgroundDesigns,
         loading: false,
         error: null,
       });
 
       console.log(
-        `[design-duck:store] Loaded vision + ${globalDecisionCount} global decision(s) + ${Object.keys(projects).length} project(s) with ${totalReqs} requirements and ${totalDecisions} design decisions` +
-        (playgroundCount > 0 ? ` + ${playgroundCount} playground(s)` : ""),
+        `[design-duck:store] Loaded vision + ${globalDecisionCount} global decision(s) + ${Object.keys(projects).length} project(s) with ${totalReqs} requirements and ${totalDecisions} design decisions`,
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -418,7 +344,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const body = await res.json().catch(() => ({ error: res.statusText }));
       throw new Error(body.error || "Failed to save vision");
     }
-    // SSE will trigger a reload automatically; also update local state immediately
     set({ vision });
   },
 
@@ -501,68 +426,10 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const body = await res.json().catch(() => ({ error: res.statusText }));
       throw new Error(body.error || "Failed to delete project");
     }
-    // Remove from local state immediately
     const { [projectName]: _p, ...remainingProjects } = get().projects;
     const { [projectName]: _c, ...remainingContexts } = get().projectContexts;
     const { [projectName]: _d, ...remainingDesigns } = get().designs;
     set({ projects: remainingProjects, projectContexts: remainingContexts, designs: remainingDesigns });
-  },
-
-  savePlaygroundRequirements: async (playgroundName: string, data: PlaygroundRequirements) => {
-    console.log(`[design-duck:store] Saving playground requirements for ${playgroundName}...`);
-    const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}/requirements`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save playground requirements");
-    }
-    set({ playgrounds: { ...get().playgrounds, [playgroundName]: data } });
-  },
-
-  savePlaygroundContext: async (playgroundName: string, data: ContextDocument) => {
-    console.log(`[design-duck:store] Saving playground context for ${playgroundName}...`);
-    const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}/context`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save playground context");
-    }
-    set({ playgroundContexts: { ...get().playgroundContexts, [playgroundName]: data } });
-  },
-
-  savePlaygroundDesign: async (playgroundName: string, data: ProjectDesign) => {
-    console.log(`[design-duck:store] Saving playground design for ${playgroundName}...`);
-    const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}/design`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to save playground design");
-    }
-    set({ playgroundDesigns: { ...get().playgroundDesigns, [playgroundName]: data } });
-  },
-
-  deletePlayground: async (playgroundName: string) => {
-    console.log(`[design-duck:store] Deleting playground ${playgroundName}...`);
-    const res = await fetch(`/api/playgrounds/${encodeURIComponent(playgroundName)}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(body.error || "Failed to delete playground");
-    }
-    const { [playgroundName]: _p, ...remainingPlaygrounds } = get().playgrounds;
-    const { [playgroundName]: _c, ...remainingContexts } = get().playgroundContexts;
-    const { [playgroundName]: _d, ...remainingDesigns } = get().playgroundDesigns;
-    set({ playgrounds: remainingPlaygrounds, playgroundContexts: remainingContexts, playgroundDesigns: remainingDesigns });
   },
 
   propagateToGlobal: async (projectName: string, decisionId: string) => {
@@ -576,7 +443,6 @@ export const useRequirementsStore = create<RequirementsState>()((set, get) => ({
       const body = await res.json().catch(() => ({ error: res.statusText }));
       throw new Error(body.error || "Failed to propagate decision to global");
     }
-    // SSE will trigger a reload automatically; also reload immediately for responsiveness
     await get().loadFromFiles();
   },
 

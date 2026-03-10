@@ -3,7 +3,6 @@ import type {
   ContextDocument,
   GlobalDesign,
   ProjectRequirements,
-  PlaygroundRequirements,
   ProjectDesign,
   Decision,
   DesignOption,
@@ -17,9 +16,6 @@ export interface DesignDocSnapshot {
   projects: Record<string, ProjectRequirements>;
   projectContexts: Record<string, ContextDocument>;
   designs: Record<string, ProjectDesign>;
-  playgrounds: Record<string, PlaygroundRequirements>;
-  playgroundContexts: Record<string, ContextDocument>;
-  playgroundDesigns: Record<string, ProjectDesign>;
 }
 
 // ---------------------------------------------------------------------------
@@ -201,42 +197,6 @@ function renderProject(
   return lines.join("\n");
 }
 
-function renderPlayground(
-  name: string,
-  heading: string,
-  reqs: PlaygroundRequirements,
-  ctx: ContextDocument | undefined,
-  design: ProjectDesign | undefined,
-): string {
-  const lines: string[] = [];
-  lines.push(heading);
-  lines.push("");
-  lines.push(`**Problem Statement:** ${reqs.problemStatement}`);
-
-  if (ctx && ctx.contexts.length > 0) {
-    lines.push("");
-    lines.push("**Context:**");
-    lines.push("");
-    lines.push(renderContextTable(ctx));
-  }
-
-  if (reqs.requirements.length > 0) {
-    lines.push("");
-    lines.push("**Requirements:**");
-    lines.push("");
-    lines.push(renderRequirementsTable(reqs.requirements));
-  }
-
-  if (design && design.decisions.length > 0) {
-    lines.push("");
-    lines.push("**Design Decisions:**");
-    lines.push("");
-    lines.push(renderDesignSection(design));
-  }
-
-  return lines.join("\n");
-}
-
 // ---------------------------------------------------------------------------
 // Main export function
 // ---------------------------------------------------------------------------
@@ -293,27 +253,6 @@ export function generateDesignDocMarkdown(snapshot: DesignDocSnapshot): string {
         snapshot.projects[name],
         snapshot.projectContexts[name],
         snapshot.designs[name],
-      ));
-      sections.push("");
-    });
-  }
-
-  // 5. Playgrounds
-  const playgroundNames = Object.keys(snapshot.playgrounds);
-  if (playgroundNames.length > 0) {
-    const playgroundSectionNum = sectionNum;
-    sections.push(`## ${sectionNum}. Playgrounds`);
-    sections.push("");
-    sectionNum++;
-
-    playgroundNames.forEach((name, idx) => {
-      const heading = `### ${playgroundSectionNum}.${idx + 1} ${name}`;
-      sections.push(renderPlayground(
-        name,
-        heading,
-        snapshot.playgrounds[name],
-        snapshot.playgroundContexts[name],
-        snapshot.playgroundDesigns[name],
       ));
       sections.push("");
     });

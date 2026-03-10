@@ -2,7 +2,7 @@
  * Migration v1.1.0 — Add `category: other` to all existing design decisions.
  *
  * The Decision type now requires a `category` field. This migration walks
- * all design.yaml files (root, projects, playgrounds) and adds
+ * all design.yaml files (root, projects) and adds
  * `category: other` to any decision that doesn't already have one.
  */
 
@@ -91,10 +91,5 @@ export const migration: Migration = {
       addCategoryToDesignFile(join(projectsDir, project, "design.yaml"));
     }
 
-    // 3. Playground design.yaml files
-    const playgroundsDir = join(docsDir, "playgrounds");
-    for (const playground of listSubdirs(playgroundsDir)) {
-      addCategoryToDesignFile(join(playgroundsDir, playground, "design.yaml"));
-    }
   },
 };

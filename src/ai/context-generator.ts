@@ -10,8 +10,6 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   listProjects,
-  listPlaygrounds,
-  readProjectRequirements,
   readProjectDesign,
 } from "../infrastructure/file-store";
 import {
@@ -21,10 +19,6 @@ import {
   designPrompt,
   choosePrompt,
   propagatePrompt,
-  playgroundPrompt,
-  playgroundRequirementsPrompt,
-  playgroundDesignPrompt,
-  playgroundChoosePrompt,
 } from "./prompts";
 
 // ---------------------------------------------------------------------------
@@ -94,42 +88,6 @@ function readRawProjectDesign(
  */
 function readRawGlobalDesign(docsDir: string): string | null {
   return readRawOrNull(join(docsDir, "design.yaml"));
-}
-
-/**
- * Reads a playground's requirements.yaml as raw text. Returns null if missing.
- */
-function readRawPlaygroundRequirements(
-  docsDir: string,
-  playgroundName: string,
-): string | null {
-  return readRawOrNull(
-    join(docsDir, "playgrounds", playgroundName, "requirements.yaml"),
-  );
-}
-
-/**
- * Reads a playground's context.yaml as raw text. Returns null if missing.
- */
-function readRawPlaygroundContext(
-  docsDir: string,
-  playgroundName: string,
-): string | null {
-  return readRawOrNull(
-    join(docsDir, "playgrounds", playgroundName, "context.yaml"),
-  );
-}
-
-/**
- * Reads a playground's design.yaml as raw text. Returns null if missing.
- */
-function readRawPlaygroundDesign(
-  docsDir: string,
-  playgroundName: string,
-): string | null {
-  return readRawOrNull(
-    join(docsDir, "playgrounds", playgroundName, "design.yaml"),
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -267,71 +225,3 @@ export function generatePropagateContext(
     otherProjectDesigns,
   );
 }
-
-// ---------------------------------------------------------------------------
-// Playground context generators
-// ---------------------------------------------------------------------------
-
-/**
- * Playground phase: create/list playgrounds.
- */
-export function generatePlaygroundContext(docsDir: string): string {
-  const existing = listPlaygrounds(docsDir);
-  return playgroundPrompt(existing);
-}
-
-/**
- * Playground Requirements: gather requirements for a playground.
- */
-export function generatePlaygroundRequirementsContext(
-  docsDir: string,
-  playgroundName: string,
-): string {
-  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
-  return playgroundRequirementsPrompt(playgroundName, rawReqs);
-}
-
-/**
- * Playground Design: brainstorm design decisions for a playground.
- */
-export function generatePlaygroundDesignContext(
-  docsDir: string,
-  playgroundName: string,
-): string {
-  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
-  if (!rawReqs) {
-    throw new Error(
-      `requirements.yaml not found for playground "${playgroundName}". Run 'dd context playground-requirements ${playgroundName}' first.`,
-    );
-  }
-
-  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
-  const rawPlaygroundDesign = readRawPlaygroundDesign(docsDir, playgroundName);
-  return playgroundDesignPrompt(playgroundName, rawReqs, rawPlaygroundContext, rawPlaygroundDesign);
-}
-
-/**
- * Playground Choose: evaluate and pick design options for a playground.
- */
-export function generatePlaygroundChooseContext(
-  docsDir: string,
-  playgroundName: string,
-): string {
-  const rawReqs = readRawPlaygroundRequirements(docsDir, playgroundName);
-  if (!rawReqs) {
-    throw new Error(
-      `requirements.yaml not found for playground "${playgroundName}".`,
-    );
-  }
-
-  const rawDesign = readRawPlaygroundDesign(docsDir, playgroundName);
-  if (!rawDesign) {
-    throw new Error(
-      `design.yaml not found for playground "${playgroundName}". Run 'dd context playground-design ${playgroundName}' first.`,
-    );
-  }
-
-  const rawPlaygroundContext = readRawPlaygroundContext(docsDir, playgroundName);
-  return playgroundChoosePrompt(playgroundName, rawReqs, rawDesign, rawPlaygroundContext);
-}
-

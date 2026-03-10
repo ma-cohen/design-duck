@@ -50,18 +50,14 @@ describe("context command", () => {
     );
   }
 
-  test("PHASES exports all 10 phases", () => {
-    expect(PHASES).toHaveLength(10);
+  test("PHASES exports all 6 phases", () => {
+    expect(PHASES).toHaveLength(6);
     expect(PHASES).toContain("vision");
     expect(PHASES).toContain("projects");
     expect(PHASES).toContain("requirements");
     expect(PHASES).toContain("design");
     expect(PHASES).toContain("choose");
     expect(PHASES).toContain("propagate");
-    expect(PHASES).toContain("playground");
-    expect(PHASES).toContain("playground-requirements");
-    expect(PHASES).toContain("playground-design");
-    expect(PHASES).toContain("playground-choose");
   });
 
   test("prints usage and sets exit code for unknown phase", () => {

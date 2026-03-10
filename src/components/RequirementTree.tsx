@@ -5,15 +5,13 @@
  *   - Detail view (project selected): full project section with requirements & design
  */
 
-import type { Vision, ProjectRequirements, PlaygroundRequirements, ProjectDesign, GlobalDesign, ContextDocument } from "../domain/requirements/requirement";
+import type { Vision, ProjectRequirements, ProjectDesign, GlobalDesign, ContextDocument } from "../domain/requirements/requirement";
 import { useRequirementsStore } from "../stores/requirements-store";
 import { VisionHeader } from "./VisionHeader";
 import { ContextSection } from "./ContextSection";
 import { GlobalDesignSection } from "./GlobalDesignSection";
 import { ProjectSection } from "./ProjectSection";
 import { ProjectCard } from "./ProjectCard";
-import { PlaygroundCard } from "./PlaygroundCard";
-import { PlaygroundSection } from "./PlaygroundSection";
 
 export interface RequirementTreeProps {
   vision: Vision | null;
@@ -22,15 +20,10 @@ export interface RequirementTreeProps {
   projects: Record<string, ProjectRequirements>;
   projectContexts?: Record<string, ContextDocument>;
   designs?: Record<string, ProjectDesign>;
-  playgrounds?: Record<string, PlaygroundRequirements>;
-  playgroundContexts?: Record<string, ContextDocument>;
-  playgroundDesigns?: Record<string, ProjectDesign>;
   loading: boolean;
   error: string | null;
   selectedProject: string | null;
   onSelectProject: (name: string | null) => void;
-  selectedPlayground?: string | null;
-  onSelectPlayground?: (name: string | null) => void;
 }
 
 export function RequirementTree({
@@ -40,21 +33,14 @@ export function RequirementTree({
   projects,
   projectContexts = {},
   designs = {},
-  playgrounds = {},
-  playgroundContexts = {},
-  playgroundDesigns = {},
   loading,
   error,
   selectedProject,
   onSelectProject,
-  selectedPlayground = null,
-  onSelectPlayground,
 }: RequirementTreeProps) {
   const deleteProject = useRequirementsStore((s) => s.deleteProject);
-  const deletePlayground = useRequirementsStore((s) => s.deletePlayground);
   const saveRootContext = useRequirementsStore((s) => s.saveRootContext);
   const projectNames = Object.keys(projects).sort();
-  const playgroundNames = Object.keys(playgrounds).sort();
 
   console.debug(
     `[design-duck:ui] Rendering RequirementTree: ${projectNames.length} project(s), selected=${selectedProject}`,
@@ -63,11 +49,6 @@ export function RequirementTree({
   const handleDeleteProject = async (name: string) => {
     await deleteProject(name);
     onSelectProject(null);
-  };
-
-  const handleDeletePlayground = async (name: string) => {
-    await deletePlayground(name);
-    onSelectPlayground?.(null);
   };
 
   if (loading) {
@@ -121,22 +102,7 @@ export function RequirementTree({
     );
   }
 
-  // ---------- Detail view: single playground ----------
-  if (selectedPlayground && playgrounds[selectedPlayground]) {
-    return (
-      <div data-testid="playground-detail-view">
-        <PlaygroundSection
-          playgroundName={selectedPlayground}
-          playground={playgrounds[selectedPlayground]}
-          playgroundContext={playgroundContexts[selectedPlayground] ?? null}
-          design={playgroundDesigns[selectedPlayground] ?? null}
-          onDeletePlayground={handleDeletePlayground}
-        />
-      </div>
-    );
-  }
-
-  // ---------- Home view: vision + project card grid + playgrounds ----------
+  // ---------- Home view: vision + project card grid ----------
   return (
     <div data-testid="requirement-tree">
       <VisionHeader vision={vision} />
@@ -174,35 +140,6 @@ export function RequirementTree({
               onClick={() => onSelectProject(name)}
             />
           ))}
-        </div>
-      )}
-
-      {/* Playgrounds section */}
-      {playgroundNames.length > 0 && (
-        <div className="mt-10" data-testid="playgrounds-section">
-          <div className="mb-4 flex items-center gap-3">
-            <h2 className="text-xl font-bold text-slate-50">Playgrounds</h2>
-            <span className="inline-flex items-center rounded-full bg-amber-900/40 px-2.5 py-0.5 text-xs font-medium text-amber-300">
-              Isolated
-            </span>
-          </div>
-          <p className="mb-5 text-base text-slate-400">
-            Standalone problem explorations — not tied to the product vision.
-          </p>
-          <div
-            className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-            data-testid="playgrounds-grid"
-          >
-            {playgroundNames.map((name) => (
-              <PlaygroundCard
-                key={name}
-                playgroundName={name}
-                playground={playgrounds[name]}
-                design={playgroundDesigns[name] ?? null}
-                onClick={() => onSelectPlayground?.(name)}
-              />
-            ))}
-          </div>
         </div>
       )}
     </div>

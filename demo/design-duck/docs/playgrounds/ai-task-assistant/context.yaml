@@ -1,7 +1,0 @@
-contexts:
-  - id: AI-CTX-001
-    description: "This is an exploratory feature — we're not committed to shipping it in MVP"
-  - id: AI-CTX-002
-    description: "We want to avoid vendor lock-in to a single AI provider"
-  - id: AI-CTX-003
-    description: "AI costs must stay under $50/month during the exploration phase"

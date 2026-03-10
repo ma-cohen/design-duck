@@ -118,8 +118,6 @@ export function scaffoldDocs(duckDir: string): void {
   const docsDir = join(duckDir, "docs");
   const exampleProjectDir = join(docsDir, "projects", "example-project");
   mkdirSync(exampleProjectDir, { recursive: true });
-  const playgroundsDir = join(docsDir, "playgrounds");
-  mkdirSync(playgroundsDir, { recursive: true });
   console.log("Created design-duck/docs/");
 
   // Write AGENTS.md (AI agent instructions)
@@ -239,7 +237,6 @@ Design Duck initialized! Your folder structure:
   │   ├── dd-design.md
   │   ├── dd-choose.md
   │   ├── dd-propagate.md
-  │   ├── dd-playground.md
   │   ├── dd-validate.md
   │   ├── dd-ui.md
   │   ├── dd-init.md
@@ -254,7 +251,6 @@ Design Duck initialized! Your folder structure:
       │       ├── context.yaml         # Project-specific context (system, tech)
       │       ├── requirements.yaml    # User-value requirements
       │       └── design.yaml          # Design decisions & options
-      └── playgrounds/                 # Isolated problem explorations (empty)
 
 Next steps:
   1. cd design-duck && npm install     # one-time setup

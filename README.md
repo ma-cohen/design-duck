@@ -73,18 +73,6 @@ Review in UI <------------┘
 - `choose`: select options and rationale
 - `propagate`: review chosen project decisions for promotion to global design
 
-### Playground phases (isolated problem-solving)
-
-```bash
-./design-duck/duck context playground
-./design-duck/duck context playground-requirements <playground>
-./design-duck/duck context playground-design <playground>
-./design-duck/duck context playground-choose <playground>
-```
-
-Use playgrounds for experiments that should not directly alter your main project
-design flow.
-
 ### Validate
 
 ```bash
@@ -119,7 +107,6 @@ design-duck/
 │   ├── dd-design.md
 │   ├── dd-choose.md
 │   ├── dd-propagate.md
-│   ├── dd-playground.md
 │   ├── dd-validate.md
 │   ├── dd-ui.md
 │   ├── dd-init.md
@@ -134,11 +121,6 @@ design-duck/
     │       ├── requirements.yaml
     │       ├── context.yaml
     │       └── design.yaml
-    └── playgrounds/
-        └── <playground-name>/
-            ├── requirements.yaml
-            ├── context.yaml
-            └── design.yaml
 ```
 
 ## YAML Reference
@@ -150,7 +132,7 @@ design-duck/
 - `mission` (string)
 - `problem` (string)
 
-### `context.yaml` (root or project/playground)
+### `context.yaml` (root or project)
 
 - `contexts` (array)
 - `contexts[].id` (string, unique in file)
@@ -164,15 +146,7 @@ design-duck/
 - `requirements[].description` (string)
 - `requirements[].userValue` (string)
 
-### `requirements.yaml` (playground)
-
-- `problemStatement` (string)
-- `requirements` (array)
-- `requirements[].id` (string)
-- `requirements[].description` (string)
-- `requirements[].userValue` (string)
-
-### `design.yaml` (global/project/playground)
+### `design.yaml` (global/project)
 
 - `notes` (string or `null`)
 - `decisions` (array)

@@ -14,10 +14,6 @@ import {
   generateDesignContext,
   generateChooseContext,
   generatePropagateContext,
-  generatePlaygroundContext,
-  generatePlaygroundRequirementsContext,
-  generatePlaygroundDesignContext,
-  generatePlaygroundChooseContext,
 } from "../ai/context-generator";
 
 export const PHASES = [
@@ -27,10 +23,6 @@ export const PHASES = [
   "design",
   "choose",
   "propagate",
-  "playground",
-  "playground-requirements",
-  "playground-design",
-  "playground-choose",
 ] as const;
 
 export type Phase = (typeof PHASES)[number];
@@ -43,19 +35,12 @@ const PROJECT_PHASES = new Set<Phase>([
   "propagate",
 ]);
 
-/** Phases that require a playground name argument. */
-const PLAYGROUND_PHASES = new Set<Phase>([
-  "playground-requirements",
-  "playground-design",
-  "playground-choose",
-]);
-
 function isPhase(s: string): s is Phase {
   return PHASES.includes(s as Phase);
 }
 
 function printContextUsage(): void {
-  console.error("Usage: design-duck context <phase> [project|playground]");
+  console.error("Usage: design-duck context <phase> [project]");
   console.error("");
   console.error("Phases:");
   console.error("  vision                        Define/refine the product vision");
@@ -64,12 +49,6 @@ function printContextUsage(): void {
   console.error("  design <p>                    Brainstorm design decisions for a project");
   console.error("  choose <p>                    Evaluate and choose design options");
   console.error("  propagate <p>                 Review decisions for propagation to global");
-  console.error("");
-  console.error("Playground phases (isolated problem-solving):");
-  console.error("  playground                    Create/list playgrounds");
-  console.error("  playground-requirements <pg>  Gather requirements for a playground");
-  console.error("  playground-design <pg>        Brainstorm design decisions for a playground");
-  console.error("  playground-choose <pg>        Evaluate and choose design options");
   process.exitCode = 1;
 }
 
@@ -110,14 +89,6 @@ export function context(
     return;
   }
 
-  // Validate playground argument for phases that require it
-  if (PLAYGROUND_PHASES.has(phase) && !projectName) {
-    console.error(`Error: Phase "${phase}" requires a playground name.`);
-    console.error(`Usage: design-duck context ${phase} <playground>`);
-    process.exitCode = 1;
-    return;
-  }
-
   // Resolve the requirements directory
   const docsDir = resolveRequirementsDir(baseDir);
 
@@ -153,18 +124,6 @@ export function context(
         break;
       case "propagate":
         output = generatePropagateContext(docsDir!, projectName!);
-        break;
-      case "playground":
-        output = generatePlaygroundContext(docsDir!);
-        break;
-      case "playground-requirements":
-        output = generatePlaygroundRequirementsContext(docsDir!, projectName!);
-        break;
-      case "playground-design":
-        output = generatePlaygroundDesignContext(docsDir!, projectName!);
-        break;
-      case "playground-choose":
-        output = generatePlaygroundChooseContext(docsDir!, projectName!);
         break;
     }
 
