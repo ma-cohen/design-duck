@@ -11,7 +11,7 @@ describe("validate", () => {
 
   beforeEach(() => {
     testDir = join(tmpdir(), `design-duck-test-${Date.now()}`);
-    docsDir = join(testDir, "desgin-duck", "docs");
+    docsDir = join(testDir, "design-duck", "docs");
     mkdirSync(join(docsDir, "projects", "test-project"), { recursive: true });
     process.exitCode = 0;
   });
@@ -21,7 +21,7 @@ describe("validate", () => {
     process.exitCode = 0;
   });
 
-  test("exits with code 1 when desgin-duck/docs/ directory does not exist", () => {
+  test("exits with code 1 when design-duck/docs/ directory does not exist", () => {
     rmSync(docsDir, { recursive: true });
     validate(testDir);
     expect(process.exitCode).toBe(1);

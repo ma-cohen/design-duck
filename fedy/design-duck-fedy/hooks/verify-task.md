@@ -8,28 +8,28 @@ Run these verification steps after completing a task.
 
 1. **Type Check**
    ```bash
-   cd /Users/matanco/MyRepos/desgin-duck && bun x tsc --noEmit
+   cd /Users/matanco/MyRepos/design-duck && bun x tsc --noEmit
    ```
    - Success: exit code 0
    - On failure: fix TypeScript errors and retry
 
 2. **Run Tests**
    ```bash
-   cd /Users/matanco/MyRepos/desgin-duck && bun test
+   cd /Users/matanco/MyRepos/design-duck && bun test
    ```
    - Success: exit code 0 (or no tests found)
    - On failure: fix failing tests and retry
 
 3. **Build**
    ```bash
-   cd /Users/matanco/MyRepos/desgin-duck && bun run build
+   cd /Users/matanco/MyRepos/design-duck && bun run build
    ```
    - Success: exit code 0, dist/ files created
    - On failure: fix build errors and retry
 
 4. **Push to Remote**
    ```bash
-   cd /Users/matanco/MyRepos/desgin-duck && git push
+   cd /Users/matanco/MyRepos/design-duck && git push
    ```
    - Success: exit code 0
    - On failure: resolve push conflicts (pull/rebase) and retry

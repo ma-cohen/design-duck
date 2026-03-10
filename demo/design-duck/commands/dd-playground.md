@@ -30,7 +30,7 @@ on one focused thing.
    should focus on one specific problem or question.
 
 5. Create a playground directory at
-   `desgin-duck/docs/playgrounds/<playground-name>/requirements.yaml`
+   `design-duck/docs/playgrounds/<playground-name>/requirements.yaml`
    with a clear `problemStatement`.
 
 6. Run validation to check your work:

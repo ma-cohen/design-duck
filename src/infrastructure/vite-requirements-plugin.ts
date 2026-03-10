@@ -1,5 +1,5 @@
 /**
- * Vite plugin that watches the desgin-duck/docs/ directory for YAML changes
+ * Vite plugin that watches the design-duck/docs/ directory for YAML changes
  * and notifies the browser via HMR custom events.
  *
  * Uses the existing file-watcher infrastructure to detect filesystem changes
@@ -13,7 +13,7 @@ import { watchDocsDir } from "./file-watcher";
 import type { Plugin } from "vite";
 
 /**
- * Creates a Vite plugin that watches the desgin-duck/docs/ directory
+ * Creates a Vite plugin that watches the design-duck/docs/ directory
  * and sends HMR events when YAML files change.
  *
  * @returns Vite plugin instance
@@ -33,11 +33,11 @@ export function docsWatcherPlugin(): Plugin {
     name: "design-duck-docs-watcher",
 
     configureServer(server) {
-      const docsDir = join(server.config.root, "desgin-duck", "docs");
+      const docsDir = join(server.config.root, "design-duck", "docs");
 
       if (!existsSync(docsDir)) {
         console.warn(
-          "[design-duck:vite] desgin-duck/docs/ directory not found, skipping file watcher",
+          "[design-duck:vite] design-duck/docs/ directory not found, skipping file watcher",
         );
         return;
       }

@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-# Design Duck CLI wrapper — run from your project root: ./desgin-duck/duck <command>
+# Design Duck CLI wrapper — run from your project root: ./design-duck/duck <command>
 DIR="$(cd "$(dirname "$0")" && pwd)"
 node "$DIR/node_modules/design-duck/dist/cli.js" "$@"

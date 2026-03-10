@@ -33,7 +33,7 @@ export interface UiServerOptions {
   port?: number;
   /** Absolute path to the dist-ui/ directory with pre-built UI files. */
   distUiDir: string;
-  /** Absolute path to the desgin-duck/docs/ directory to serve YAML files from. */
+  /** Absolute path to the design-duck/docs/ directory to serve YAML files from. */
   docsDir: string;
   /** Whether to open the browser automatically. @default true */
   open?: boolean;
@@ -77,7 +77,7 @@ const MIME_TYPES: Record<string, string> = {
  *
  * @param options - Server configuration
  * @returns A handle with a `close()` method and the actual port
- * @throws Error if dist-ui/ or desgin-duck/docs/ directories are missing
+ * @throws Error if dist-ui/ or design-duck/docs/ directories are missing
  */
 export function startUiServer(options: UiServerOptions): UiServerHandle {
   const { port = 3456, distUiDir, docsDir, open = true } = options;
@@ -92,7 +92,7 @@ export function startUiServer(options: UiServerOptions): UiServerHandle {
 
   if (!existsSync(docsDir)) {
     throw new Error(
-      `desgin-duck/docs/ not found at ${docsDir}. Run 'design-duck init' first.`,
+      `design-duck/docs/ not found at ${docsDir}. Run 'design-duck init' first.`,
     );
   }
 

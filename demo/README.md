@@ -38,9 +38,9 @@ and picks the next available port if needed.
 
 ## Files to inspect
 
-- `demo/desgin-duck/docs/vision.yaml`
-- `demo/desgin-duck/docs/context.yaml`
-- `demo/desgin-duck/docs/design.yaml`
-- `demo/desgin-duck/docs/projects/core-app/`
-- `demo/desgin-duck/docs/projects/notifications/`
-- `demo/desgin-duck/docs/playgrounds/ai-task-assistant/`
+- `demo/design-duck/docs/vision.yaml`
+- `demo/design-duck/docs/context.yaml`
+- `demo/design-duck/docs/design.yaml`
+- `demo/design-duck/docs/projects/core-app/`
+- `demo/design-duck/docs/projects/notifications/`
+- `demo/design-duck/docs/playgrounds/ai-task-assistant/`

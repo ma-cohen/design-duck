@@ -17,7 +17,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 2. Install dependencies:
 
    ```bash
-   cd desgin-duck && npm install && cd ..
+   cd design-duck && npm install && cd ..
    ```
 
 3. Report the created folder structure to the user and suggest next steps:
@@ -27,7 +27,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 ## Notes
 
 - Init only runs once — it will refuse to overwrite an existing setup.
-- After init, all Design Duck state lives in `desgin-duck/`.
+- After init, all Design Duck state lives in `design-duck/`.
 
 ## Next Step
 

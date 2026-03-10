@@ -1,7 +1,7 @@
 /**
  * Migration type definition.
  *
- * Each migration transforms the user's desgin-duck/ directory
+ * Each migration transforms the user's design-duck/ directory
  * from one version's schema to the next.
  */
 export interface Migration {
@@ -9,6 +9,6 @@ export interface Migration {
   version: string;
   /** Human-readable description of what this migration does */
   description: string;
-  /** Transform files in the desgin-duck/ directory */
+  /** Transform files in the design-duck/ directory */
   migrate: (duckDir: string) => void;
 }

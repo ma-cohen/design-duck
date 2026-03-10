@@ -13,7 +13,7 @@ describe("context command", () => {
 
   beforeEach(() => {
     testDir = join(tmpdir(), `design-duck-ctx-cmd-test-${Date.now()}`);
-    docsDir = join(testDir, "desgin-duck", "docs");
+    docsDir = join(testDir, "design-duck", "docs");
     mkdirSync(join(docsDir, "projects"), { recursive: true });
     process.exitCode = 0;
 

@@ -75,10 +75,10 @@ function printContextUsage(): void {
 
 /**
  * Resolves the requirements directory from the current working directory.
- * Looks for desgin-duck/docs/ in the given base directory.
+ * Looks for design-duck/docs/ in the given base directory.
  */
 function resolveRequirementsDir(baseDir: string): string | null {
-  const docsDir = join(baseDir, "desgin-duck", "docs");
+  const docsDir = join(baseDir, "design-duck", "docs");
   if (existsSync(docsDir)) return docsDir;
   return null;
 }
@@ -87,7 +87,7 @@ function resolveRequirementsDir(baseDir: string): string | null {
  * Entry point for the `context` CLI command.
  *
  * @param args - Remaining CLI arguments after "context" (e.g., ["requirements", "user-auth"])
- * @param baseDir - Base directory to look for desgin-duck/docs/ (defaults to cwd)
+ * @param baseDir - Base directory to look for design-duck/docs/ (defaults to cwd)
  */
 export function context(
   args: string[],
@@ -124,7 +124,7 @@ export function context(
   // Vision phase can work without an existing requirements dir
   if (!docsDir && phase !== "vision") {
     console.error(
-      "Error: desgin-duck/docs/ directory not found.",
+      "Error: design-duck/docs/ directory not found.",
     );
     console.error("Run 'design-duck init' first to set up your project.");
     process.exitCode = 1;
@@ -137,7 +137,7 @@ export function context(
     switch (phase) {
       case "vision":
         // Vision works even without init — docsDir may be null
-        output = generateVisionContext(docsDir ?? join(baseDir, "desgin-duck", "docs"));
+        output = generateVisionContext(docsDir ?? join(baseDir, "design-duck", "docs"));
         break;
       case "projects":
         output = generateProjectsContext(docsDir!);

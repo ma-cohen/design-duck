@@ -6,7 +6,7 @@ Design Duck gives your AI coding agent structured context at each step:
 vision, projects, requirements, and design decisions. You stay in control of
 the decisions; the agent does the drafting work.
 
-All state lives in plain YAML files under `desgin-duck/docs/`. A live UI updates
+All state lives in plain YAML files under `design-duck/docs/`. A live UI updates
 instantly when those files change.
 
 ## Getting Started
@@ -17,22 +17,22 @@ Only [Node.js](https://nodejs.org) v18+ is required.
 ### 1. Initialize
 
 ```bash
-npx github:ma-cohen/desgin-duck#main init
+npx github:ma-cohen/design-duck#main init
 ```
 
-This scaffolds a local `desgin-duck/` folder with templates, command shortcuts,
+This scaffolds a local `design-duck/` folder with templates, command shortcuts,
 and an agent guide.
 
 ### 2. Install once
 
 ```bash
-cd desgin-duck && npm install && cd ..
+cd design-duck && npm install && cd ..
 ```
 
 ### 3. Run the UI
 
 ```bash
-./desgin-duck/duck ui
+./design-duck/duck ui
 ```
 
 The dashboard opens in your browser and auto-reloads when YAML files change.
@@ -58,12 +58,12 @@ Review in UI <------------┘
 ### Core phases
 
 ```bash
-./desgin-duck/duck context vision
-./desgin-duck/duck context projects
-./desgin-duck/duck context requirements <project>
-./desgin-duck/duck context design <project>
-./desgin-duck/duck context choose <project>
-./desgin-duck/duck context propagate <project>
+./design-duck/duck context vision
+./design-duck/duck context projects
+./design-duck/duck context requirements <project>
+./design-duck/duck context design <project>
+./design-duck/duck context choose <project>
+./design-duck/duck context propagate <project>
 ```
 
 - `vision`: define/refine `vision.yaml`
@@ -76,10 +76,10 @@ Review in UI <------------┘
 ### Playground phases (isolated problem-solving)
 
 ```bash
-./desgin-duck/duck context playground
-./desgin-duck/duck context playground-requirements <playground>
-./desgin-duck/duck context playground-design <playground>
-./desgin-duck/duck context playground-choose <playground>
+./design-duck/duck context playground
+./design-duck/duck context playground-requirements <playground>
+./design-duck/duck context playground-design <playground>
+./design-duck/duck context playground-choose <playground>
 ```
 
 Use playgrounds for experiments that should not directly alter your main project
@@ -88,7 +88,7 @@ design flow.
 ### Validate
 
 ```bash
-./desgin-duck/duck validate
+./design-duck/duck validate
 ```
 
 Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
@@ -98,17 +98,17 @@ Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
 
 | Command | Description |
 | --- | --- |
-| `./desgin-duck/duck init` | Scaffold `desgin-duck/` with templates and command files |
-| `./desgin-duck/duck context <phase> [name]` | Generate AI context prompt for a phase |
-| `./desgin-duck/duck validate` | Validate YAML files and references |
-| `./desgin-duck/duck ui` | Start live UI (auto-selects an available port from 3456) |
-| `./desgin-duck/duck upgrade` | Reinstall latest package and run migrations |
-| `./desgin-duck/duck reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
+| `./design-duck/duck init` | Scaffold `design-duck/` with templates and command files |
+| `./design-duck/duck context <phase> [name]` | Generate AI context prompt for a phase |
+| `./design-duck/duck validate` | Validate YAML files and references |
+| `./design-duck/duck ui` | Start live UI (auto-selects an available port from 3456) |
+| `./design-duck/duck upgrade` | Reinstall latest package and run migrations |
+| `./design-duck/duck reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
 
 ## File Structure
 
 ```text
-desgin-duck/
+design-duck/
 ├── duck
 ├── duck.cmd
 ├── AGENTS.md

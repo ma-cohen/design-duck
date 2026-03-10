@@ -4,14 +4,14 @@ import { readVision, listProjects, listPlaygrounds, readProjectRequirements, rea
 import { validateVision } from "../domain/requirements/requirement";
 
 /**
- * Validates all requirement files in the desgin-duck/docs/ directory.
+ * Validates all requirement files in the design-duck/docs/ directory.
  * Reports validation errors to stdout.
  * 
- * @param targetDir - Directory containing desgin-duck/docs/ folder (defaults to cwd)
+ * @param targetDir - Directory containing design-duck/docs/ folder (defaults to cwd)
  * @returns void - exits with code 1 if validation fails, 0 if successful
  */
 export function validate(targetDir: string = process.cwd()): void {
-  const docsDir = join(targetDir, "desgin-duck", "docs");
+  const docsDir = join(targetDir, "design-duck", "docs");
 
   if (process.env.DEBUG) {
     console.error("[design-duck:validate] targetDir:", targetDir);
@@ -20,7 +20,7 @@ export function validate(targetDir: string = process.cwd()): void {
 
   // Check if requirements directory exists
   if (!existsSync(docsDir)) {
-    console.error("Error: desgin-duck/docs/ directory not found.");
+    console.error("Error: design-duck/docs/ directory not found.");
     console.error("Run 'design-duck init' first to create the docs structure.");
     process.exitCode = 1;
     return;
@@ -105,7 +105,7 @@ export function validate(targetDir: string = process.cwd()): void {
   let totalRequirements = 0;
 
   if (projects.length === 0) {
-    console.log("No projects found in desgin-duck/docs/projects/.");
+    console.log("No projects found in design-duck/docs/projects/.");
   }
 
   let totalDecisions = 0;

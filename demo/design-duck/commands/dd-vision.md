@@ -26,10 +26,10 @@ Use their message as context for what the vision should be about.
 
 4. **Ask the user about their situation first** — company stage, team size,
    budget, constraints, target users, etc. Capture these as context items in
-   `desgin-duck/docs/context.yaml`. Do not define the vision in a vacuum.
+   `design-duck/docs/context.yaml`. Do not define the vision in a vacuum.
 
 5. Follow the instructions from the context output. Edit
-   `desgin-duck/docs/vision.yaml` with a clear **vision**, **mission**,
+   `design-duck/docs/vision.yaml` with a clear **vision**, **mission**,
    and **problem** statement, informed by the context and the user's request.
 
 6. Run validation to check your work:

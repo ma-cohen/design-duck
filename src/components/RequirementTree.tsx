@@ -156,7 +156,7 @@ export function RequirementTree({
           <p className="text-base text-slate-300">
             No projects found. Add a project directory under{" "}
             <code className="rounded bg-slate-600 px-2 py-1 text-sm font-mono text-slate-200">
-              desgin-duck/docs/projects/
+              design-duck/docs/projects/
             </code>
           </p>
         </div>

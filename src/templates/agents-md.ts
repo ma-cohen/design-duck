@@ -7,7 +7,7 @@ export const AGENT_MD = `# Design Duck — Agent Instructions
 
 You are working inside a project that uses **Design Duck** for vision-driven
 requirements and design management. All project state lives in YAML files under
-\`desgin-duck/docs/\`. A live UI (\`design-duck ui\`) shows the current
+\`design-duck/docs/\`. A live UI (\`design-duck ui\`) shows the current
 state and updates automatically when files change.
 
 ## Workflow
@@ -30,7 +30,7 @@ a context prompt — run it, read the output, then perform the work described.
 design-duck context vision
 \`\`\`
 
-Edit \`desgin-duck/docs/vision.yaml\` with the **productName**, a clear **vision**, **mission**,
+Edit \`design-duck/docs/vision.yaml\` with the **productName**, a clear **vision**, **mission**,
 and **problem** statement. The \`productName\` is displayed in the UI header —
 always ask the user for it. Every downstream decision traces back here.
 
@@ -40,7 +40,7 @@ always ask the user for it. Every downstream decision traces back here.
 design-duck context projects
 \`\`\`
 
-Create project directories under \`desgin-duck/docs/projects/<name>/\`.
+Create project directories under \`design-duck/docs/projects/<name>/\`.
 Each project gets its own \`requirements.yaml\` with a \`visionAlignment\` field
 and an empty \`requirements\` array.
 
@@ -91,7 +91,7 @@ the UI to move decisions. Only chosen decisions can be propagated.
 ## File Structure
 
 \`\`\`
-desgin-duck/docs/
+design-duck/docs/
 ├── vision.yaml                  # Product name, vision, mission & problem
 ├── design.yaml                  # Global design decisions
 └── projects/
@@ -112,7 +112,7 @@ desgin-duck/docs/
 ## Short \`dd\` Alias
 
 If the \`dd\` shell function is installed (added to \`~/.zshrc\` or \`~/.bashrc\`),
-you can use \`dd\` instead of \`./desgin-duck/duck\` or \`design-duck\` for all
+you can use \`dd\` instead of \`./design-duck/duck\` or \`design-duck\` for all
 commands:
 
 \`\`\`bash
@@ -128,7 +128,7 @@ available — it is shorter and works from the project root.
 
 ## Command Files (Tag & Go)
 
-Instead of remembering CLI commands, tag a command file in \`desgin-duck/commands/\`
+Instead of remembering CLI commands, tag a command file in \`design-duck/commands/\`
 to have the agent run the right command automatically. Just tag the file and add
 your instructions — the agent handles the rest.
 

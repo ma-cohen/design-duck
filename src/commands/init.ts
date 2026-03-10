@@ -5,30 +5,30 @@ import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
 import { writeProjectVersion } from "../infrastructure/version";
 
-/** package.json for the desgin-duck/ folder — depends on the tool from GitHub */
+/** package.json for the design-duck/ folder — depends on the tool from GitHub */
 const DUCK_PACKAGE_JSON = `{
   "private": true,
   "description": "Design Duck — local requirements management. Run: ./duck ui",
   "dependencies": {
-    "design-duck": "github:ma-cohen/desgin-duck#main"
+    "design-duck": "github:ma-cohen/design-duck#main"
   }
 }
 `;
 
-/** .gitignore for the desgin-duck/ folder — keep node_modules out of version control */
+/** .gitignore for the design-duck/ folder — keep node_modules out of version control */
 const DUCK_GITIGNORE = `node_modules/
 `;
 
 /** Bash wrapper script — runs the CLI from node_modules */
 const DUCK_SH = `#!/usr/bin/env bash
-# Design Duck CLI wrapper — run from your project root: ./desgin-duck/duck <command>
+# Design Duck CLI wrapper — run from your project root: ./design-duck/duck <command>
 DIR="$(cd "$(dirname "$0")" && pwd)"
 node "$DIR/node_modules/design-duck/dist/cli.js" "$@"
 `;
 
 /** Windows wrapper script */
 const DUCK_CMD = `@echo off
-REM Design Duck CLI wrapper — run from your project root: .\\desgin-duck\\duck <command>
+REM Design Duck CLI wrapper — run from your project root: .\\design-duck\\duck <command>
 node "%~dp0node_modules\\design-duck\\dist\\cli.js" %*
 `;
 
@@ -120,7 +120,7 @@ export function scaffoldDocs(duckDir: string): void {
   mkdirSync(exampleProjectDir, { recursive: true });
   const playgroundsDir = join(docsDir, "playgrounds");
   mkdirSync(playgroundsDir, { recursive: true });
-  console.log("Created desgin-duck/docs/");
+  console.log("Created design-duck/docs/");
 
   // Write AGENTS.md (AI agent instructions)
   const agentMdPath = join(duckDir, "AGENTS.md");
@@ -164,7 +164,7 @@ export function scaffoldCommands(duckDir: string): void {
 }
 
 export function init(targetDir: string = process.cwd()): void {
-  const duckDir = join(targetDir, "desgin-duck");
+  const duckDir = join(targetDir, "design-duck");
   const docsDir = join(duckDir, "docs");
 
   if (process.env.DEBUG) {
@@ -172,7 +172,7 @@ export function init(targetDir: string = process.cwd()): void {
   }
 
   if (existsSync(docsDir)) {
-    console.error("desgin-duck/docs/ already exists. Aborting init.");
+    console.error("design-duck/docs/ already exists. Aborting init.");
     process.exitCode = 1;
     return;
   }
@@ -227,8 +227,8 @@ export function init(targetDir: string = process.cwd()): void {
   console.log(`
 Design Duck initialized! Your folder structure:
 
-  desgin-duck/
-  ├── duck                             # CLI wrapper (run: ./desgin-duck/duck <command>)
+  design-duck/
+  ├── duck                             # CLI wrapper (run: ./design-duck/duck <command>)
   ├── duck.cmd                         # CLI wrapper (Windows)
   ├── package.json                     # npm dependencies
   ├── AGENTS.md                        # AI agent instructions & workflow guide
@@ -257,7 +257,7 @@ Design Duck initialized! Your folder structure:
       └── playgrounds/                 # Isolated problem explorations (empty)
 
 Next steps:
-  1. cd desgin-duck && npm install     # one-time setup
+  1. cd design-duck && npm install     # one-time setup
   2. cd ..
   3. Tag @dd-vision and tell your AI agent what to build!
 
@@ -266,5 +266,5 @@ If you have the 'dd' shell alias set up, you can also use:
   dd ui
   dd validate
 
-Or point your AI agent at desgin-duck/AGENTS.md for the full workflow.`);
+Or point your AI agent at design-duck/AGENTS.md for the full workflow.`);
 }

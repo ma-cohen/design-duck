@@ -25,7 +25,7 @@ describe("upgrade infrastructure", () => {
 
   beforeEach(() => {
     testDir = join(tmpdir(), `design-duck-upgrade-test-${Date.now()}`);
-    duckDir = join(testDir, "desgin-duck");
+    duckDir = join(testDir, "design-duck");
     mkdirSync(duckDir, { recursive: true });
   });
 
@@ -55,7 +55,7 @@ describe("upgrade infrastructure", () => {
 
   test("readProjectVersion returns null when .version file is missing", () => {
     const emptyDir = join(tmpdir(), `design-duck-empty-${Date.now()}`);
-    mkdirSync(join(emptyDir, "desgin-duck"), { recursive: true });
+    mkdirSync(join(emptyDir, "design-duck"), { recursive: true });
     const version = readProjectVersion(emptyDir);
     expect(version).toBeNull();
     rmSync(emptyDir, { recursive: true, force: true });

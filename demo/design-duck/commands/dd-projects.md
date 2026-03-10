@@ -9,7 +9,7 @@ Use their message as context for how to split the vision into projects.
 
 ## Prerequisites
 
-The vision must be defined first (`desgin-duck/docs/vision.yaml`).
+The vision must be defined first (`design-duck/docs/vision.yaml`).
 
 ## Steps
 
@@ -23,7 +23,7 @@ The vision must be defined first (`desgin-duck/docs/vision.yaml`).
    projects (if any), and detailed instructions.
 
 3. Follow the instructions from the context output. Create project directories
-   under `desgin-duck/docs/projects/<name>/` with a
+   under `design-duck/docs/projects/<name>/` with a
    `requirements.yaml` containing a `visionAlignment` field.
 
 4. Run validation to check your work:

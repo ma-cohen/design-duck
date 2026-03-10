@@ -1,7 +1,7 @@
 /**
  * Version tracking utilities.
  *
- * Reads/writes the .version file in the user's desgin-duck/ directory
+ * Reads/writes the .version file in the user's design-duck/ directory
  * and provides a version-mismatch check for the CLI.
  */
 
@@ -11,12 +11,12 @@ import { VERSION } from "../index";
 
 const VERSION_FILENAME = ".version";
 
-/** Resolve the path to the .version file inside the desgin-duck/ directory. */
+/** Resolve the path to the .version file inside the design-duck/ directory. */
 export function versionFilePath(targetDir: string = process.cwd()): string {
-  return join(targetDir, "desgin-duck", VERSION_FILENAME);
+  return join(targetDir, "design-duck", VERSION_FILENAME);
 }
 
-/** Read the current project version from desgin-duck/.version. Returns null if not found. */
+/** Read the current project version from design-duck/.version. Returns null if not found. */
 export function readProjectVersion(targetDir: string = process.cwd()): string | null {
   const filePath = versionFilePath(targetDir);
   if (!existsSync(filePath)) {
@@ -25,7 +25,7 @@ export function readProjectVersion(targetDir: string = process.cwd()): string | 
   return readFileSync(filePath, "utf-8").trim();
 }
 
-/** Write the installed version to desgin-duck/.version. */
+/** Write the installed version to design-duck/.version. */
 export function writeProjectVersion(targetDir: string = process.cwd(), version?: string): void {
   const filePath = versionFilePath(targetDir);
   writeFileSync(filePath, (version ?? VERSION) + "\n", "utf-8");

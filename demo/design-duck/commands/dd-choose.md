@@ -12,7 +12,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    ```bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    ```
 3. If there is exactly one project, use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -30,7 +30,7 @@ This phase requires a **project name**.
 
 3. Follow the instructions from the context output. For each unchosen
    decision, evaluate options and set `chosen` + `chosenReason` in
-   `desgin-duck/docs/projects/<project-name>/design.yaml`.
+   `design-duck/docs/projects/<project-name>/design.yaml`.
 
 4. Run validation to check your work:
 

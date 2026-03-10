@@ -23,5 +23,5 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 - The upgrade command handles the full clean reinstall automatically (removes
   `node_modules` and `package-lock.json` to force a fresh fetch from GitHub).
-- Backups of overwritten files are saved in `desgin-duck/.backup/`.
+- Backups of overwritten files are saved in `design-duck/.backup/`.
 - AGENTS.md and command files are always regenerated to stay current.

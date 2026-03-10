@@ -12,7 +12,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    ```bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    ```
 3. If there is exactly one project, use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -31,11 +31,11 @@ This phase requires a **project name**.
 3. **Ask the user about their current system and technical situation** —
    existing tech stack, infrastructure, deployment environment, etc. Capture
    these as context items in
-   `desgin-duck/docs/projects/<project-name>/context.yaml`.
+   `design-duck/docs/projects/<project-name>/context.yaml`.
    Do not make design decisions without understanding the current landscape.
 
 4. Follow the instructions from the context output. Create or edit
-   `desgin-duck/docs/projects/<project-name>/design.yaml`
+   `design-duck/docs/projects/<project-name>/design.yaml`
    with design decisions. Each decision should have multiple options with
    pros/cons. Use `contextRefs` to link decisions to relevant context items.
    Leave `chosen` and `chosenReason` as `null` — the human picks.

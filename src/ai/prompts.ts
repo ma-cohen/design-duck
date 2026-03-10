@@ -33,7 +33,7 @@ Write clear, concise statements that will guide all downstream project decisions
 - Time horizons and urgency
 - Any existing products or systems
 
-Capture the answers as context items in: desgin-duck/docs/context.yaml
+Capture the answers as context items in: design-duck/docs/context.yaml
 
 ${contextBlock}
 
@@ -41,8 +41,8 @@ ${stateBlock}
 
 ## Instructions
 
-1. First, update context items in desgin-duck/docs/context.yaml based on the user's situation.
-2. Then, edit desgin-duck/docs/vision.yaml informed by that context.
+1. First, update context items in design-duck/docs/context.yaml based on the user's situation.
+2. Then, edit design-duck/docs/vision.yaml informed by that context.
 
 Each context item needs:
 - **id**: A unique identifier (e.g., CTX-001)
@@ -117,7 +117,7 @@ ${contextBlock}${existingBlock}
 ## Instructions
 
 For each new project, create a directory and requirements.yaml file:
-  desgin-duck/docs/projects/<project-name>/requirements.yaml
+  design-duck/docs/projects/<project-name>/requirements.yaml
 
 Use kebab-case for project directory names (e.g., \`user-auth\`, \`notification-service\`).
 
@@ -127,7 +127,7 @@ Each requirements.yaml should contain:
 
 ## Expected YAML Format
 
-For each project file at \`desgin-duck/docs/projects/<name>/requirements.yaml\`:
+For each project file at \`design-duck/docs/projects/<name>/requirements.yaml\`:
 
 \`\`\`yaml
 visionAlignment: "This project contributes to the vision by..."
@@ -183,7 +183,7 @@ ${contextBlock}${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/docs/projects/${projectName}/requirements.yaml
+Edit the file: design-duck/docs/projects/${projectName}/requirements.yaml
 
 Each requirement needs:
 - **id**: A unique identifier with a project-specific prefix (e.g., AUTH-001, NOTIF-001).
@@ -287,7 +287,7 @@ decision whose choice triggered it.
 - Performance or scale requirements
 - Integration points with other systems
 
-Capture the answers as context items in: desgin-duck/docs/projects/${projectName}/context.yaml
+Capture the answers as context items in: design-duck/docs/projects/${projectName}/context.yaml
 `
     : `Since this is a design iteration, you already have context from previous rounds.
 If the user's answers from before are captured in context.yaml, build on them.
@@ -334,8 +334,8 @@ and **code organization**. Only skip a category if it genuinely doesn't apply.
 ${cascadingBlock}
 ## Instructions
 
-1. First, update project context items in desgin-duck/docs/projects/${projectName}/context.yaml based on the user's answers.
-2. Then, edit desgin-duck/docs/projects/${projectName}/design.yaml
+1. First, update project context items in design-duck/docs/projects/${projectName}/context.yaml based on the user's answers.
+2. Then, edit design-duck/docs/projects/${projectName}/design.yaml
 
 For each significant architectural or design decision:
 1. Identify the topic and provide context.
@@ -485,7 +485,7 @@ ${designYaml}\`\`\`
 
 ## Instructions
 
-Edit the file: desgin-duck/docs/projects/${projectName}/design.yaml
+Edit the file: design-duck/docs/projects/${projectName}/design.yaml
 
 For each decision where \`chosen\` is null:
 1. Analyze all options against the requirements and vision.
@@ -636,7 +636,7 @@ ${existingBlock}
 ## Instructions
 
 For each new playground, create a directory and requirements.yaml file:
-  desgin-duck/docs/playgrounds/<playground-name>/requirements.yaml
+  design-duck/docs/playgrounds/<playground-name>/requirements.yaml
 
 Use kebab-case for playground directory names (e.g., \`caching-strategy\`, \`auth-spike\`).
 
@@ -646,7 +646,7 @@ Each requirements.yaml should contain:
 
 ## Expected YAML Format
 
-For each playground file at \`desgin-duck/docs/playgrounds/<name>/requirements.yaml\`:
+For each playground file at \`design-duck/docs/playgrounds/<name>/requirements.yaml\`:
 
 \`\`\`yaml
 problemStatement: "We need to figure out the best approach to..."
@@ -688,7 +688,7 @@ ${stateBlock}
 
 ## Instructions
 
-Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/requirements.yaml
+Edit the file: design-duck/docs/playgrounds/${playgroundName}/requirements.yaml
 
 Each requirement needs:
 - **id**: A unique identifier with a playground-specific prefix (e.g., PG-001, SPIKE-001).
@@ -763,7 +763,7 @@ of the decision whose choice triggered it.
   const firstRunQuestions = !isIteration
     ? `**Before brainstorming decisions, ask about the current system and technical situation.**
 Capture the answers as context items in:
-desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
+design-duck/docs/playgrounds/${playgroundName}/context.yaml
 `
     : `Since this is a design iteration, build on existing context. Only ask
 follow-up questions if a chosen decision opens up a new area.
@@ -799,8 +799,8 @@ Every decision must have a \`category\`. Assign one of the following:
 ${cascadingBlock}
 ## Instructions
 
-1. First, update context items in desgin-duck/docs/playgrounds/${playgroundName}/context.yaml
-2. Then, edit desgin-duck/docs/playgrounds/${playgroundName}/design.yaml
+1. First, update context items in design-duck/docs/playgrounds/${playgroundName}/context.yaml
+2. Then, edit design-duck/docs/playgrounds/${playgroundName}/design.yaml
 
 For each significant decision:
 1. Identify the topic and provide context.
@@ -896,7 +896,7 @@ ${designYaml}\`\`\`
 
 ## Instructions
 
-Edit the file: desgin-duck/docs/playgrounds/${playgroundName}/design.yaml
+Edit the file: design-duck/docs/playgrounds/${playgroundName}/design.yaml
 
 For each decision where \`chosen\` is null:
 1. Analyze all options against the requirements.

@@ -3,7 +3,7 @@
  *
  * 1. Reinstall the package from the remote to get the latest code
  * 2. Re-exec the CLI using the freshly installed binary
- * 3. Read desgin-duck/.version (default to "0.1.0" if missing)
+ * 3. Read design-duck/.version (default to "0.1.0" if missing)
  * 4. Check if already up-to-date
  * 5. Collect and run applicable migrations
  * 6. Regenerate AGENTS.md & command files
@@ -24,7 +24,7 @@ import {
 } from "../infrastructure/version";
 
 /**
- * Back up a file to desgin-duck/.backup/<version>/ before migrating.
+ * Back up a file to design-duck/.backup/<version>/ before migrating.
  * Creates the backup directory if it doesn't exist.
  */
 function backupFile(
@@ -49,11 +49,11 @@ function backupFile(
 }
 
 export function upgrade(targetDir: string = process.cwd()): void {
-  const duckDir = join(targetDir, "desgin-duck");
+  const duckDir = join(targetDir, "design-duck");
 
   if (!existsSync(duckDir)) {
     console.error(
-      "No desgin-duck/ directory found. Run 'design-duck init' first."
+      "No design-duck/ directory found. Run 'design-duck init' first."
     );
     process.exitCode = 1;
     return;
@@ -160,7 +160,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
           `Migration to v${m.version} failed: ${err instanceof Error ? err.message : err}`
         );
         console.error(
-          `Backups are available in desgin-duck/.backup/${currentVersion}/`
+          `Backups are available in design-duck/.backup/${currentVersion}/`
         );
         process.exitCode = 1;
         return;

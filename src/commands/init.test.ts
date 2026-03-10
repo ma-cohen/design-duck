@@ -19,14 +19,14 @@ describe("init", () => {
     process.exitCode = 0;
   });
 
-  test("creates desgin-duck/docs/ directory", () => {
+  test("creates design-duck/docs/ directory", () => {
     init(testDir);
-    expect(existsSync(join(testDir, "desgin-duck", "docs"))).toBe(true);
+    expect(existsSync(join(testDir, "design-duck", "docs"))).toBe(true);
   });
 
   test("creates AGENTS.md, vision.yaml, and example project requirements.yaml", () => {
     init(testDir);
-    const duckDir = join(testDir, "desgin-duck");
+    const duckDir = join(testDir, "design-duck");
     const docsDir = join(duckDir, "docs");
     expect(existsSync(join(duckDir, "AGENTS.md"))).toBe(true);
     expect(existsSync(join(docsDir, "vision.yaml"))).toBe(true);
@@ -35,7 +35,7 @@ describe("init", () => {
 
   test("AGENTS.md contains workflow instructions and context commands", () => {
     init(testDir);
-    const content = readFileSync(join(testDir, "desgin-duck", "AGENTS.md"), "utf-8");
+    const content = readFileSync(join(testDir, "design-duck", "AGENTS.md"), "utf-8");
     expect(content).toContain("design-duck context vision");
     expect(content).toContain("design-duck context projects");
     expect(content).toContain("design-duck context requirements");
@@ -47,7 +47,7 @@ describe("init", () => {
 
   test("vision.yaml contains vision, mission, and problem fields", () => {
     init(testDir);
-    const content = readFileSync(join(testDir, "desgin-duck", "docs", "vision.yaml"), "utf-8");
+    const content = readFileSync(join(testDir, "design-duck", "docs", "vision.yaml"), "utf-8");
     expect(content).toContain("vision:");
     expect(content).toContain("mission:");
     expect(content).toContain("problem:");
@@ -56,23 +56,23 @@ describe("init", () => {
   test("example project requirements.yaml contains visionAlignment and empty requirements array", () => {
     init(testDir);
     const content = readFileSync(
-      join(testDir, "desgin-duck", "docs", "projects", "example-project", "requirements.yaml"),
+      join(testDir, "design-duck", "docs", "projects", "example-project", "requirements.yaml"),
       "utf-8",
     );
     expect(content).toContain("visionAlignment:");
     expect(content).toContain("requirements: []");
   });
 
-  test("aborts with exit code 1 if desgin-duck/docs/ already exists", () => {
-    mkdirSync(join(testDir, "desgin-duck", "docs"), { recursive: true });
+  test("aborts with exit code 1 if design-duck/docs/ already exists", () => {
+    mkdirSync(join(testDir, "design-duck", "docs"), { recursive: true });
     init(testDir);
     expect(process.exitCode).toBe(1);
   });
 
-  test("does not create files when desgin-duck/docs/ already exists", () => {
-    mkdirSync(join(testDir, "desgin-duck", "docs"), { recursive: true });
+  test("does not create files when design-duck/docs/ already exists", () => {
+    mkdirSync(join(testDir, "design-duck", "docs"), { recursive: true });
     init(testDir);
-    expect(existsSync(join(testDir, "desgin-duck", "docs", "vision.yaml"))).toBe(false);
+    expect(existsSync(join(testDir, "design-duck", "docs", "vision.yaml"))).toBe(false);
   });
 
   test("initializes git repo when .git does not exist", () => {

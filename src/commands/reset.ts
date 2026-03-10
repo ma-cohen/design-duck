@@ -17,12 +17,12 @@ function confirm(message: string): Promise<boolean> {
 export async function reset(args: string[] = []): Promise<void> {
   const force = args.includes("--force");
   const targetDir = process.cwd();
-  const duckDir = join(targetDir, "desgin-duck");
+  const duckDir = join(targetDir, "design-duck");
   const docsDir = join(duckDir, "docs");
   const commandsDir = join(duckDir, "commands");
 
   if (!existsSync(duckDir)) {
-    console.error("desgin-duck/ not found. Run 'duck init' first.");
+    console.error("design-duck/ not found. Run 'duck init' first.");
     process.exitCode = 1;
     return;
   }
@@ -44,7 +44,7 @@ export async function reset(args: string[] = []): Promise<void> {
   if (existsSync(commandsDir)) {
     rmSync(commandsDir, { recursive: true, force: true });
   }
-  console.log("Deleted desgin-duck/docs/ and commands/");
+  console.log("Deleted design-duck/docs/ and commands/");
 
   // Re-scaffold from templates
   scaffoldDocs(duckDir);

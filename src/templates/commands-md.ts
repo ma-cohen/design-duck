@@ -1,5 +1,5 @@
 /**
- * Command markdown templates — generated into desgin-duck/commands/ by init and upgrade.
+ * Command markdown templates — generated into design-duck/commands/ by init and upgrade.
  *
  * Each file acts as an agent instruction: the user tags it (e.g. @dd-vision)
  * and the agent reads the file to know which CLI command to run and how to
@@ -38,10 +38,10 @@ Use their message as context for what the vision should be about.
 
 4. **Ask the user about their situation first** — company stage, team size,
    budget, constraints, target users, etc. Capture these as context items in
-   \`desgin-duck/docs/context.yaml\`. Do not define the vision in a vacuum.
+   \`design-duck/docs/context.yaml\`. Do not define the vision in a vacuum.
 
 5. Follow the instructions from the context output. Edit
-   \`desgin-duck/docs/vision.yaml\` with a clear **vision**, **mission**,
+   \`design-duck/docs/vision.yaml\` with a clear **vision**, **mission**,
    and **problem** statement, informed by the context and the user's request.
 
 6. Run validation to check your work:
@@ -74,7 +74,7 @@ Use their message as context for how to split the vision into projects.
 
 ## Prerequisites
 
-The vision must be defined first (\`desgin-duck/docs/vision.yaml\`).
+The vision must be defined first (\`design-duck/docs/vision.yaml\`).
 
 ## Steps
 
@@ -88,7 +88,7 @@ The vision must be defined first (\`desgin-duck/docs/vision.yaml\`).
    projects (if any), and detailed instructions.
 
 3. Follow the instructions from the context output. Create project directories
-   under \`desgin-duck/docs/projects/<name>/\` with a
+   under \`design-duck/docs/projects/<name>/\` with a
    \`requirements.yaml\` containing a \`visionAlignment\` field.
 
 4. Run validation to check your work:
@@ -122,7 +122,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -139,7 +139,7 @@ This phase requires a **project name**.
    detailed instructions.
 
 3. Follow the instructions from the context output. Edit
-   \`desgin-duck/docs/projects/<project-name>/requirements.yaml\`
+   \`design-duck/docs/projects/<project-name>/requirements.yaml\`
    with user-value requirements. Each requirement needs an **id**,
    **description**, and **userValue**.
 
@@ -176,7 +176,7 @@ this multiple times as cascading decisions emerge from previous choices.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -196,12 +196,12 @@ this multiple times as cascading decisions emerge from previous choices.
 3. **On first run**, ask the user about their current system and technical
    situation — existing tech stack, infrastructure, deployment environment,
    etc. Capture these as context items in
-   \`desgin-duck/docs/projects/<project-name>/context.yaml\`.
+   \`design-duck/docs/projects/<project-name>/context.yaml\`.
    **On subsequent runs** (iteration), build on existing context and focus
    on cascading decisions triggered by previous choices.
 
 4. Follow the instructions from the context output. Create or edit
-   \`desgin-duck/docs/projects/<project-name>/design.yaml\`
+   \`design-duck/docs/projects/<project-name>/design.yaml\`
    with design decisions. Each decision needs:
    - A \`category\`: product, architecture, technology, data, testing,
      infrastructure, or other
@@ -248,7 +248,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -266,7 +266,7 @@ This phase requires a **project name**.
 
 3. Follow the instructions from the context output. For each unchosen
    decision, evaluate options and set \`chosen\` + \`chosenReason\` in
-   \`desgin-duck/docs/projects/<project-name>/design.yaml\`.
+   \`design-duck/docs/projects/<project-name>/design.yaml\`.
 
 4. **Perform a cascading analysis**: after choosing, review your choices and
    identify any new decisions that are now needed as a consequence. List them
@@ -310,7 +310,7 @@ This phase requires a **project name**.
 1. If the user mentioned a project name in their message, use it.
 2. Otherwise, list the available projects:
    \`\`\`bash
-   ls desgin-duck/docs/projects/
+   ls design-duck/docs/projects/
    \`\`\`
 3. If there is exactly one project (besides \`example-project\`), use it.
 4. If there are multiple projects, ask the user which one to work on.
@@ -385,7 +385,7 @@ on one focused thing.
    should focus on one specific problem or question.
 
 5. Create a playground directory at
-   \`desgin-duck/docs/playgrounds/<playground-name>/requirements.yaml\`
+   \`design-duck/docs/playgrounds/<playground-name>/requirements.yaml\`
    with a clear \`problemStatement\`.
 
 6. Run validation to check your work:
@@ -491,7 +491,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 2. Install dependencies:
 
    \`\`\`bash
-   cd desgin-duck && npm install && cd ..
+   cd design-duck && npm install && cd ..
    \`\`\`
 
 3. Report the created folder structure to the user and suggest next steps:
@@ -501,7 +501,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 ## Notes
 
 - Init only runs once — it will refuse to overwrite an existing setup.
-- After init, all Design Duck state lives in \`desgin-duck/\`.
+- After init, all Design Duck state lives in \`design-duck/\`.
 
 ## Next Step
 
@@ -526,8 +526,8 @@ The user tagged this file to ask you to **reset** Design Duck.
    \`\`\`
 
 2. This will:
-   - Delete the entire \`desgin-duck/docs/\` directory (all projects, playgrounds, vision, design, etc.)
-   - Delete and regenerate the \`desgin-duck/commands/\` directory
+   - Delete the entire \`design-duck/docs/\` directory (all projects, playgrounds, vision, design, etc.)
+   - Delete and regenerate the \`design-duck/commands/\` directory
    - Re-create everything with fresh empty templates (same as \`dd init\`)
 
 3. Report to the user that the reset is complete.
@@ -536,7 +536,7 @@ The user tagged this file to ask you to **reset** Design Duck.
 
 - Without \`--force\`, the command prompts for confirmation before deleting.
 - This is destructive — all existing YAML content will be lost.
-- The \`desgin-duck/\` directory itself, \`package.json\`, \`.gitignore\`, and the
+- The \`design-duck/\` directory itself, \`package.json\`, \`.gitignore\`, and the
   \`duck\` wrapper scripts are preserved.
 
 ## Next Step
@@ -569,7 +569,7 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 - The upgrade command handles the full clean reinstall automatically (removes
   \`node_modules\` and \`package-lock.json\` to force a fresh fetch from GitHub).
-- Backups of overwritten files are saved in \`desgin-duck/.backup/\`.
+- Backups of overwritten files are saved in \`design-duck/.backup/\`.
 - AGENTS.md and command files are always regenerated to stay current.
 `;
 

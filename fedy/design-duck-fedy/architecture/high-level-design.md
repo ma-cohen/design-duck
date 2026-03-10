@@ -263,10 +263,10 @@ The CLI is designed to be **runnable without publishing to npm**. Consumers can 
 
 ```bash
 # From Git (public or private repo)
-npm install github:ma-cohen/desgin-duck#main
+npm install github:ma-cohen/design-duck#main
 
 # From local path (e.g. while developing)
-npm install file:../path/to/desgin-duck
+npm install file:../path/to/design-duck
 
 # Then run the CLI
 npx design-duck init       # Scaffold requirements/
