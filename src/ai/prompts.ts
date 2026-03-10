@@ -527,6 +527,370 @@ phase again to add them:
 
 
 // ---------------------------------------------------------------------------
+// Solve (Full Cycle)
+// ---------------------------------------------------------------------------
+
+export interface SolveState {
+  visionYaml: string | null;
+  rootContextYaml: string | null;
+  existingProjects: string[];
+  /** Per-project state keyed by project name. */
+  projects: Record<
+    string,
+    {
+      requirementsYaml: string | null;
+      contextYaml: string | null;
+      designYaml: string | null;
+    }
+  >;
+  globalDesignYaml: string | null;
+}
+
+export function solvePrompt(state: SolveState): string {
+  const hasVision = state.visionYaml !== null;
+  const hasProjects = state.existingProjects.length > 0;
+
+  const sections: string[] = [];
+
+  sections.push(`# Design Duck — Solve (Full Cycle)
+
+## Your Role
+
+You are running the **complete Design Duck workflow** from start to finish.
+The user has stated a problem — your job is to take it through every phase
+(vision, projects, requirements, design, choose) **without stopping between
+phases**. Do NOT pause to suggest next steps — just keep going.
+
+**Before you begin:** Start the live UI so the user can see progress:
+
+\`\`\`bash
+dd ui
+\`\`\`
+`);
+
+  // --- Context gathering (upfront) ---
+  sections.push(`## Step 0 — Gather Context
+
+Before doing any design work, ask the user about their situation **in one batch**.
+Cover both situational and technical context:
+
+- Company stage (startup, scale-up, enterprise?)
+- Team size and composition
+- Budget and resource constraints
+- Target market and users
+- Time horizons and urgency
+- Existing technology stack and infrastructure
+- Current system architecture (if any)
+- Deployment environment
+- Performance or scale requirements
+- Integration points with other systems
+
+Capture answers as context items in \`design-duck/docs/context.yaml\`:
+
+\`\`\`yaml
+contexts:
+  - id: CTX-001
+    description: "One-liner factual statement"
+\`\`\`
+
+Then proceed to the phases below **without waiting for further prompts**.
+`);
+
+  // --- Phase 1: Vision ---
+  if (!hasVision) {
+    sections.push(`## Phase 1 — Define the Vision
+
+Create \`design-duck/docs/vision.yaml\` based on the user's problem statement
+and the context you gathered.
+
+\`\`\`yaml
+productName: "The Product Name"
+vision: "A world where..."
+mission: "We provide..."
+problem: "Users currently struggle with..."
+\`\`\`
+
+Keep each field to 1-2 sentences. Be specific, not generic. Always set productName —
+ask the user if they haven't provided one.
+`);
+  } else {
+    sections.push(`## Phase 1 — Vision (already defined)
+
+The vision is already set:
+
+\`\`\`yaml
+${state.visionYaml}\`\`\`
+
+Use this as the foundation for all downstream work. Refine it only if the
+user's problem statement conflicts with it.
+`);
+  }
+
+  // --- Phase 2: Projects ---
+  if (!hasProjects) {
+    sections.push(`## Phase 2 — Create a Project
+
+Create **one focused project** for the user's problem. Use kebab-case for
+the directory name.
+
+Create \`design-duck/docs/projects/<name>/requirements.yaml\`:
+
+\`\`\`yaml
+visionAlignment: "How this project contributes to the vision..."
+requirements: []
+\`\`\`
+
+Keep it to a single project unless the problem clearly spans multiple
+independent work streams. Fewer focused projects are better.
+`);
+  } else {
+    const projectList = state.existingProjects.map((p) => `- ${p}`).join("\n");
+    sections.push(`## Phase 2 — Projects (already exist)
+
+These projects are already defined:
+${projectList}
+
+If the user's problem fits an existing project, add to it. Otherwise create
+a new project directory.
+`);
+  }
+
+  // --- Per-project phases ---
+  sections.push(`## Phase 3 — Requirements
+
+For each project, edit its \`requirements.yaml\` with user-value requirements
+derived from the problem statement and context.
+
+Each requirement needs:
+- **id**: Unique with a project prefix (e.g. \`MIG-001\`)
+- **description**: What the user can do (user story style)
+- **userValue**: Why this matters to the user
+
+Focus on what users need, not technical implementation. Aim for 3-10 requirements.
+
+## Phase 4 — Design Brainstorm
+
+For each project, create \`design.yaml\` with design decisions.
+
+Each decision needs:
+- **id**: e.g. \`DEC-MIG-001\`
+- **topic**: What is being decided
+- **context**: Why this decision matters
+- **category**: product | architecture | technology | data | testing | infrastructure | other
+- **requirementRefs**: Which requirements drive this
+- **contextRefs**: Relevant context item IDs
+- **options**: At least 2 options, each with \`id\`, \`title\`, \`description\`, \`pros\`, \`cons\`
+- **chosen**: \`null\` (do NOT choose yet)
+- **chosenReason**: \`null\`
+
+Also create project context in \`design-duck/docs/projects/<name>/context.yaml\`
+with technical facts relevant to the design.
+
+\`\`\`yaml
+contexts:
+  - id: CTX-<PREFIX>-001
+    description: "Technical fact about the project"
+\`\`\`
+
+### Design Guidelines
+
+- **Favour simplicity.** Always include a simple, straightforward option.
+- **Avoid over-engineering.** Don't propose options beyond what requirements need.
+- Only create decisions for questions that genuinely matter.
+- Ensure coverage across categories (product, architecture, technology, data,
+  testing, infrastructure). Skip a category only if it genuinely doesn't apply.
+
+## Phase 5 — Choose
+
+For each unchosen decision, evaluate options and set \`chosen\` + \`chosenReason\`.
+
+- Justify choices in terms of user value, not just technical merit.
+- **Prefer simpler options** when they deliver similar user value.
+- Keep \`chosenReason\` to 1-2 sentences.
+
+After choosing, check for **cascading decisions** — choices that open up new
+questions. If found, add them to \`design.yaml\` with \`parentDecisionRef\`
+pointing to the choice that triggered them, then choose those too.
+
+Repeat until the design is stable across all categories.
+`);
+
+  // --- Existing state dump ---
+  const stateBlocks: string[] = [];
+
+  if (state.rootContextYaml) {
+    stateBlocks.push(`### Root Context\n\n\`\`\`yaml\n${state.rootContextYaml}\`\`\`\n`);
+  }
+
+  if (state.globalDesignYaml) {
+    stateBlocks.push(`### Global Design Decisions\n\nRespect these system-wide decisions:\n\n\`\`\`yaml\n${state.globalDesignYaml}\`\`\`\n`);
+  }
+
+  for (const name of state.existingProjects) {
+    const proj = state.projects[name];
+    if (!proj) continue;
+    const parts: string[] = [`### Project: ${name}\n`];
+    if (proj.requirementsYaml)
+      parts.push(`**Requirements:**\n\`\`\`yaml\n${proj.requirementsYaml}\`\`\`\n`);
+    if (proj.contextYaml)
+      parts.push(`**Context:**\n\`\`\`yaml\n${proj.contextYaml}\`\`\`\n`);
+    if (proj.designYaml)
+      parts.push(`**Design:**\n\`\`\`yaml\n${proj.designYaml}\`\`\`\n`);
+    stateBlocks.push(parts.join("\n"));
+  }
+
+  if (stateBlocks.length > 0) {
+    sections.push(`## Current State\n\n${stateBlocks.join("\n")}`);
+  }
+
+  // --- Wrap-up ---
+  sections.push(`## Final Steps
+
+1. Run validation: \`dd validate\`
+2. Present a summary of what was created:
+   - Vision
+   - Project(s) and their requirements
+   - Design decisions with chosen options and reasoning
+3. Let the user know they can:
+   - Review everything in the UI
+   - Add more problems with \`@dd-add\`
+   - Iterate on design with \`@dd-design\` or \`@dd-choose\`
+
+## Rules
+
+- **YAML is the source of truth.** Edit the files directly.
+- **IDs must be unique** within their scope.
+- **requirementRefs** and **contextRefs** must reference existing IDs.
+- Keep descriptions concise and user-focused.
+- **Solve the requirements, not more.**
+- **Iterate, don't anticipate.**
+`);
+
+  return sections.join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Add Problem
+// ---------------------------------------------------------------------------
+
+export function addPrompt(
+  visionYaml: string,
+  projectName: string,
+  requirementsYaml: string,
+  rootContextYaml: string | null,
+  projectContextYaml: string | null,
+  projectDesignYaml: string | null,
+  globalDesignYaml: string | null,
+): string {
+  const contextBlock = rootContextYaml
+    ? `### Root Context\n\n\`\`\`yaml\n${rootContextYaml}\`\`\`\n`
+    : "";
+
+  const projectContextBlock = projectContextYaml
+    ? `### Project Context\n\n\`\`\`yaml\n${projectContextYaml}\`\`\`\n`
+    : "";
+
+  const globalDesignBlock = globalDesignYaml
+    ? `### Global Design Decisions\n\nRespect these system-wide decisions:\n\n\`\`\`yaml\n${globalDesignYaml}\`\`\`\n`
+    : "";
+
+  const designBlock = projectDesignYaml
+    ? `### Existing Design\n\n\`\`\`yaml\n${projectDesignYaml}\`\`\`\n`
+    : "";
+
+  return `# Design Duck — Add Problem: ${projectName}
+
+## Your Role
+
+You are adding a **new problem** to the existing "${projectName}" project.
+The user has described a new need — your job is to add requirements for it,
+then brainstorm and choose design decisions, **all without stopping between
+phases**.
+
+## Vision
+
+\`\`\`yaml
+${visionYaml}\`\`\`
+
+${contextBlock}${projectContextBlock}${globalDesignBlock}
+## Existing Requirements
+
+\`\`\`yaml
+${requirementsYaml}\`\`\`
+
+${designBlock}
+
+## Instructions
+
+### Step 1 — Add Requirements
+
+Edit \`design-duck/docs/projects/${projectName}/requirements.yaml\` and add
+new requirements based on the user's problem statement. **Do NOT modify or
+remove existing requirements.**
+
+- Use IDs that don't collide with existing ones (check the list above).
+- Focus on user value, not implementation.
+- Each requirement needs: \`id\`, \`description\`, \`userValue\`.
+
+### Step 2 — Update Context (if needed)
+
+If the new problem introduces new technical or situational facts, add them
+to \`design-duck/docs/projects/${projectName}/context.yaml\`. Don't duplicate
+existing context items.
+
+### Step 3 — Design Decisions
+
+Edit \`design-duck/docs/projects/${projectName}/design.yaml\` and add new
+design decisions for the new requirements. **Do NOT modify or remove existing
+decisions.**
+
+Each decision needs:
+- **id**: Unique, not colliding with existing ones
+- **topic**, **context**, **category**
+- **requirementRefs**: Reference the NEW requirement IDs
+- **contextRefs**: Reference relevant context items
+- **options**: At least 2 per decision with pros/cons
+- **chosen**: \`null\`, **chosenReason**: \`null\`
+
+If existing chosen decisions affect the new ones, use \`globalDecisionRefs\` or
+\`parentDecisionRef\` to link them.
+
+### Step 4 — Choose
+
+For each new unchosen decision, evaluate options and set \`chosen\` +
+\`chosenReason\`. Do NOT change existing chosen decisions.
+
+Check for cascading decisions. If found, add and choose them too.
+
+### Step 5 — Validate and Summarise
+
+1. Run: \`dd validate\`
+2. Present a summary of what was added:
+   - New requirements
+   - New design decisions with chosen options
+3. Let the user know they can:
+   - Review in the UI
+   - Add more problems with \`@dd-add\`
+   - Iterate on specific decisions with \`@dd-design\` or \`@dd-choose\`
+
+## Guidelines
+
+- **Favour simplicity.** Always include a simple option.
+- **Avoid over-engineering.** Don't go beyond what the new requirements need.
+- **Prefer simpler options** when they deliver similar user value.
+- Keep \`chosenReason\` to 1-2 sentences.
+- Ensure new decisions don't contradict existing chosen decisions.
+
+## Rules
+
+- **YAML is the source of truth.** Edit the files directly.
+- **IDs must be unique** within their scope.
+- **Do NOT modify existing requirements or decisions** — only add new ones.
+- **requirementRefs** and **contextRefs** must reference existing IDs.
+`;
+}
+
+// ---------------------------------------------------------------------------
 // Propagate Review
 // ---------------------------------------------------------------------------
 

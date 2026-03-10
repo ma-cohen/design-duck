@@ -19,6 +19,9 @@ import {
   designPrompt,
   choosePrompt,
   propagatePrompt,
+  solvePrompt,
+  addPrompt,
+  type SolveState,
 } from "./prompts";
 
 // ---------------------------------------------------------------------------
@@ -223,5 +226,64 @@ export function generatePropagateContext(
     rawDesign,
     rawGlobalDesign,
     otherProjectDesigns,
+  );
+}
+
+/**
+ * Solve — run the full cycle from current state.
+ */
+export function generateSolveContext(docsDir: string): string {
+  const rawVision = readRawVision(docsDir);
+  const rawRootContext = readRawRootContext(docsDir);
+  const rawGlobalDesign = readRawGlobalDesign(docsDir);
+  const existing = listProjects(docsDir);
+
+  const projects: SolveState["projects"] = {};
+  for (const name of existing) {
+    projects[name] = {
+      requirementsYaml: readRawProjectRequirements(docsDir, name),
+      contextYaml: readRawProjectContext(docsDir, name),
+      designYaml: readRawProjectDesign(docsDir, name),
+    };
+  }
+
+  return solvePrompt({
+    visionYaml: rawVision,
+    rootContextYaml: rawRootContext,
+    existingProjects: existing,
+    projects,
+    globalDesignYaml: rawGlobalDesign,
+  });
+}
+
+/**
+ * Add Problem — extend an existing project with new requirements and design.
+ */
+export function generateAddContext(
+  docsDir: string,
+  projectName: string,
+): string {
+  const rawVision = readRawVision(docsDir) ?? "";
+
+  const rawReqs = readRawProjectRequirements(docsDir, projectName);
+  if (!rawReqs) {
+    throw new Error(
+      `requirements.yaml not found for project "${projectName}". The project must exist before adding problems to it.`,
+    );
+  }
+
+  const rawRootContext = readRawRootContext(docsDir);
+  const rawProjectContext = readRawProjectContext(docsDir, projectName);
+  const rawProjectDesign = readRawProjectDesign(docsDir, projectName);
+  const rawGlobalDesign = readRawGlobalDesign(docsDir);
+
+  return addPrompt(
+    rawVision,
+    projectName,
+    rawReqs,
+    rawRootContext,
+    rawProjectContext,
+    rawProjectDesign,
+    rawGlobalDesign,
   );
 }

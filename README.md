@@ -37,10 +37,15 @@ cd design-duck && npm install && cd ..
 
 The dashboard opens in your browser and auto-reloads when YAML files change.
 
-### 4. Work through context phases
+### 4. Solve your problem
 
-Run a context command, feed the output to your AI agent, let it edit YAML, and
-review results in the UI.
+The fastest way to get a full design is `@dd-solve` — tag it in your AI chat
+with a problem statement and the agent runs every phase (vision, projects,
+requirements, design, choose) in one shot.
+
+To add more problems to an existing project later, use `@dd-add`.
+
+You can also run individual phases manually — see **Workflow Phases** below.
 
 ```text
 You                        Design Duck                    Your AI Agent
@@ -55,7 +60,17 @@ Review in UI <------------┘
 
 ## Workflow Phases
 
-### Core phases
+### Quick start
+
+```bash
+./design-duck/duck context solve              # full cycle from current state
+./design-duck/duck context add <project>      # add a new problem to a project
+```
+
+- `solve`: runs the entire workflow (vision through choose) in one shot, adapting to whatever state already exists
+- `add`: extends an existing project with new requirements and design decisions
+
+### Individual phases
 
 ```bash
 ./design-duck/duck context vision
@@ -101,6 +116,8 @@ design-duck/
 ├── duck.cmd
 ├── AGENTS.md
 ├── commands/
+│   ├── dd-solve.md
+│   ├── dd-add.md
 │   ├── dd-vision.md
 │   ├── dd-projects.md
 │   ├── dd-requirements.md

@@ -350,6 +350,126 @@ decisions and chosen options.
 
 
 // ---------------------------------------------------------------------------
+// Full-cycle commands
+// ---------------------------------------------------------------------------
+
+const DD_SOLVE = `# Design Duck — Solve (Full Cycle)
+
+Run the entire Design Duck workflow in one shot: vision, projects, requirements,
+design, choose — all without stopping between phases.
+
+## How to Use
+
+The user tagged this file to run the **full cycle**. Use their message as the
+problem statement. You will take it through every phase automatically.
+
+## Steps
+
+1. Start the live UI so the user can see progress in real time:
+
+   \`\`\`bash
+   dd ui
+   \`\`\`
+
+2. Run the solve context command to get the current state and full instructions:
+
+   \`\`\`bash
+   dd context solve
+   \`\`\`
+
+3. Read the output carefully — it contains the current state of all phases,
+   YAML formats, guidelines, and step-by-step instructions.
+
+4. Follow **all** the instructions from the context output. Work through every
+   phase sequentially. **Do NOT stop between phases** to suggest next steps —
+   just keep going until everything is complete.
+
+5. Run validation when done:
+
+   \`\`\`bash
+   dd validate
+   \`\`\`
+
+6. Present a summary of everything created and let the user know they can
+   review in the UI.
+
+## Rules
+
+- YAML is the source of truth — edit the files directly.
+- **Do NOT stop between phases.** Run the full cycle in one go.
+- Ask context questions upfront (situation + tech stack) before starting.
+- Keep descriptions concise and user-focused.
+
+## After Completion
+
+Let the user know they can:
+- Review everything in the live UI
+- Add more problems: \`@dd-add\`
+- Iterate on specific decisions: \`@dd-design\` or \`@dd-choose\`
+`;
+
+const DD_ADD = `# Design Duck — Add Problem
+
+Add a new problem or need to an existing project, then design and choose
+solutions for it — all without stopping between phases.
+
+## How to Use
+
+The user tagged this file to **add a new problem** to an existing project.
+Use their message as the problem statement.
+This requires a **project name**.
+
+### Determining the Project Name
+
+1. If the user mentioned a project name in their message, use it.
+2. Otherwise, list the available projects:
+   \`\`\`bash
+   ls design-duck/docs/projects/
+   \`\`\`
+3. If there is exactly one project (besides \`example-project\`), use it.
+4. If there are multiple projects, ask the user which one to add to.
+
+## Steps
+
+1. Run the add context command with the project name:
+
+   \`\`\`bash
+   dd context add <project-name>
+   \`\`\`
+
+2. Read the output carefully — it contains the existing state (vision,
+   requirements, design) and step-by-step instructions.
+
+3. Follow **all** the instructions from the context output:
+   - Add new requirements for the user's problem
+   - Add new design decisions with options
+   - Choose options for the new decisions
+   **Do NOT stop between steps** — complete everything in one go.
+
+4. Run validation when done:
+
+   \`\`\`bash
+   dd validate
+   \`\`\`
+
+5. Present a summary of what was added.
+
+## Rules
+
+- **Do NOT modify or remove existing requirements or decisions** — only add new ones.
+- Use IDs that don't collide with existing ones.
+- YAML is the source of truth — edit the files directly.
+- Keep descriptions concise and user-focused.
+
+## After Completion
+
+Let the user know they can:
+- Review in the UI
+- Add more problems: \`@dd-add\`
+- Iterate on specific decisions: \`@dd-design\` or \`@dd-choose\`
+`;
+
+// ---------------------------------------------------------------------------
 // Utility commands
 // ---------------------------------------------------------------------------
 
@@ -516,6 +636,8 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 /** All command markdown files keyed by filename (without path). */
 export const COMMAND_FILES: Record<string, string> = {
+  "dd-solve.md": DD_SOLVE,
+  "dd-add.md": DD_ADD,
   "dd-vision.md": DD_VISION,
   "dd-projects.md": DD_PROJECTS,
   "dd-requirements.md": DD_REQUIREMENTS,

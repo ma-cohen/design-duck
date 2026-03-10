@@ -10,6 +10,13 @@ requirements and design management. All project state lives in YAML files under
 \`design-duck/docs/\`. A live UI (\`design-duck ui\`) shows the current
 state and updates automatically when files change.
 
+## Quick Start
+
+The fastest way to get started is \`@dd-solve\` — tag it with your problem
+statement and the agent runs the entire workflow (vision, projects, requirements,
+design, choose) in one shot. To add more problems to an existing project later,
+use \`@dd-add\`.
+
 ## Workflow
 
 **Before you begin:** Start the live UI so the user can see progress in real time:
@@ -134,6 +141,8 @@ your instructions — the agent handles the rest.
 
 | Tag                    | What it does                                |
 | ---------------------- | ------------------------------------------- |
+| \`@dd-solve\`           | **Full cycle** — run all phases in one shot  |
+| \`@dd-add\`             | **Add problem** — extend a project with new requirements and design |
 | \`@dd-vision\`          | Define or refine the product vision         |
 | \`@dd-projects\`        | Split the vision into projects              |
 | \`@dd-requirements\`    | Gather requirements for a project           |

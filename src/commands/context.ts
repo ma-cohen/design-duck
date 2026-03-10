@@ -14,6 +14,8 @@ import {
   generateDesignContext,
   generateChooseContext,
   generatePropagateContext,
+  generateSolveContext,
+  generateAddContext,
 } from "../ai/context-generator";
 
 export const PHASES = [
@@ -23,6 +25,8 @@ export const PHASES = [
   "design",
   "choose",
   "propagate",
+  "solve",
+  "add",
 ] as const;
 
 export type Phase = (typeof PHASES)[number];
@@ -33,6 +37,7 @@ const PROJECT_PHASES = new Set<Phase>([
   "design",
   "choose",
   "propagate",
+  "add",
 ]);
 
 function isPhase(s: string): s is Phase {
@@ -49,6 +54,8 @@ function printContextUsage(): void {
   console.error("  design <p>                    Brainstorm design decisions for a project");
   console.error("  choose <p>                    Evaluate and choose design options");
   console.error("  propagate <p>                 Review decisions for propagation to global");
+  console.error("  solve                         Run the full cycle from current state");
+  console.error("  add <p>                       Add a new problem to an existing project");
   process.exitCode = 1;
 }
 
@@ -93,7 +100,7 @@ export function context(
   const docsDir = resolveRequirementsDir(baseDir);
 
   // Vision phase can work without an existing requirements dir
-  if (!docsDir && phase !== "vision") {
+  if (!docsDir && phase !== "vision" && phase !== "solve") {
     console.error(
       "Error: design-duck/docs/ directory not found.",
     );
@@ -124,6 +131,12 @@ export function context(
         break;
       case "propagate":
         output = generatePropagateContext(docsDir!, projectName!);
+        break;
+      case "solve":
+        output = generateSolveContext(docsDir ?? join(baseDir, "design-duck", "docs"));
+        break;
+      case "add":
+        output = generateAddContext(docsDir!, projectName!);
         break;
     }
 
