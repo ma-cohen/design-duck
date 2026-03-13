@@ -17,11 +17,18 @@ Only [Node.js](https://nodejs.org) v18+ is required.
 ### 1. Initialize
 
 ```bash
-npx github:ma-cohen/design-duck#main init
+npx design-duck init
 ```
 
 This scaffolds a local `design-duck/` folder with templates, command shortcuts,
 and an agent guide.
+
+> **npm mirror lagging?** If your corporate npm registry hasn't synced the
+> latest version yet, install directly from GitHub Releases:
+>
+> ```bash
+> npx design-duck init --github
+> ```
 
 ### 2. Install once
 
@@ -105,7 +112,8 @@ Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
 | `./design-duck/duck context <phase> [name]` | Generate AI context prompt for a phase |
 | `./design-duck/duck validate` | Validate YAML files and references |
 | `./design-duck/duck ui` | Start live UI (auto-selects an available port from 3456) |
-| `./design-duck/duck upgrade` | Reinstall latest package and run migrations |
+| `./design-duck/duck upgrade` | Reinstall latest package from npm and run migrations |
+| `./design-duck/duck upgrade --github` | Same as above, but pulls from GitHub Releases instead |
 | `./design-duck/duck reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
 
 ## File Structure

@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+      # Publish to npm registry
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Create pre-built tarball for GitHub Release
+      - run: npm pack --pack-destination .
+
+      # Also create a stable "latest" tarball name for the --github upgrade path
+      - run: cp design-duck-*.tgz design-duck-latest.tgz
+
+      # Attach both tarballs to the GitHub Release
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            design-duck-*.tgz
+          generate_release_notes: true

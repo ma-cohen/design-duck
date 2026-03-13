@@ -4,16 +4,21 @@ import { join } from "node:path";
 import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
 import { writeProjectVersion } from "../infrastructure/version";
+import { VERSION } from "../index";
 
-/** package.json for the design-duck/ folder — depends on the tool from GitHub */
-const DUCK_PACKAGE_JSON = `{
-  "private": true,
-  "description": "Design Duck — local requirements management. Run: ./duck ui",
-  "dependencies": {
-    "design-duck": "github:ma-cohen/design-duck#main"
-  }
+const GITHUB_RELEASE_BASE =
+  "https://github.com/ma-cohen/design-duck/releases/latest/download";
+
+function duckPackageJson(useGithub: boolean): string {
+  const dep = useGithub
+    ? `${GITHUB_RELEASE_BASE}/design-duck-${VERSION}.tgz`
+    : "design-duck";
+  return JSON.stringify(
+    { private: true, description: "Design Duck — local requirements management. Run: ./duck ui", dependencies: { "design-duck": dep } },
+    null,
+    2,
+  ) + "\n";
 }
-`;
 
 /** .gitignore for the design-duck/ folder — keep node_modules out of version control */
 const DUCK_GITIGNORE = `node_modules/
@@ -161,7 +166,11 @@ export function scaffoldCommands(duckDir: string): void {
   console.log("  Created commands/ (tag-and-go agent shortcuts)");
 }
 
-export function init(targetDir: string = process.cwd()): void {
+export interface InitOptions {
+  useGithub?: boolean;
+}
+
+export function init(targetDir: string = process.cwd(), opts: InitOptions = {}): void {
   const duckDir = join(targetDir, "design-duck");
   const docsDir = join(duckDir, "docs");
 
@@ -183,11 +192,11 @@ export function init(targetDir: string = process.cwd()): void {
   writeProjectVersion(targetDir);
   console.log("  Created .version");
 
-  // Write package.json for local npm install
   const pkgJsonPath = join(duckDir, "package.json");
   if (!existsSync(pkgJsonPath)) {
-    writeFileSync(pkgJsonPath, DUCK_PACKAGE_JSON, "utf-8");
-    console.log("  Created package.json");
+    writeFileSync(pkgJsonPath, duckPackageJson(!!opts.useGithub), "utf-8");
+    const source = opts.useGithub ? "GitHub Release" : "npm";
+    console.log(`  Created package.json (source: ${source})`);
   }
 
   // Write .gitignore to exclude node_modules
