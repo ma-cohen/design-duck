@@ -33,8 +33,9 @@ describe("upgrade infrastructure", () => {
     rmSync(testDir, { recursive: true, force: true });
   });
 
-  test("VERSION matches 1.1.0 from package.json", () => {
-    expect(VERSION).toBe("1.1.0");
+  test("VERSION matches package.json version", () => {
+    const pkg = require("../../package.json");
+    expect(VERSION).toBe(pkg.version);
   });
 
   test("migrations array has registered migrations", () => {

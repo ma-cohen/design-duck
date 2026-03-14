@@ -22,7 +22,7 @@ jobs:
 
       - run: npm install --ignore-scripts
       - run: npm run build
-      - run: bun test || echo "::warning::Some tests failed — see logs above"
+      - run: bun test
 
       # Publish to npm registry
       - run: npm publish
