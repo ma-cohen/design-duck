@@ -1,0 +1,21 @@
+# Design decisions for this project.
+# Each decision explores multiple options with pros/cons,
+# and links back to requirements via requirementRefs.
+#
+# notes: Free-text area for research links, analysis, constraints.
+
+notes: null
+decisions: []
+# Example:
+#   - id: DEC-001
+#     topic: "Database choice"
+#     context: "We need to choose a database for user data"
+#     requirementRefs: [REQ-001]
+#     options:
+#       - id: postgres
+#         title: "PostgreSQL"
+#         description: "Relational database"
+#         pros: ["Mature", "Strong SQL support"]
+#         cons: ["Schema migrations needed"]
+#     chosen: null
+#     chosenReason: null

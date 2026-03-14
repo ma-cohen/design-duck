@@ -1,0 +1,8 @@
+# Project requirements - user-value focused
+visionAlignment: ""
+
+requirements: []
+# Example:
+#   - id: REQ-001
+#     description: "Users can sign up with email and password"
+#     userValue: "Provides a familiar way to access the platform"

@@ -14,6 +14,13 @@ The user tagged this file to ask you to **initialize** Design Duck.
    dd init
    ```
 
+   If the npm registry is behind (e.g. a corporate mirror with a sync delay),
+   use the GitHub Release source instead:
+
+   ```bash
+   dd init --github
+   ```
+
 2. Install dependencies:
 
    ```bash

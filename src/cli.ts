@@ -4,7 +4,6 @@
  * Commands: init | ui | validate | context | upgrade
  */
 
-import { fileURLToPath } from "node:url";
 import { init } from "./commands/init";
 import { ui } from "./commands/ui";
 import { validate } from "./commands/validate";
@@ -94,12 +93,4 @@ function main(): void {
   }
 }
 
-// Support both Bun (import.meta.main) and Node.js (argv check)
-const isMain =
-  typeof (import.meta as any).main === "boolean"
-    ? (import.meta as any).main
-    : process.argv[1] === fileURLToPath(import.meta.url);
-
-if (isMain) {
-  main();
-}
+main();

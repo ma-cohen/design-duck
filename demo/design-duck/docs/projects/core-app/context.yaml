@@ -1,7 +1,0 @@
-contexts:
-  - id: P1-CTX-001
-    description: "The core app is the first project we ship — it must be usable standalone without the notifications project"
-  - id: P1-CTX-002
-    description: "We're targeting web-first, but the UI should be responsive enough for tablets"
-  - id: P1-CTX-003
-    description: "Our competitors all have Kanban boards — users expect drag-and-drop columns"

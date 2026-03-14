@@ -14,7 +14,7 @@ This phase requires a **project name**.
    ```bash
    ls design-duck/docs/projects/
    ```
-3. If there is exactly one project, use it.
+3. If there is exactly one project (besides `example-project`), use it.
 4. If there are multiple projects, ask the user which one to work on.
 
 ## Steps
@@ -32,7 +32,11 @@ This phase requires a **project name**.
    decision, evaluate options and set `chosen` + `chosenReason` in
    `design-duck/docs/projects/<project-name>/design.yaml`.
 
-4. Run validation to check your work:
+4. **Perform a cascading analysis**: after choosing, review your choices and
+   identify any new decisions that are now needed as a consequence. List them
+   so the user knows whether to loop back to `@dd-design`.
+
+5. Run validation to check your work:
 
    ```bash
    dd validate
@@ -44,8 +48,12 @@ This phase requires a **project name**.
 - Provide a clear `chosenReason` for each selection.
 - Consider the user's message for any preferences or constraints.
 - **Prefer simpler options** when they deliver similar user value. Choose complexity only when a concrete requirement demands it.
+- Consider how choices interact — one choice may constrain or enable options in another decision.
 
 ## Next Step
 
-When you're done, suggest the user continue to the **propagate** phase to
-review which decisions should be promoted to global design: `@dd-propagate`
+**If cascading decisions were identified**, suggest the user loop back to the
+design phase: `@dd-design`
+
+**If the design is complete** across all categories, suggest continuing to:
+- **Propagation review**: `@dd-propagate`

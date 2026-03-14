@@ -14,7 +14,7 @@ This phase requires a **project name**.
    ```bash
    ls design-duck/docs/projects/
    ```
-3. If there is exactly one project, use it.
+3. If there is exactly one project (besides `example-project`), use it.
 4. If there are multiple projects, ask the user which one to work on.
 
 ## Steps

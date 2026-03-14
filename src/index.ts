@@ -19,4 +19,3 @@ export const VERSION: string = pkg.version;
 // Infrastructure exports
 // export * from './infrastructure/file-store';
 
-console.log('[design-duck] Library loaded');

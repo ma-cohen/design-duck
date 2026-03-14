@@ -1,0 +1,13 @@
+# Project context — technical and system facts specific to this project
+# that inform design decisions.
+#
+# Each context item has:
+#   id          - Unique identifier (e.g. CTX-PROJ-001)
+#   description - One-liner factual statement about the current system
+
+contexts: []
+# Example:
+#   - id: CTX-PROJ-001
+#     description: "Current backend uses Express.js on Node 18"
+#   - id: CTX-PROJ-002
+#     description: "Deployed to AWS ECS with Fargate"

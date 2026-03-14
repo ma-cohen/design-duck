@@ -8,11 +8,18 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 ## Steps
 
-1. Run the upgrade command — it automatically cleans and reinstalls the latest
-   version from GitHub before applying migrations:
+1. Run the upgrade command — it pulls the latest version from npm and applies
+   any pending migrations:
 
    ```bash
    dd upgrade
+   ```
+
+   If the npm registry is behind (e.g. a corporate mirror with a sync delay),
+   pull directly from GitHub Releases instead:
+
+   ```bash
+   dd upgrade --github
    ```
 
 2. Review the output for any migration messages or warnings.
@@ -21,7 +28,6 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 ## Notes
 
-- The upgrade command handles the full clean reinstall automatically (removes
-  `node_modules` and `package-lock.json` to force a fresh fetch from GitHub).
+- By default, upgrade uses npm. Pass `--github` to bypass a stale npm mirror.
 - Backups of overwritten files are saved in `design-duck/.backup/`.
 - AGENTS.md and command files are always regenerated to stay current.

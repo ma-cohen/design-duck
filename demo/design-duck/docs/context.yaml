@@ -1,11 +1,13 @@
-contexts:
-  - id: CTX-001
-    description: "We are a 2-person startup, bootstrapped, no external funding"
-  - id: CTX-002
-    description: "Target users are development teams of 3-10 people"
-  - id: CTX-003
-    description: "We want to ship an MVP in 6 weeks"
-  - id: CTX-004
-    description: "Both founders are experienced TypeScript/React developers"
-  - id: CTX-005
-    description: "Competitors (Linear, Shortcut) are well-funded — we compete on simplicity, not features"
+# Situational context — business, organizational, and environmental facts
+# that inform vision and all project decisions.
+#
+# Each context item has:
+#   id          - Unique identifier (e.g. CTX-001)
+#   description - One-liner factual statement about the situation
+
+contexts: []
+# Example:
+#   - id: CTX-001
+#     description: "We are a bootstrapped startup with 3 developers"
+#   - id: CTX-002
+#     description: "Our target users are small development teams"
