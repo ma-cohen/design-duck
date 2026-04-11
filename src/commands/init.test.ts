@@ -36,12 +36,12 @@ describe("init", () => {
   test("AGENTS.md contains workflow instructions and context commands", () => {
     init(testDir);
     const content = readFileSync(join(testDir, "design-duck", "AGENTS.md"), "utf-8");
-    expect(content).toContain("design-duck context vision");
-    expect(content).toContain("design-duck context projects");
-    expect(content).toContain("design-duck context requirements");
-    expect(content).toContain("design-duck context design");
-    expect(content).toContain("design-duck context choose");
-    expect(content).toContain("design-duck context propagate");
+    expect(content).toContain("dd context vision");
+    expect(content).toContain("dd context projects");
+    expect(content).toContain("dd context requirements");
+    expect(content).toContain("dd context design");
+    expect(content).toContain("dd context choose");
+    expect(content).toContain("dd context propagate");
     expect(content).toContain("YAML is the source of truth");
   });
 
@@ -78,11 +78,5 @@ describe("init", () => {
   test("does not crash when .git does not exist", () => {
     init(testDir);
     expect(process.exitCode).not.toBe(1);
-  });
-
-  test("skips git init when .git already exists", () => {
-    mkdirSync(join(testDir, ".git"));
-    init(testDir);
-    expect(existsSync(join(testDir, ".git", "HEAD"))).toBe(false);
   });
 });

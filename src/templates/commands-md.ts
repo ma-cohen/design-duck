@@ -545,20 +545,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
    dd init
    \`\`\`
 
-   If the npm registry is behind (e.g. a corporate mirror with a sync delay),
-   use the GitHub Release source instead:
-
-   \`\`\`bash
-   dd init --github
-   \`\`\`
-
-2. Install dependencies:
-
-   \`\`\`bash
-   cd design-duck && npm install && cd ..
-   \`\`\`
-
-3. Report the created folder structure to the user and suggest next steps:
+2. Report the created folder structure to the user and suggest next steps:
    - Start the UI: \`dd ui\`
    - Begin with vision: tag \`@dd-vision\` with a description of the product
 
@@ -600,8 +587,7 @@ The user tagged this file to ask you to **reset** Design Duck.
 
 - Without \`--force\`, the command prompts for confirmation before deleting.
 - This is destructive — all existing YAML content will be lost.
-- The \`design-duck/\` directory itself, \`package.json\`, \`.gitignore\`, and the
-  \`duck\` wrapper scripts are preserved.
+- The \`design-duck/\` directory itself is preserved (only docs/ and commands/ are reset).
 
 ## Next Step
 
@@ -618,27 +604,25 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 ## Steps
 
-1. Run the upgrade command — it pulls the latest version from npm and applies
-   any pending migrations:
+1. Upgrade the global CLI binary:
+
+   \`\`\`bash
+   npm install -g design-duck@latest
+   \`\`\`
+
+2. Apply any schema migrations and regenerate templates for this project:
 
    \`\`\`bash
    dd upgrade
    \`\`\`
 
-   If the npm registry is behind (e.g. a corporate mirror with a sync delay),
-   pull directly from GitHub Releases instead:
+3. Review the output for any migration messages or warnings.
 
-   \`\`\`bash
-   dd upgrade --github
-   \`\`\`
-
-2. Review the output for any migration messages or warnings.
-
-3. Report to the user what was upgraded and if any action is needed.
+4. Report to the user what was upgraded and if any action is needed.
 
 ## Notes
 
-- By default, upgrade uses npm. Pass \`--github\` to bypass a stale npm mirror.
+- Step 1 upgrades the \`dd\` CLI itself; step 2 upgrades this project's files.
 - Backups of overwritten files are saved in \`design-duck/.backup/\`.
 - AGENTS.md and command files are always regenerated to stay current.
 `;

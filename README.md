@@ -14,32 +14,27 @@ instantly when those files change.
 Design Duck works in any codebase (Node.js, Python, Go, Rust, Java, and more).
 Only [Node.js](https://nodejs.org) v18+ is required.
 
-### 1. Initialize
+### 1. Install once (globally)
 
 ```bash
-npx design-duck init
+npm install -g design-duck
 ```
 
-This scaffolds a local `design-duck/` folder with templates, command shortcuts,
+This gives you the `dd` command available in any project, forever.
+
+### 2. Initialize a project
+
+```bash
+dd init
+```
+
+This scaffolds a `design-duck/` folder with YAML templates, command shortcuts,
 and an agent guide.
-
-> **npm mirror lagging?** If your corporate npm registry hasn't synced the
-> latest version yet, install directly from GitHub Releases:
->
-> ```bash
-> npx design-duck init --github
-> ```
-
-### 2. Install once
-
-```bash
-cd design-duck && npm install && cd ..
-```
 
 ### 3. Run the UI
 
 ```bash
-./design-duck/duck ui
+dd ui
 ```
 
 The dashboard opens in your browser and auto-reloads when YAML files change.
@@ -70,8 +65,8 @@ Review in UI <------------┘
 ### Quick start
 
 ```bash
-./design-duck/duck context solve              # full cycle from current state
-./design-duck/duck context add <project>      # add a new problem to a project
+dd context solve              # full cycle from current state
+dd context add <project>      # add a new problem to a project
 ```
 
 - `solve`: runs the entire workflow (vision through choose) in one shot, adapting to whatever state already exists
@@ -80,12 +75,12 @@ Review in UI <------------┘
 ### Individual phases
 
 ```bash
-./design-duck/duck context vision
-./design-duck/duck context projects
-./design-duck/duck context requirements <project>
-./design-duck/duck context design <project>
-./design-duck/duck context choose <project>
-./design-duck/duck context propagate <project>
+dd context vision
+dd context projects
+dd context requirements <project>
+dd context design <project>
+dd context choose <project>
+dd context propagate <project>
 ```
 
 - `vision`: define/refine `vision.yaml`
@@ -98,7 +93,7 @@ Review in UI <------------┘
 ### Validate
 
 ```bash
-./design-duck/duck validate
+dd validate
 ```
 
 Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
@@ -108,20 +103,17 @@ Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
 
 | Command | Description |
 | --- | --- |
-| `./design-duck/duck init` | Scaffold `design-duck/` with templates and command files |
-| `./design-duck/duck context <phase> [name]` | Generate AI context prompt for a phase |
-| `./design-duck/duck validate` | Validate YAML files and references |
-| `./design-duck/duck ui` | Start live UI (auto-selects an available port from 3456) |
-| `./design-duck/duck upgrade` | Reinstall latest package from npm and run migrations |
-| `./design-duck/duck upgrade --github` | Same as above, but pulls from GitHub Releases instead |
-| `./design-duck/duck reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
+| `dd init` | Scaffold `design-duck/` with templates and command files |
+| `dd context <phase> [name]` | Generate AI context prompt for a phase |
+| `dd validate` | Validate YAML files and references |
+| `dd ui` | Start live UI (auto-selects an available port from 3456) |
+| `dd upgrade` | Apply schema migrations and regenerate templates (update the binary with `npm install -g design-duck@latest`) |
+| `dd reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
 
 ## File Structure
 
 ```text
 design-duck/
-├── duck
-├── duck.cmd
 ├── AGENTS.md
 ├── commands/
 │   ├── dd-solve.md

@@ -1,41 +1,8 @@
-import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync, chmodSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
 import { writeProjectVersion } from "../infrastructure/version";
-import { VERSION } from "../index";
-
-const GITHUB_RELEASE_BASE =
-  "https://github.com/ma-cohen/design-duck/releases/latest/download";
-
-function duckPackageJson(useGithub: boolean): string {
-  const dep = useGithub
-    ? `${GITHUB_RELEASE_BASE}/design-duck-${VERSION}.tgz`
-    : "design-duck";
-  return JSON.stringify(
-    { private: true, description: "Design Duck — local requirements management. Run: ./duck ui", dependencies: { "design-duck": dep } },
-    null,
-    2,
-  ) + "\n";
-}
-
-/** .gitignore for the design-duck/ folder — keep node_modules out of version control */
-const DUCK_GITIGNORE = `node_modules/
-`;
-
-/** Bash wrapper script — runs the CLI from node_modules */
-const DUCK_SH = `#!/usr/bin/env bash
-# Design Duck CLI wrapper — run from your project root: ./design-duck/duck <command>
-DIR="$(cd "$(dirname "$0")" && pwd)"
-node "$DIR/node_modules/design-duck/dist/cli.js" "$@"
-`;
-
-/** Windows wrapper script */
-const DUCK_CMD = `@echo off
-REM Design Duck CLI wrapper — run from your project root: .\\design-duck\\duck <command>
-node "%~dp0node_modules\\design-duck\\dist\\cli.js" %*
-`;
 
 const VISION_YAML = `# Vision, mission, and core problem
 productName: ""
@@ -151,7 +118,6 @@ export function scaffoldDocs(duckDir: string): void {
 
   writeFileSync(join(exampleProjectDir, "design.yaml"), EXAMPLE_DESIGN_YAML, "utf-8");
   console.log("  Created projects/example-project/design.yaml");
-
 }
 
 /**
@@ -166,11 +132,7 @@ export function scaffoldCommands(duckDir: string): void {
   console.log("  Created commands/ (tag-and-go agent shortcuts)");
 }
 
-export interface InitOptions {
-  useGithub?: boolean;
-}
-
-export function init(targetDir: string = process.cwd(), opts: InitOptions = {}): void {
+export function init(targetDir: string = process.cwd()): void {
   const duckDir = join(targetDir, "design-duck");
   const docsDir = join(duckDir, "docs");
 
@@ -184,92 +146,29 @@ export function init(targetDir: string = process.cwd(), opts: InitOptions = {}):
     return;
   }
 
-  // Scaffold docs/ and commands/ using shared helpers
   scaffoldDocs(duckDir);
   scaffoldCommands(duckDir);
-
-  // Write .version file to track the installed version
   writeProjectVersion(targetDir);
   console.log("  Created .version");
 
-  const pkgJsonPath = join(duckDir, "package.json");
-  if (!existsSync(pkgJsonPath)) {
-    writeFileSync(pkgJsonPath, duckPackageJson(!!opts.useGithub), "utf-8");
-    const source = opts.useGithub ? "GitHub Release" : "npm";
-    console.log(`  Created package.json (source: ${source})`);
-  }
-
-  // Write .gitignore to exclude node_modules
-  const gitignorePath = join(duckDir, ".gitignore");
-  if (!existsSync(gitignorePath)) {
-    writeFileSync(gitignorePath, DUCK_GITIGNORE, "utf-8");
-    console.log("  Created .gitignore");
-  }
-
-  // Write duck wrapper scripts (bash + Windows)
-  const duckShPath = join(duckDir, "duck");
-  writeFileSync(duckShPath, DUCK_SH, "utf-8");
-  try {
-    chmodSync(duckShPath, 0o755);
-  } catch {
-    // chmod may fail on Windows — that's fine, they use duck.cmd
-  }
-  console.log("  Created duck (CLI wrapper)");
-
-  const duckCmdPath = join(duckDir, "duck.cmd");
-  writeFileSync(duckCmdPath, DUCK_CMD, "utf-8");
-  console.log("  Created duck.cmd (Windows CLI wrapper)");
-
-  if (!existsSync(join(targetDir, ".git"))) {
-    try {
-      execSync("git init", { cwd: targetDir, stdio: "pipe" });
-      console.log("Initialized git repository.");
-    } catch {
-      console.warn("Warning: git init failed. Is git installed?");
-    }
-  } else if (process.env.DEBUG) {
-    console.error("[design-duck:init] git repo already exists, skipping git init");
-  }
-
   console.log(`
-Design Duck initialized! Your folder structure:
+Design Duck initialized!
 
   design-duck/
-  ├── duck                             # CLI wrapper (run: ./design-duck/duck <command>)
-  ├── duck.cmd                         # CLI wrapper (Windows)
-  ├── package.json                     # npm dependencies
   ├── AGENTS.md                        # AI agent instructions & workflow guide
   ├── commands/                        # Tag-and-go agent shortcuts (@dd-vision, etc.)
-  │   ├── dd-vision.md
-  │   ├── dd-projects.md
-  │   ├── dd-requirements.md
-  │   ├── dd-design.md
-  │   ├── dd-choose.md
-  │   ├── dd-propagate.md
-  │   ├── dd-validate.md
-  │   ├── dd-ui.md
-  │   ├── dd-init.md
-  │   ├── dd-upgrade.md
-  │   └── dd-reset.md
   └── docs/
       ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem
       ├── design.yaml                  # Global design decisions
-      ├── projects/
-      │   └── example-project/
-      │       ├── context.yaml         # Project-specific context (system, tech)
-      │       ├── requirements.yaml    # User-value requirements
-      │       └── design.yaml          # Design decisions & options
+      └── projects/
+          └── example-project/
+              ├── context.yaml
+              ├── requirements.yaml
+              └── design.yaml
 
 Next steps:
-  1. cd design-duck && npm install     # one-time setup
-  2. cd ..
-  3. Tag @dd-vision and tell your AI agent what to build!
+  Tag @dd-vision and tell your AI agent what to build!
 
-If you have the 'dd' shell alias set up, you can also use:
-  dd context vision
-  dd ui
-  dd validate
-
-Or point your AI agent at design-duck/AGENTS.md for the full workflow.`);
+Or run: dd ui    (opens the live dashboard)`);
 }

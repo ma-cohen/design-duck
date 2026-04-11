@@ -7,7 +7,7 @@ export const AGENT_MD = `# Design Duck — Agent Instructions
 
 You are working inside a project that uses **Design Duck** for vision-driven
 requirements and design management. All project state lives in YAML files under
-\`design-duck/docs/\`. A live UI (\`design-duck ui\`) shows the current
+\`design-duck/docs/\`. A live UI (\`dd ui\`) shows the current
 state and updates automatically when files change.
 
 ## Quick Start
@@ -22,7 +22,7 @@ use \`@dd-add\`.
 **Before you begin:** Start the live UI so the user can see progress in real time:
 
 \`\`\`bash
-design-duck ui
+dd ui
 \`\`\`
 
 This opens a browser dashboard that auto-updates as you edit the YAML files.
@@ -34,7 +34,7 @@ a context prompt — run it, read the output, then perform the work described.
 ### 1. Define the Vision
 
 \`\`\`bash
-design-duck context vision
+dd context vision
 \`\`\`
 
 Edit \`design-duck/docs/vision.yaml\` with the **productName**, a clear **vision**, **mission**,
@@ -44,7 +44,7 @@ always ask the user for it. Every downstream decision traces back here.
 ### 2. Split into Projects
 
 \`\`\`bash
-design-duck context projects
+dd context projects
 \`\`\`
 
 Create project directories under \`design-duck/docs/projects/<name>/\`.
@@ -54,7 +54,7 @@ and an empty \`requirements\` array.
 ### 3. Gather Requirements (per project)
 
 \`\`\`bash
-design-duck context requirements <project>
+dd context requirements <project>
 \`\`\`
 
 Fill in user-value requirements. Each requirement has an **id**, **description**,
@@ -67,12 +67,12 @@ emerge. Loop between design and choose until the design is complete:
 
 1. Brainstorm decisions:
    \`\`\`bash
-   design-duck context design <project>
+   dd context design <project>
    \`\`\`
 
 2. Evaluate and choose options:
    \`\`\`bash
-   design-duck context choose <project>
+   dd context choose <project>
    \`\`\`
 
 3. If cascading decisions are needed (the choose phase will identify them),
@@ -87,7 +87,7 @@ to the decision whose choice triggered it.
 ### 5b. Propagation Review (per project, optional)
 
 \`\`\`bash
-design-duck context propagate <project>
+dd context propagate <project>
 \`\`\`
 
 After the design is complete, review whether any decisions should be **propagated
@@ -109,29 +109,15 @@ design-duck/docs/
 
 ## Other Commands
 
-| Command                  | Purpose                              |
-| ------------------------ | ------------------------------------ |
-| \`design-duck init\`      | Scaffold the requirements directory  |
-| \`design-duck ui\`        | Start the live UI (auto-selects port starting from 3456) |
-| \`design-duck validate\`  | Validate all YAML files              |
-| \`design-duck upgrade\`   | Upgrade to latest version            |
+| Command              | Purpose                              |
+| -------------------- | ------------------------------------ |
+| \`dd init\`           | Scaffold the requirements directory  |
+| \`dd ui\`             | Start the live UI (auto-selects port starting from 3456) |
+| \`dd validate\`       | Validate all YAML files              |
+| \`dd upgrade\`        | Apply migrations and regenerate templates |
 
-## Short \`dd\` Alias
-
-If the \`dd\` shell function is installed (added to \`~/.zshrc\` or \`~/.bashrc\`),
-you can use \`dd\` instead of \`./design-duck/duck\` or \`design-duck\` for all
-commands:
-
-\`\`\`bash
-dd init                          # scaffold + npm install in one step
-dd context vision                # generate context prompt
-dd ui                            # start the live UI
-dd validate                      # validate YAML files
-dd context requirements <project>
-\`\`\`
-
-When running commands in the terminal on behalf of the user, prefer \`dd\` if
-available — it is shorter and works from the project root.
+When running commands in the terminal on behalf of the user, always use \`dd\` —
+it is available globally after \`npm install -g design-duck\`.
 
 ## Command Files (Tag & Go)
 
@@ -185,7 +171,7 @@ context command and fills in vision.yaml based on your description.
 - **IDs must be unique** within their scope (requirements per project, decisions
   per project, etc.).
 - **requirementRefs** must reference existing requirement IDs. Run
-  \`design-duck validate\` to check cross-references.
+  \`dd validate\` to check cross-references.
 - **Global design decisions** can be referenced by project decisions via
   \`globalDecisionRefs\`.
 - **Every decision must have a \`category\`**: product, architecture, technology,
