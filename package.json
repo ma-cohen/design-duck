@@ -19,7 +19,10 @@
     "prepare": "npm run build",
     "start": "node dist/cli.js",
     "dev:ui": "vite --open",
-    "test": "bun test"
+    "test": "bun test",
+    "release:patch": "npm version patch && git push origin HEAD && git push origin --tags",
+    "release:minor": "npm version minor && git push origin HEAD && git push origin --tags",
+    "release:major": "npm version major && git push origin HEAD && git push origin --tags"
   },
   "engines": {
     "node": ">=18"
