@@ -20,16 +20,13 @@ function isCommand(s: string): s is Command {
 }
 
 function printUsage(): void {
-  console.error("Usage: design-duck <command> [options]");
+  console.error("Usage: dd <command> [options]");
   console.error("Commands: init | ui | validate | context | upgrade | reset");
-  console.error("\nOptions:");
-  console.error("  --github   Use GitHub Releases instead of npm registry (for init and upgrade)");
   process.exitCode = 1;
 }
 
-function cmdInit(args: string[]): void {
-  const useGithub = args.includes("--github");
-  init(process.cwd(), { useGithub });
+function cmdInit(): void {
+  init(process.cwd());
 }
 
 function cmdUi(): void {
@@ -44,9 +41,8 @@ function cmdContext(args: string[]): void {
   context(args);
 }
 
-function cmdUpgrade(args: string[]): void {
-  const useGithub = args.includes("--github");
-  upgrade(process.cwd(), { useGithub });
+function cmdUpgrade(): void {
+  upgrade(process.cwd());
 }
 
 async function cmdReset(args: string[]): Promise<void> {
@@ -73,7 +69,7 @@ function main(): void {
 
   switch (command) {
     case "init":
-      cmdInit(args.slice(1));
+      cmdInit();
       break;
     case "ui":
       cmdUi();
@@ -85,7 +81,7 @@ function main(): void {
       cmdContext(args.slice(1));
       break;
     case "upgrade":
-      cmdUpgrade(args.slice(1));
+      cmdUpgrade();
       break;
     case "reset":
       cmdReset(args.slice(1));

@@ -22,7 +22,7 @@ export async function reset(args: string[] = []): Promise<void> {
   const commandsDir = join(duckDir, "commands");
 
   if (!existsSync(duckDir)) {
-    console.error("design-duck/ not found. Run 'duck init' first.");
+    console.error("design-duck/ not found. Run 'dd init' first.");
     process.exitCode = 1;
     return;
   }

@@ -1,18 +1,18 @@
 /**
- * design-duck upgrade – migrate an existing project to the latest version.
+ * design-duck upgrade – apply schema migrations and regenerate templates
+ * for an existing project.
  *
- * 1. Reinstall the package from the remote (npm or GitHub Release)
- * 2. Re-exec the CLI using the freshly installed binary
- * 3. Read design-duck/.version (default to "0.1.0" if missing)
- * 4. Check if already up-to-date
- * 5. Collect and run applicable migrations
- * 6. Regenerate AGENTS.md & command files
- * 7. Write the new .version
+ * To upgrade the CLI itself, run: npm install -g design-duck@latest
+ *
+ * 1. Read design-duck/.version (default to "0.1.0" if missing)
+ * 2. Check if already up-to-date
+ * 3. Collect and run applicable migrations
+ * 4. Regenerate AGENTS.md & command files
+ * 5. Write the new .version
  */
 
-import { existsSync, mkdirSync, cpSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
 import { VERSION } from "../index";
 import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
@@ -22,13 +22,6 @@ import {
   writeProjectVersion,
   compareSemver,
 } from "../infrastructure/version";
-
-const GITHUB_RELEASE_BASE =
-  "https://github.com/ma-cohen/design-duck/releases/latest/download";
-
-export interface UpgradeOptions {
-  useGithub?: boolean;
-}
 
 /**
  * Back up a file to design-duck/.backup/<version>/ before migrating.
@@ -54,108 +47,18 @@ function backupFile(
   }
 }
 
-/**
- * Detect whether the current consumer package.json uses a GitHub Release URL
- * (as opposed to a plain npm registry dependency).
- */
-function isGithubSource(duckDir: string): boolean {
-  try {
-    const pkgPath = join(duckDir, "package.json");
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-    const dep: string = pkg?.dependencies?.["design-duck"] ?? "";
-    return dep.startsWith("https://github.com/");
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Reinstall via npm update (standard registry path).
- */
-function reinstallFromNpm(duckDir: string): void {
-  const lockFile = join(duckDir, "package-lock.json");
-  if (existsSync(lockFile)) rmSync(lockFile);
-
-  execSync("npm update design-duck", {
-    cwd: duckDir,
-    stdio: process.env.DEBUG ? "inherit" : "pipe",
-  });
-}
-
-/**
- * Reinstall by pointing at the latest GitHub Release tarball.
- * Rewrites the dependency URL in package.json, then runs npm install.
- */
-function reinstallFromGithub(duckDir: string): void {
-  const latestUrl = `${GITHUB_RELEASE_BASE}/design-duck-latest.tgz`;
-
-  const pkgPath = join(duckDir, "package.json");
-  const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-  pkg.dependencies = pkg.dependencies ?? {};
-  pkg.dependencies["design-duck"] = latestUrl;
-  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-
-  const lockFile = join(duckDir, "package-lock.json");
-  const nodeModules = join(duckDir, "node_modules");
-  if (existsSync(lockFile)) rmSync(lockFile);
-  if (existsSync(nodeModules)) rmSync(nodeModules, { recursive: true });
-
-  execSync("npm install", {
-    cwd: duckDir,
-    stdio: process.env.DEBUG ? "inherit" : "pipe",
-  });
-}
-
-export function upgrade(targetDir: string = process.cwd(), opts: UpgradeOptions = {}): void {
+export function upgrade(targetDir: string = process.cwd()): void {
   const duckDir = join(targetDir, "design-duck");
 
   if (!existsSync(duckDir)) {
     console.error(
-      "No design-duck/ directory found. Run 'design-duck init' first."
+      "No design-duck/ directory found. Run 'dd init' first."
     );
     process.exitCode = 1;
     return;
   }
 
-  // Determine source: explicit flag > auto-detect from existing package.json
-  const useGithub = opts.useGithub ?? isGithubSource(duckDir);
-
-  // 1. Unless we already reinstalled (re-exec pass), pull the latest package
-  if (!process.env._DD_SKIP_REINSTALL) {
-    const source = useGithub ? "GitHub Release" : "npm";
-    console.log(`Checking for updates (source: ${source})...`);
-    try {
-      if (useGithub) {
-        reinstallFromGithub(duckDir);
-      } else {
-        reinstallFromNpm(duckDir);
-      }
-    } catch (err) {
-      console.error(
-        `Failed to install latest package: ${err instanceof Error ? err.message : err}`
-      );
-      process.exitCode = 1;
-      return;
-    }
-
-    // Re-exec using the freshly installed CLI so the new code is loaded
-    const cliBin = join(duckDir, "node_modules", "design-duck", "dist", "cli.js");
-    if (existsSync(cliBin)) {
-      try {
-        execSync(`node "${cliBin}" upgrade`, {
-          cwd: targetDir,
-          stdio: "inherit",
-          env: { ...process.env, _DD_SKIP_REINSTALL: "1" },
-        });
-        return;
-      } catch (err: any) {
-        process.exitCode = err.status ?? 1;
-        return;
-      }
-    }
-  }
-
-  // 2. Determine current version
+  // 1. Determine current version
   const currentVersion = readProjectVersion(targetDir) ?? "0.1.0";
 
   if (process.env.DEBUG) {
@@ -164,23 +67,23 @@ export function upgrade(targetDir: string = process.cwd(), opts: UpgradeOptions 
     );
   }
 
-  // 3. Check if already up-to-date
+  // 2. Check if already up-to-date
   if (compareSemver(currentVersion, VERSION) === 0) {
     console.log(`Already up to date (v${VERSION}).`);
     return;
   }
 
-  // 4. Detect stale CLI — project version ahead of installed
+  // 3. Detect stale CLI — project version ahead of installed
   if (compareSemver(currentVersion, VERSION) > 0) {
     console.error(
-      `Version mismatch: your project is at v${currentVersion} but the latest available CLI is v${VERSION}.\n` +
-      `This likely means the remote hasn't been updated yet.`
+      `Version mismatch: your project is at v${currentVersion} but the installed CLI is v${VERSION}.\n` +
+      `Upgrade the CLI first: npm install -g design-duck@latest`
     );
     process.exitCode = 1;
     return;
   }
 
-  // 5. Collect applicable migrations
+  // 4. Collect applicable migrations
   const applicable = migrations.filter(
     (m) =>
       compareSemver(m.version, currentVersion) > 0 &&
@@ -220,7 +123,7 @@ export function upgrade(targetDir: string = process.cwd(), opts: UpgradeOptions 
     console.log("  No schema migrations needed.");
   }
 
-  // 6. Regenerate AGENTS.md (always — it's tool-generated)
+  // 5. Regenerate AGENTS.md (always — it's tool-generated)
   if (applicable.length === 0) {
     backupFile(join(duckDir, "AGENTS.md"), duckDir, currentVersion);
   }
@@ -228,7 +131,7 @@ export function upgrade(targetDir: string = process.cwd(), opts: UpgradeOptions 
   writeFileSync(agentMdPath, AGENT_MD, "utf-8");
   console.log("  Regenerated AGENTS.md");
 
-  // 7. Regenerate command markdown files (always — they're tool-generated)
+  // 6. Regenerate command markdown files (always — they're tool-generated)
   const commandsDir = join(duckDir, "commands");
   if (existsSync(commandsDir)) {
     for (const filename of Object.keys(COMMAND_FILES)) {
@@ -241,7 +144,7 @@ export function upgrade(targetDir: string = process.cwd(), opts: UpgradeOptions 
   }
   console.log("  Regenerated commands/ (tag-and-go agent shortcuts)");
 
-  // 8. Write the new version
+  // 7. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
 }
