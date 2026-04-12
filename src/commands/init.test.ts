@@ -24,24 +24,31 @@ describe("init", () => {
     expect(existsSync(join(testDir, "design-duck", "docs"))).toBe(true);
   });
 
-  test("creates AGENTS.md, vision.yaml, and example project requirements.yaml", () => {
+  test("creates vision.yaml and example project requirements.yaml", () => {
     init(testDir);
     const duckDir = join(testDir, "design-duck");
     const docsDir = join(duckDir, "docs");
-    expect(existsSync(join(duckDir, "AGENTS.md"))).toBe(true);
     expect(existsSync(join(docsDir, "vision.yaml"))).toBe(true);
     expect(existsSync(join(docsDir, "projects", "example-project", "requirements.yaml"))).toBe(true);
   });
 
-  test("AGENTS.md contains workflow instructions and context commands", () => {
+  test("does not create AGENTS.md", () => {
     init(testDir);
-    const content = readFileSync(join(testDir, "design-duck", "AGENTS.md"), "utf-8");
-    expect(content).toContain("dd context vision");
-    expect(content).toContain("dd context projects");
-    expect(content).toContain("dd context requirements");
-    expect(content).toContain("dd context design");
-    expect(content).toContain("dd context choose");
-    expect(content).toContain("dd context propagate");
+    expect(existsSync(join(testDir, "design-duck", "AGENTS.md"))).toBe(false);
+  });
+
+  test("creates dd-new.md, dd-extend.md, and dd-chat.md command files", () => {
+    init(testDir);
+    const commandsDir = join(testDir, "design-duck", "commands");
+    expect(existsSync(join(commandsDir, "dd-new.md"))).toBe(true);
+    expect(existsSync(join(commandsDir, "dd-extend.md"))).toBe(true);
+    expect(existsSync(join(commandsDir, "dd-chat.md"))).toBe(true);
+  });
+
+  test("dd-new.md contains context commands and workflow instructions", () => {
+    init(testDir);
+    const content = readFileSync(join(testDir, "design-duck", "commands", "dd-new.md"), "utf-8");
+    expect(content).toContain("dd context solve");
     expect(content).toContain("YAML is the source of truth");
   });
 
