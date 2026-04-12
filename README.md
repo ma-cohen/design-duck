@@ -39,13 +39,15 @@ dd ui
 
 The dashboard opens in your browser and auto-reloads when YAML files change.
 
-### 4. Solve your problem
+### 4. Work with your AI agent
 
-The fastest way to get a full design is `@dd-solve` — tag it in your AI chat
-with a problem statement and the agent runs every phase (vision, projects,
-requirements, design, choose) in one shot.
+There are 3 ways to work — tag a command file in your AI chat:
 
-To add more problems to an existing project later, use `@dd-add`.
+| Tag | When to use |
+| --- | ----------- |
+| `@dd-new "describe your idea"` | Start a new project — runs the full design cycle in one shot |
+| `@dd-extend "describe the problem"` | Add a new problem to an existing project |
+| `@dd-chat "ask anything"` | Continue at any stage — the agent reads current state and picks up from there |
 
 You can also run individual phases manually — see **Workflow Phases** below.
 
@@ -107,17 +109,18 @@ Validates YAML schema and cross-references (`requirementRefs`, `contextRefs`,
 | `dd context <phase> [name]` | Generate AI context prompt for a phase |
 | `dd validate` | Validate YAML files and references |
 | `dd ui` | Start live UI (auto-selects an available port from 3456) |
-| `dd upgrade` | Apply schema migrations and regenerate templates (update the binary with `npm install -g design-duck@latest`) |
+| `dd upgrade` | Apply schema migrations and regenerate command files for this project |
 | `dd reset [--force]` | Reset `docs/` and `commands/` back to empty templates |
+| `dd help` | Show all commands and tag-and-go shortcuts |
 
 ## File Structure
 
 ```text
 design-duck/
-├── AGENTS.md
 ├── commands/
-│   ├── dd-solve.md
-│   ├── dd-add.md
+│   ├── dd-new.md
+│   ├── dd-extend.md
+│   ├── dd-chat.md
 │   ├── dd-vision.md
 │   ├── dd-projects.md
 │   ├── dd-requirements.md
@@ -178,6 +181,36 @@ design-duck/
 - `decisions[].options` (array of options: `id`, `title`, `description`, `pros`, `cons`)
 - `decisions[].chosen` (string or `null`)
 - `decisions[].chosenReason` (string or `null`)
+
+## Upgrading
+
+When a new version of Design Duck is released, upgrade in two steps:
+
+### 1. Update the CLI
+
+```bash
+npm install -g design-duck@latest
+```
+
+This updates the `dd` binary globally. Run `dd --version` to confirm the new version.
+
+### 2. Update your project files
+
+```bash
+dd upgrade
+```
+
+Run this inside each project that uses Design Duck. It will:
+
+- Apply any schema migrations to your YAML files
+- Regenerate the command files in `design-duck/commands/` to the latest templates
+- Remove any command files that were renamed or replaced in this release
+
+Backups of overwritten files are saved to `design-duck/.backup/<previous-version>/`
+before any changes are made.
+
+> **Note:** Step 1 upgrades the CLI itself. Step 2 upgrades a specific project's
+> files. You need to run step 2 in every project separately.
 
 ## Development
 
