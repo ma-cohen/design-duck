@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
 import { writeProjectVersion } from "../infrastructure/version";
 
@@ -92,11 +91,6 @@ export function scaffoldDocs(duckDir: string): void {
   mkdirSync(exampleProjectDir, { recursive: true });
   console.log("Created design-duck/docs/");
 
-  // Write AGENTS.md (AI agent instructions)
-  const agentMdPath = join(duckDir, "AGENTS.md");
-  writeFileSync(agentMdPath, AGENT_MD, "utf-8");
-  console.log("  Created AGENTS.md (AI agent instructions)");
-
   // Write vision.yaml
   writeFileSync(join(docsDir, "vision.yaml"), VISION_YAML, "utf-8");
   console.log("  Created vision.yaml");
@@ -155,8 +149,7 @@ export function init(targetDir: string = process.cwd()): void {
 Design Duck initialized!
 
   design-duck/
-  ├── AGENTS.md                        # AI agent instructions & workflow guide
-  ├── commands/                        # Tag-and-go agent shortcuts (@dd-vision, etc.)
+  ├── commands/                        # Tag-and-go agent shortcuts (@dd-new, @dd-extend, @dd-chat, ...)
   └── docs/
       ├── context.yaml                 # Situational context (org, team, constraints)
       ├── vision.yaml                  # Vision, mission & core problem
@@ -167,8 +160,17 @@ Design Duck initialized!
               ├── requirements.yaml
               └── design.yaml
 
-Next steps:
-  Tag @dd-vision and tell your AI agent what to build!
+3 ways to work with your AI agent:
 
-Or run: dd ui    (opens the live dashboard)`);
+  1. Start a new project (full design cycle in one shot)
+       @dd-new "describe your idea"
+
+  2. Add a new problem to an existing project
+       @dd-extend "describe the new problem"
+
+  3. Continue or explore at any stage
+       @dd-chat "ask anything, or pick up where you left off"
+
+Or run: dd ui    (opens the live dashboard)
+         dd help  (see all commands and workflows)`);
 }

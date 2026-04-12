@@ -1,7 +1,7 @@
 /**
  * Command markdown templates — generated into design-duck/commands/ by init and upgrade.
  *
- * Each file acts as an agent instruction: the user tags it (e.g. @dd-vision)
+ * Each file acts as an agent instruction: the user tags it (e.g. @dd-new)
  * and the agent reads the file to know which CLI command to run and how to
  * handle the output.
  */
@@ -353,14 +353,14 @@ decisions and chosen options.
 // Full-cycle commands
 // ---------------------------------------------------------------------------
 
-const DD_SOLVE = `# Design Duck — Solve (Full Cycle)
+const DD_NEW = `# Design Duck — New Project
 
 Run the entire Design Duck workflow in one shot: vision, projects, requirements,
 design, choose — all without stopping between phases.
 
 ## How to Use
 
-The user tagged this file to run the **full cycle**. Use their message as the
+The user tagged this file to start a **new project**. Use their message as the
 problem statement. You will take it through every phase automatically.
 
 ## Steps
@@ -404,18 +404,18 @@ problem statement. You will take it through every phase automatically.
 
 Let the user know they can:
 - Review everything in the live UI
-- Add more problems: \`@dd-add\`
+- Add more problems: \`@dd-extend\`
 - Iterate on specific decisions: \`@dd-design\` or \`@dd-choose\`
 `;
 
-const DD_ADD = `# Design Duck — Add Problem
+const DD_EXTEND = `# Design Duck — Extend Project
 
 Add a new problem or need to an existing project, then design and choose
 solutions for it — all without stopping between phases.
 
 ## How to Use
 
-The user tagged this file to **add a new problem** to an existing project.
+The user tagged this file to **extend an existing project** with a new problem.
 Use their message as the problem statement.
 This requires a **project name**.
 
@@ -465,8 +465,70 @@ This requires a **project name**.
 
 Let the user know they can:
 - Review in the UI
-- Add more problems: \`@dd-add\`
+- Add more problems: \`@dd-extend\`
 - Iterate on specific decisions: \`@dd-design\` or \`@dd-choose\`
+`;
+
+const DD_CHAT = `# Design Duck — Chat (Continue Anywhere)
+
+Pick up the conversation at whatever stage the project is currently at.
+The agent reads current state and figures out what to do.
+
+## How to Use
+
+Tag this file with your question, intent, or next step.
+
+Examples:
+- \`@dd-chat the requirements look good, let's move to design\`
+- \`@dd-chat what decisions are still open in the auth project?\`
+- \`@dd-chat I've reviewed the options, choose them now\`
+
+## Step 1 — Inspect Current State
+
+Check what exists and what is populated:
+
+\`\`\`bash
+ls design-duck/docs/projects/ 2>/dev/null || echo "No projects yet"
+\`\`\`
+
+Also read \`design-duck/docs/vision.yaml\` to check if productName is set.
+For each relevant project, read its \`requirements.yaml\` and \`design.yaml\`.
+
+## Step 2 — Determine What to Do
+
+Based on state + the user's message:
+
+| State | Next phase |
+| ----- | ---------- |
+| No vision (productName empty) | \`dd context vision\` |
+| Vision exists, no projects | \`dd context projects\` |
+| Projects exist, no requirements | \`dd context requirements <project>\` |
+| Requirements exist, no design decisions | \`dd context design <project>\` |
+| Design exists, some decisions unchosen | \`dd context choose <project>\` |
+| All decisions chosen, user wants to add more | \`dd context design <project>\` |
+| User explicitly names a phase | Run that phase's context command |
+
+If multiple projects exist and the user hasn't specified one, ask.
+Always prefer explicit user intent over your inference.
+
+## Step 3 — Do the Work
+
+Run the context command you chose, read its output carefully, follow its instructions.
+Then validate:
+
+\`\`\`bash
+dd validate
+\`\`\`
+
+## Rules
+
+- YAML is the source of truth — edit files directly.
+- Do NOT modify existing chosen decisions unless the user explicitly asks.
+- If the user's intent is still ambiguous after reading state, ask one clarifying question.
+
+## After Completion
+
+Tell the user what you did and what the natural next step is.
 `;
 
 // ---------------------------------------------------------------------------
@@ -547,7 +609,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 
 2. Report the created folder structure to the user and suggest next steps:
    - Start the UI: \`dd ui\`
-   - Begin with vision: tag \`@dd-vision\` with a description of the product
+   - Start a new project: \`@dd-new\` with a description of what to build
 
 ## Notes
 
@@ -556,8 +618,7 @@ The user tagged this file to ask you to **initialize** Design Duck.
 
 ## Next Step
 
-When you're done, suggest the user start with the **vision** phase to define
-the product direction: \`@dd-vision\`
+When you're done, suggest the user start a new project: \`@dd-new\`
 `;
 
 const DD_RESET = `# Design Duck — Reset
@@ -591,7 +652,7 @@ The user tagged this file to ask you to **reset** Design Duck.
 
 ## Next Step
 
-After resetting, suggest the user start fresh with the **vision** phase: \`@dd-vision\`
+After resetting, suggest the user start a new project: \`@dd-new\`
 `;
 
 const DD_UPGRADE = `# Design Duck — Upgrade
@@ -624,7 +685,7 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 - Step 1 upgrades the \`dd\` CLI itself; step 2 upgrades this project's files.
 - Backups of overwritten files are saved in \`design-duck/.backup/\`.
-- AGENTS.md and command files are always regenerated to stay current.
+- Command files are always regenerated to stay current.
 `;
 
 // ---------------------------------------------------------------------------
@@ -633,8 +694,9 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 
 /** All command markdown files keyed by filename (without path). */
 export const COMMAND_FILES: Record<string, string> = {
-  "dd-solve.md": DD_SOLVE,
-  "dd-add.md": DD_ADD,
+  "dd-new.md": DD_NEW,
+  "dd-extend.md": DD_EXTEND,
+  "dd-chat.md": DD_CHAT,
   "dd-vision.md": DD_VISION,
   "dd-projects.md": DD_PROJECTS,
   "dd-requirements.md": DD_REQUIREMENTS,

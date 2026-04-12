@@ -11,10 +11,9 @@
  * 5. Write the new .version
  */
 
-import { existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, cpSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { VERSION } from "../index";
-import { AGENT_MD } from "../templates/agents-md";
 import { COMMAND_FILES } from "../templates/commands-md";
 import { migrations } from "../migrations";
 import {
@@ -99,8 +98,6 @@ export function upgrade(targetDir: string = process.cwd()): void {
     }
     console.log("");
 
-    backupFile(join(duckDir, "AGENTS.md"), duckDir, currentVersion);
-
     for (const m of applicable) {
       if (process.env.DEBUG) {
         console.error(`[design-duck:upgrade] running migration -> v${m.version}`);
@@ -123,19 +120,20 @@ export function upgrade(targetDir: string = process.cwd()): void {
     console.log("  No schema migrations needed.");
   }
 
-  // 5. Regenerate AGENTS.md (always — it's tool-generated)
-  if (applicable.length === 0) {
-    backupFile(join(duckDir, "AGENTS.md"), duckDir, currentVersion);
-  }
-  const agentMdPath = join(duckDir, "AGENTS.md");
-  writeFileSync(agentMdPath, AGENT_MD, "utf-8");
-  console.log("  Regenerated AGENTS.md");
-
-  // 6. Regenerate command markdown files (always — they're tool-generated)
+  // 5. Regenerate command markdown files (always — they're tool-generated)
   const commandsDir = join(duckDir, "commands");
   if (existsSync(commandsDir)) {
     for (const filename of Object.keys(COMMAND_FILES)) {
       backupFile(join(commandsDir, filename), duckDir, currentVersion);
+    }
+    // Clean up command files renamed in this version
+    const obsoleteCommandFiles = ["dd-solve.md", "dd-add.md"];
+    for (const filename of obsoleteCommandFiles) {
+      const oldPath = join(commandsDir, filename);
+      if (existsSync(oldPath)) {
+        unlinkSync(oldPath);
+        console.log(`  Removed renamed command file: ${filename}`);
+      }
     }
   }
   mkdirSync(commandsDir, { recursive: true });
