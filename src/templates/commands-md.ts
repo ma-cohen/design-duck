@@ -374,7 +374,7 @@ problem statement. You will take it through every phase automatically.
 2. Run the solve context command to get the current state and full instructions:
 
    \`\`\`bash
-   dd context solve
+   dd context new
    \`\`\`
 
 3. Read the output carefully — it contains the current state of all phases,
@@ -434,7 +434,7 @@ This requires a **project name**.
 1. Run the add context command with the project name:
 
    \`\`\`bash
-   dd context add <project-name>
+   dd context extend <project-name>
    \`\`\`
 
 2. Read the output carefully — it contains the existing state (vision,

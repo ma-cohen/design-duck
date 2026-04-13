@@ -58,8 +58,8 @@ describe("context command", () => {
     expect(PHASES).toContain("design");
     expect(PHASES).toContain("choose");
     expect(PHASES).toContain("propagate");
-    expect(PHASES).toContain("solve");
-    expect(PHASES).toContain("add");
+    expect(PHASES).toContain("new");
+    expect(PHASES).toContain("extend");
   });
 
   test("prints usage and sets exit code for unknown phase", () => {

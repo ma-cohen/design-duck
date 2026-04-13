@@ -67,12 +67,12 @@ Review in UI <------------┘
 ### Quick start
 
 ```bash
-dd context solve              # full cycle from current state
-dd context add <project>      # add a new problem to a project
+dd context new                # full cycle from current state
+dd context extend <project>   # add a new problem to a project
 ```
 
-- `solve`: runs the entire workflow (vision through choose) in one shot, adapting to whatever state already exists
-- `add`: extends an existing project with new requirements and design decisions
+- `new`: runs the entire workflow (vision through choose) in one shot, adapting to whatever state already exists
+- `extend`: extends an existing project with new requirements and design decisions
 
 ### Individual phases
 

@@ -48,7 +48,7 @@ describe("init", () => {
   test("dd-new.md contains context commands and workflow instructions", () => {
     init(testDir);
     const content = readFileSync(join(testDir, "design-duck", "commands", "dd-new.md"), "utf-8");
-    expect(content).toContain("dd context solve");
+    expect(content).toContain("dd context new");
     expect(content).toContain("YAML is the source of truth");
   });
 
