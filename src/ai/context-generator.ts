@@ -232,7 +232,7 @@ export function generatePropagateContext(
 /**
  * Solve — run the full cycle from current state.
  */
-export function generateSolveContext(docsDir: string): string {
+export function generateNewContext(docsDir: string): string {
   const rawVision = readRawVision(docsDir);
   const rawRootContext = readRawRootContext(docsDir);
   const rawGlobalDesign = readRawGlobalDesign(docsDir);
@@ -259,7 +259,7 @@ export function generateSolveContext(docsDir: string): string {
 /**
  * Add Problem — extend an existing project with new requirements and design.
  */
-export function generateAddContext(
+export function generateExtendContext(
   docsDir: string,
   projectName: string,
 ): string {

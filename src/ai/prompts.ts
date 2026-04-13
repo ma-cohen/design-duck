@@ -753,7 +753,7 @@ Repeat until the design is stable across all categories.
    - Design decisions with chosen options and reasoning
 3. Let the user know they can:
    - Review everything in the UI
-   - Add more problems with \`@dd-add\`
+   - Add more problems with \`@dd-extend\`
    - Iterate on design with \`@dd-design\` or \`@dd-choose\`
 
 ## Rules
@@ -870,7 +870,7 @@ Check for cascading decisions. If found, add and choose them too.
    - New design decisions with chosen options
 3. Let the user know they can:
    - Review in the UI
-   - Add more problems with \`@dd-add\`
+   - Add more problems with \`@dd-extend\`
    - Iterate on specific decisions with \`@dd-design\` or \`@dd-choose\`
 
 ## Guidelines
