@@ -4,3 +4,4 @@ dist-ui/
 .env
 *.log
 .claude/
+.worktrees/
