@@ -481,7 +481,7 @@ Tag this file with your question, intent, or next step.
 Examples:
 - \`@dd-chat the requirements look good, let's move to design\`
 - \`@dd-chat what decisions are still open in the auth project?\`
-- \`@dd-chat I've reviewed the options, choose them now\``
+- \`@dd-chat I've reviewed the options, choose them now\`
 
 ## Step 1 — Inspect Current State
 
@@ -753,7 +753,9 @@ solutions for it — all without stopping between phases.
 
 ## How to Use
 
-The user typed \`/dd-extend\` to **extend an existing project** with a new problem. User's description: \$ARGUMENTS
+The user typed \`/dd-extend\` to **extend an existing project** with a new problem.
+User's description: \$ARGUMENTS
+
 This requires a **project name**.
 
 ### Determining the Project Name
