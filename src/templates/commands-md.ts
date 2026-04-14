@@ -481,7 +481,7 @@ Tag this file with your question, intent, or next step.
 Examples:
 - \`@dd-chat the requirements look good, let's move to design\`
 - \`@dd-chat what decisions are still open in the auth project?\`
-- \`@dd-chat I've reviewed the options, choose them now\`
+- \`@dd-chat I've reviewed the options, choose them now\``
 
 ## Step 1 — Inspect Current State
 
@@ -689,6 +689,186 @@ The user tagged this file to ask you to **upgrade** Design Duck.
 `;
 
 // ---------------------------------------------------------------------------
+// Slash command variants
+// ---------------------------------------------------------------------------
+
+const DD_NEW_SLASH = `# Design Duck — New Project
+
+Run the entire Design Duck workflow in one shot: vision, projects, requirements,
+design, choose — all without stopping between phases.
+
+## How to Use
+
+The user typed \`/dd-new\` to start a **new project**. User's description: \$ARGUMENTS — take it through every phase automatically.
+
+## Steps
+
+1. Start the live UI so the user can see progress in real time:
+
+   \`\`\`bash
+   dd ui
+   \`\`\`
+
+2. Run the solve context command to get the current state and full instructions:
+
+   \`\`\`bash
+   dd context new
+   \`\`\`
+
+3. Read the output carefully — it contains the current state of all phases,
+   YAML formats, guidelines, and step-by-step instructions.
+
+4. Follow **all** the instructions from the context output. Work through every
+   phase sequentially. **Do NOT stop between phases** to suggest next steps —
+   just keep going until everything is complete.
+
+5. Run validation when done:
+
+   \`\`\`bash
+   dd validate
+   \`\`\`
+
+6. Present a summary of everything created and let the user know they can
+   review in the UI.
+
+## Rules
+
+- YAML is the source of truth — edit the files directly.
+- **Do NOT stop between phases.** Run the full cycle in one go.
+- Ask context questions upfront (situation + tech stack) before starting.
+- Keep descriptions concise and user-focused.
+
+## After Completion
+
+Let the user know they can:
+- Review everything in the live UI
+- Add more problems: \`/dd-extend\`
+- Iterate on specific decisions: \`/dd-design\` or \`/dd-choose\`
+`;
+
+const DD_EXTEND_SLASH = `# Design Duck — Extend Project
+
+Add a new problem or need to an existing project, then design and choose
+solutions for it — all without stopping between phases.
+
+## How to Use
+
+The user typed \`/dd-extend\` to **extend an existing project** with a new problem. User's description: \$ARGUMENTS
+This requires a **project name**.
+
+### Determining the Project Name
+
+1. If the user mentioned a project name in their message, use it.
+2. Otherwise, list the available projects:
+   \`\`\`bash
+   ls design-duck/docs/projects/
+   \`\`\`
+3. If there is exactly one project (besides \`example-project\`), use it.
+4. If there are multiple projects, ask the user which one to add to.
+
+## Steps
+
+1. Run the add context command with the project name:
+
+   \`\`\`bash
+   dd context extend <project-name>
+   \`\`\`
+
+2. Read the output carefully — it contains the existing state (vision,
+   requirements, design) and step-by-step instructions.
+
+3. Follow **all** the instructions from the context output:
+   - Add new requirements for the user's problem
+   - Add new design decisions with options
+   - Choose options for the new decisions
+   **Do NOT stop between steps** — complete everything in one go.
+
+4. Run validation when done:
+
+   \`\`\`bash
+   dd validate
+   \`\`\`
+
+5. Present a summary of what was added.
+
+## Rules
+
+- **Do NOT modify or remove existing requirements or decisions** — only add new ones.
+- Use IDs that don't collide with existing ones.
+- YAML is the source of truth — edit the files directly.
+- Keep descriptions concise and user-focused.
+
+## After Completion
+
+Let the user know they can:
+- Review in the UI
+- Add more problems: \`/dd-extend\`
+- Iterate on specific decisions: \`/dd-design\` or \`/dd-choose\`
+`;
+
+const DD_CHAT_SLASH = `# Design Duck — Chat (Continue Anywhere)
+
+Pick up the conversation at whatever stage the project is currently at.
+The agent reads current state and figures out what to do.
+
+## How to Use
+
+The user typed \`/dd-chat\` with their question, intent, or next step. User's input: \$ARGUMENTS
+
+Examples:
+- \`/dd-chat the requirements look good, let's move to design\`
+- \`/dd-chat what decisions are still open in the auth project?\`
+- \`/dd-chat I've reviewed the options, choose them now\`
+
+## Step 1 — Inspect Current State
+
+Check what exists and what is populated:
+
+\`\`\`bash
+ls design-duck/docs/projects/ 2>/dev/null || echo "No projects yet"
+\`\`\`
+
+Also read \`design-duck/docs/vision.yaml\` to check if productName is set.
+For each relevant project, read its \`requirements.yaml\` and \`design.yaml\`.
+
+## Step 2 — Determine What to Do
+
+Based on state + the user's message:
+
+| State | Next phase |
+| ----- | ---------- |
+| No vision (productName empty) | \`dd context vision\` |
+| Vision exists, no projects | \`dd context projects\` |
+| Projects exist, no requirements | \`dd context requirements <project>\` |
+| Requirements exist, no design decisions | \`dd context design <project>\` |
+| Design exists, some decisions unchosen | \`dd context choose <project>\` |
+| All decisions chosen, user wants to add more | \`dd context design <project>\` |
+| User explicitly names a phase | Run that phase's context command |
+
+If multiple projects exist and the user hasn't specified one, ask.
+Always prefer explicit user intent over your inference.
+
+## Step 3 — Do the Work
+
+Run the context command you chose, read its output carefully, follow its instructions.
+Then validate:
+
+\`\`\`bash
+dd validate
+\`\`\`
+
+## Rules
+
+- YAML is the source of truth — edit files directly.
+- Do NOT modify existing chosen decisions unless the user explicitly asks.
+- If the user's intent is still ambiguous after reading state, ask one clarifying question.
+
+## After Completion
+
+Tell the user what you did and what the natural next step is.
+`;
+
+// ---------------------------------------------------------------------------
 // Export: map of filename → content
 // ---------------------------------------------------------------------------
 
@@ -708,4 +888,16 @@ export const COMMAND_FILES: Record<string, string> = {
   "dd-init.md": DD_INIT,
   "dd-upgrade.md": DD_UPGRADE,
   "dd-reset.md": DD_RESET,
+};
+
+/**
+ * Slash command files for Claude Code (.claude/commands/) and Cursor (.cursor/commands/).
+ * Same as COMMAND_FILES but adapted for IDE slash commands:
+ * - References $ARGUMENTS where tag commands use "the user's message"
+ * - Intro text uses "/dd-*" syntax instead of "@dd-*" tags
+ */
+export const SLASH_COMMAND_FILES: Record<string, string> = {
+  "dd-new.md": DD_NEW_SLASH,
+  "dd-extend.md": DD_EXTEND_SLASH,
+  "dd-chat.md": DD_CHAT_SLASH,
 };
