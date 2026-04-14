@@ -125,7 +125,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
   // 5. Regenerate command files based on integration preference
   const integration = readIntegration(targetDir) ?? "tags";
 
-  if (integration === "tags" || integration === "both") {
+  if (integration === "tags") {
     // Regenerate design-duck/commands/ (tag-and-go files)
     const commandsDir = join(duckDir, "commands");
     if (existsSync(commandsDir)) {
@@ -156,7 +156,7 @@ export function upgrade(targetDir: string = process.cwd()): void {
     scaffoldCursorCommands(targetDir);
   }
 
-  // 7. Write the new version
+  // 6. Write the new version
   writeProjectVersion(targetDir, VERSION);
   console.log(`\nUpgrade complete! Now at v${VERSION}.`);
 }

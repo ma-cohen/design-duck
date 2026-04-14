@@ -6,9 +6,8 @@ import { join } from "node:path";
 /**
  * Tests for the upgrade command logic.
  *
- * Note: We test the version infrastructure and migration registry directly
- * rather than calling `upgrade()` end-to-end, since upgrade() does npm install
- * and re-exec which requires a real npm package install.
+ * The upgrade infrastructure tests verify version handling and migration registry.
+ * The integration-aware tests call upgrade() end-to-end to verify command regeneration.
  */
 
 import { migrations } from "../migrations";
@@ -136,5 +135,14 @@ describe("upgrade integration-aware command regeneration", () => {
     expect(existsSync(join(duckDir, "commands", "dd-new.md"))).toBe(true);
     expect(existsSync(join(testDir, ".claude", "commands", "dd-new.md"))).toBe(false);
     expect(existsSync(join(testDir, ".cursor", "commands", "dd-new.md"))).toBe(false);
+  });
+
+  test('integration "both" → regenerates .claude/commands/ and .cursor/commands/, not design-duck/commands/', () => {
+    writeIntegration(testDir, "both");
+    upgrade(testDir);
+
+    expect(existsSync(join(testDir, ".claude", "commands", "dd-new.md"))).toBe(true);
+    expect(existsSync(join(testDir, ".cursor", "commands", "dd-new.md"))).toBe(true);
+    expect(existsSync(join(duckDir, "commands", "dd-new.md"))).toBe(false);
   });
 });
