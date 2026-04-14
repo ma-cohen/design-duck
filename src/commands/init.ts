@@ -149,20 +149,25 @@ export function scaffoldCursorCommands(projectRootDir: string): void {
 async function promptIntegration(): Promise<Integration> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((resolve) => {
+    let resolved = false;
     console.log("\nWhich AI assistant are you using?");
     console.log("  1. Claude Code   → .claude/commands/ (slash commands: /dd-new, /dd-extend, /dd-chat)");
     console.log("  2. Cursor        → .cursor/commands/ (slash commands: /dd-new, /dd-extend, /dd-chat)");
     console.log("  3. Both");
     console.log("  4. Tags only     → design-duck/commands/ (tag-and-go: @dd-new, @dd-extend, @dd-chat)");
     rl.question("\nChoose [1-4]: ", (answer) => {
+      resolved = true;
       rl.close();
       const map: Record<string, Integration> = { "1": "claude", "2": "cursor", "3": "both", "4": "tags" };
-      resolve(map[answer.trim()] ?? "tags");  // default to tags if invalid
+      resolve(map[answer.trim()] ?? "tags");
+    });
+    rl.on("close", () => {
+      if (!resolved) resolve("tags");
     });
   });
 }
 
-export function init(targetDir: string = process.cwd(), integration: Integration): void {
+export function init(targetDir: string, integration: Integration): void {
   const duckDir = join(targetDir, "design-duck");
   const docsDir = join(duckDir, "docs");
 
