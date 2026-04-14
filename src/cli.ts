@@ -4,7 +4,7 @@
  * Commands: init | ui | validate | context | upgrade
  */
 
-import { init } from "./commands/init";
+import { initInteractive } from "./commands/init";
 import { ui } from "./commands/ui";
 import { validate } from "./commands/validate";
 import { context } from "./commands/context";
@@ -74,8 +74,8 @@ TAG-AND-GO SHORTCUTS (use in AI chat)
 `);
 }
 
-function cmdInit(): void {
-  init(process.cwd());
+async function cmdInit(): Promise<void> {
+  await initInteractive(process.cwd());
 }
 
 function cmdUi(): void {
@@ -98,7 +98,7 @@ async function cmdReset(args: string[]): Promise<void> {
   await reset(args);
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
 
@@ -118,7 +118,7 @@ function main(): void {
 
   switch (command) {
     case "init":
-      cmdInit();
+      await cmdInit();
       break;
     case "ui":
       cmdUi();
