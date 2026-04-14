@@ -21,6 +21,8 @@ import {
   writeProjectVersion,
   compareSemver,
 } from "../infrastructure/version";
+import { readIntegration } from "../infrastructure/integration";
+import { scaffoldClaudeCommands, scaffoldCursorCommands } from "./init";
 
 /**
  * Back up a file to design-duck/.backup/<version>/ before migrating.
@@ -120,27 +122,39 @@ export function upgrade(targetDir: string = process.cwd()): void {
     console.log("  No schema migrations needed.");
   }
 
-  // 5. Regenerate command markdown files (always — they're tool-generated)
-  const commandsDir = join(duckDir, "commands");
-  if (existsSync(commandsDir)) {
-    for (const filename of Object.keys(COMMAND_FILES)) {
-      backupFile(join(commandsDir, filename), duckDir, currentVersion);
-    }
-    // Clean up command files renamed in this version
-    const obsoleteCommandFiles = ["dd-solve.md", "dd-add.md"];
-    for (const filename of obsoleteCommandFiles) {
-      const oldPath = join(commandsDir, filename);
-      if (existsSync(oldPath)) {
-        unlinkSync(oldPath);
-        console.log(`  Removed renamed command file: ${filename}`);
+  // 5. Regenerate command files based on integration preference
+  const integration = readIntegration(targetDir) ?? "tags";
+
+  if (integration === "tags" || integration === "both") {
+    // Regenerate design-duck/commands/ (tag-and-go files)
+    const commandsDir = join(duckDir, "commands");
+    if (existsSync(commandsDir)) {
+      for (const filename of Object.keys(COMMAND_FILES)) {
+        backupFile(join(commandsDir, filename), duckDir, currentVersion);
+      }
+      const obsoleteCommandFiles = ["dd-solve.md", "dd-add.md"];
+      for (const filename of obsoleteCommandFiles) {
+        const oldPath = join(commandsDir, filename);
+        if (existsSync(oldPath)) {
+          unlinkSync(oldPath);
+          console.log(`  Removed renamed command file: ${filename}`);
+        }
       }
     }
+    mkdirSync(commandsDir, { recursive: true });
+    for (const [filename, content] of Object.entries(COMMAND_FILES)) {
+      writeFileSync(join(commandsDir, filename), content, "utf-8");
+    }
+    console.log("  Regenerated commands/ (tag-and-go agent shortcuts)");
   }
-  mkdirSync(commandsDir, { recursive: true });
-  for (const [filename, content] of Object.entries(COMMAND_FILES)) {
-    writeFileSync(join(commandsDir, filename), content, "utf-8");
+
+  if (integration === "claude" || integration === "both") {
+    scaffoldClaudeCommands(targetDir);
   }
-  console.log("  Regenerated commands/ (tag-and-go agent shortcuts)");
+
+  if (integration === "cursor" || integration === "both") {
+    scaffoldCursorCommands(targetDir);
+  }
 
   // 7. Write the new version
   writeProjectVersion(targetDir, VERSION);
