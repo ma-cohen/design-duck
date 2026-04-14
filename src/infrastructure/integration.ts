@@ -8,10 +8,10 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-export type Integration = "claude" | "cursor" | "both" | "tags";
-
 const INTEGRATION_FILENAME = ".integration";
-const VALID_INTEGRATIONS: Integration[] = ["claude", "cursor", "both", "tags"];
+const VALID_INTEGRATIONS = ["claude", "cursor", "both", "tags"] as const;
+
+export type Integration = (typeof VALID_INTEGRATIONS)[number];
 
 /** Path to the .integration file inside design-duck/. */
 export function integrationFilePath(targetDir: string = process.cwd()): string {
@@ -32,7 +32,7 @@ export function readIntegration(targetDir: string = process.cwd()): Integration 
 }
 
 /** Write the integration setting to design-duck/.integration. */
-export function writeIntegration(integration: Integration, targetDir: string = process.cwd()): void {
+export function writeIntegration(targetDir: string = process.cwd(), integration: Integration): void {
   const filePath = integrationFilePath(targetDir);
   writeFileSync(filePath, integration + "\n", "utf-8");
 }
