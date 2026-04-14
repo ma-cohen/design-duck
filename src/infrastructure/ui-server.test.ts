@@ -38,7 +38,9 @@ function occupyPort(port: number): Promise<Server> {
   return new Promise((resolve, reject) => {
     const srv = createTcpServer();
     srv.on("error", reject);
-    srv.listen(port, () => resolve(srv));
+    // exclusive: true sets SO_EXCLUSIVEADDRUSE on Windows, preventing other
+    // sockets from binding to the same port (default SO_REUSEADDR would allow it).
+    srv.listen({ port, exclusive: true }, () => resolve(srv));
   });
 }
 
