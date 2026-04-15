@@ -399,6 +399,7 @@ problem statement. You will take it through every phase automatically.
 - **Do NOT stop between phases.** Run the full cycle in one go.
 - Ask context questions upfront (situation + tech stack) before starting.
 - Keep descriptions concise and user-focused.
+- **Do NOT run \`dd init\`** — the design-duck directory structure is already set up. \`dd init\` is only needed once when first installing Design Duck.
 
 ## After Completion
 
@@ -737,6 +738,7 @@ The user typed \`/dd-new\` to start a **new project**. User's description: \$ARG
 - **Do NOT stop between phases.** Run the full cycle in one go.
 - Ask context questions upfront (situation + tech stack) before starting.
 - Keep descriptions concise and user-focused.
+- **Do NOT run \`dd init\`** — the design-duck directory structure is already set up. \`dd init\` is only needed once when first installing Design Duck.
 
 ## After Completion
 
