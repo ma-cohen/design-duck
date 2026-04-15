@@ -566,6 +566,8 @@ phases**. Do NOT pause to suggest next steps — just keep going.
 \`\`\`bash
 dd ui
 \`\`\`
+
+> **Never run \`dd init\`** — that command is only for first-time installation. The design-duck directory structure is already in place.
 `);
 
   // --- Context gathering (upfront) ---
